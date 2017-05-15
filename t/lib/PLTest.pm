@@ -5,7 +5,8 @@ use Config;
 use Test::More;
 use Test::Deep;
 use Data::Dumper;
-use CPP::panda::lib;
+
+my $ok = eval { require CPP::panda::lib; 1; };
 
 sub import {
     my ($class, @reqs) = @_;
@@ -25,7 +26,7 @@ sub import {
 
 sub require_full {
     plan skip_all => 'rebuild Makefile.PL adding TEST_FULL=1 to enable all tests'
-        unless CPP::panda::lib::Test::String->can('new_empty');
+        unless $ok and CPP::panda::lib::Test::String->can('new_empty');
 }
 
 sub require_threads {
