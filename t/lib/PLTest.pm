@@ -5,8 +5,14 @@ use Config;
 use Test::More;
 use Test::Deep;
 use Data::Dumper;
+use CPP::panda::lib;
 
-my $ok = eval { require CPP::panda::lib; 1; };
+my $ok = eval {
+    package CPP::panda::lib;
+    require Panda::XSLoader;
+    Panda::XSLoader::bootstrap();
+    1;
+};
 
 sub import {
     my ($class, @reqs) = @_;
