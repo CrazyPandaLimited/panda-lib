@@ -10,9 +10,7 @@ extern "C" {
 // IT IS ONLY COMPILED WITH TEST_FULL=1, OTHERWISE IT IS EMPTY XS
 // THIS FILE AND EVERYTHING IN t/* CAN BE REMOVED WHEN PERL TESTS ARE REPLACED WITH C++ TESTS
 
-#ifdef TEST_FULL
-#  include "t/src/test.h"
-#endif
+#include "t/src/test.h"
    
 MODULE = CPP::panda::lib                PACKAGE = CPP::panda::lib
 PROTOTYPES: DISABLE
@@ -58,10 +56,4 @@ T_MYPTROBJ2
 
 END
 
-void _stub () {}
-
-#ifdef TEST_FULL
-
 INCLUDE: t/src/test.xsi
-
-#endif
