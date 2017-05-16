@@ -1,3 +1,5 @@
+1.0.3    16.05.2017
+    - fix default pos value for find_last_of, find_last_not_of
 1.0.2    16.05.2017
     - bugfix for stoX group of functions in case of no pos argument
 1.0.1    15.05.2017
