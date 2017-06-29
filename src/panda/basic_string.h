@@ -492,7 +492,7 @@ public:
                     }
                     break;
                 }
-                else --_buf->refcnt;
+                else --_buf->refcnt; // fallthrough
             case State::LITERAL:
                 auto old_str = _str;
                 _new_auto(_length);
