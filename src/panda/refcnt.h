@@ -250,4 +250,35 @@ inline std::shared_ptr<T1> dynamic_pointer_cast (const std::shared_ptr<T2>& shpt
     return std::dynamic_pointer_cast<T1>(shptr);
 }
 
+namespace {
+    template <typename T, bool refcounted = IsRefCounted<T>::value>
+    struct make_shared_impl;
+
+    template <typename T>
+    struct make_shared_impl<T, true> {
+        template <typename... Args>
+        static shared_ptr<T, true> make_shared(Args&&... args) {
+            return new T(std::forward<Args>(args)...);
+        }
+    };
+
+    template <typename T>
+    struct make_shared_impl<T, false> {
+        template <typename... Args>
+        static shared_ptr<T, true> make_shared(Args&&... args) {
+            struct tmp : public T, public virtual RefCounted {
+                using T::T;
+            };
+
+            return new tmp(std::forward<Args>(args)...);
+        }
+    };
+}
+
+template <typename T, typename... Args>
+shared_ptr<T> make_shared(Args&&... args) {
+    //return make_shared_impl<T>::make_shared(std::forward<Args>(args)...);
+    return shared_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 }
