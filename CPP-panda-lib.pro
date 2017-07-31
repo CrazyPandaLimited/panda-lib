@@ -3,13 +3,15 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-INCLUDEPATH += ../src
+INCLUDEPATH += src ../CPP-catch-test/src
 
 SOURCES += \
     src/panda/lib/from_chars.cc \
     src/panda/lib/hash.cc \
     src/panda/lib/memory.cc \
-    src/panda/lib.cc
+    src/panda/lib.cc \
+    t/src/test_function.cc \
+    t/src/test_dispatcher.cc
 
 HEADERS += \
     src/panda/lib/endian.h \
@@ -33,4 +35,12 @@ HEADERS += \
     src/panda/function_utils.h \
     src/panda/lib.h \
     src/panda/optional.h \
-    src/panda/log.h
+    src/panda/log.h \
+    t/src/test.h \
+    t/src/test_utils.h
+
+DISTFILES += \
+    t/src/from_chars.xsi \
+    t/src/string.xsi \
+    t/src/string_containers.xsi \
+    t/src/test.xsi

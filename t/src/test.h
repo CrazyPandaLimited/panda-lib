@@ -11,6 +11,10 @@
 #include <panda/unordered_string_map.h>
 #include <panda/unordered_string_set.h>
 
+#undef seed
+#define CATCH_CONFIG_RUNNER
+#include "catch.hpp"
+
 using std::string_view;
 using namespace panda::lib;
 
@@ -192,6 +196,10 @@ static inline uint64_t _test_on_thread_start () {
         StaticMemoryPool<16>::tls_instance()->deallocate(mem);
     }
     return ret;
+}
+
+inline bool run_all_cpp_tests() {
+    return Catch::Session().run() == 0;
 }
 
 #ifdef _WIN32

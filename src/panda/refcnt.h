@@ -128,6 +128,7 @@ public:
     shared_ptr () : ptr(NULL), refcnt(&void_refcnt) {
         refcnt_inc();
     }
+    shared_ptr (std::nullptr_t) : shared_ptr() {}
 
     explicit shared_ptr (T* pointer) {
         ptr = pointer;
