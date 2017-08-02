@@ -43,4 +43,5 @@ DISTFILES += \
     t/src/from_chars.xsi \
     t/src/string.xsi \
     t/src/string_containers.xsi \
-    t/src/test.xsi
+    t/src/test.xsi \
+    lib.xs
