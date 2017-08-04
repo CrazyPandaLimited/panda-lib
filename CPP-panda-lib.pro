@@ -11,7 +11,8 @@ SOURCES += \
     src/panda/lib/memory.cc \
     src/panda/lib.cc \
     t/src/test_function.cc \
-    t/src/test_dispatcher.cc
+    t/src/test_dispatcher.cc \
+    t/src/test_owning_list.cc
 
 HEADERS += \
     src/panda/lib/endian.h \
@@ -37,7 +38,8 @@ HEADERS += \
     src/panda/optional.h \
     src/panda/log.h \
     t/src/test.h \
-    t/src/test_utils.h
+    t/src/test_utils.h \
+    src/panda/lib/owning_list.h
 
 DISTFILES += \
     t/src/from_chars.xsi \

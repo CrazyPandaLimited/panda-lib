@@ -1,8 +1,9 @@
 #pragma once
 
-#include <list>
+#include <panda/lib/owning_list.h>
 #include <panda/function.h>
 #include <panda/optional.h>
+#include <iostream>
 
 namespace panda {
 
@@ -11,7 +12,7 @@ class CallbackDispatcher {
 public:
     struct Event;
     using Callback = function<Ret (Event&, Args...)>;
-    using CallbackList = std::list<Callback>;
+    using CallbackList = lib::owning_list<Callback>;
 
     using RetType = typename optional_tools<Ret>::type;
 
@@ -30,7 +31,7 @@ public:
     }
 
     void add(Callback&& callback) {
-        listeners.emplace_back(std::forward<Callback>(callback));
+        listeners.push_back(std::forward<Callback>(callback));
     }
 
     template <typename... RealArgs>
@@ -46,10 +47,14 @@ public:
     void remove(const SmthComparable& callback) {
         for (auto iter = listeners.rbegin(); iter != listeners.rend(); ++iter) {
             if (*iter == callback) {
-                listeners.erase(std::next(iter).base() );
+                listeners.erase(iter);
                 break;
             }
         }
+    }
+
+    void remove_all() {
+        listeners.clear();
     }
 
 private:

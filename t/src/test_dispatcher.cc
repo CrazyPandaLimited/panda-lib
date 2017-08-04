@@ -39,6 +39,18 @@ TEST_CASE("remove callback dispatcher" , "[CallbackDispatcher]") {
     REQUIRE(d(2).value_or(0) == 1);
 }
 
+TEST_CASE("remove_all in process" , "[CallbackDispatcher]") {
+    Dispatcher d;
+    d.add([&](Event& e, int a) -> int {
+        d.remove_all();
+        return 1 + e.next(a).value_or(0);
+    });
+    d.add([](Event&, int) -> int {
+        return 2;
+    });
+    REQUIRE(d(2).value_or(0) == 1);
+}
+
 TEST_CASE("callback dispatcher copy ellision" , "[CallbackDispatcher]") {
     Dispatcher d;
     Tracer::refresh();
