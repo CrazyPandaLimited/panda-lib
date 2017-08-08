@@ -64,9 +64,9 @@ private:
 #define _panda_log_impl_(LEVEL, MSG) panda::Log(panda::Log::LEVEL) << __FILENAME__ << " " << __LINE__ << " " << MSG
 
 //#define panda_debug_v(VAR) Log(Log::DEBUG) << __FILENAME__ << " " << __LINE__ << " " << #VAR << " = " << (VAR)
-#define panda_log_debug _panda_log_impl_(DEBUG, MSG)
-
 #define panda_debug_v(VAR) _panda_log_impl_(DEBUG, #VAR << " = " << (VAR))
+
+#define panda_log_debug(MSG) _panda_log_impl_(DEBUG, MSG)
 #define panda_log_verbose(MSG) _panda_log_impl_(VERBOSE, MSG)
 #define panda_log_info(MSG) _panda_log_impl_(INFO, MSG)
 #define panda_log_warn(MSG) _panda_log_impl_(WARNING, MSG)
