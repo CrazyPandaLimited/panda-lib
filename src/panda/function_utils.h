@@ -3,7 +3,6 @@
 #include <panda/refcnt.h>
 
 namespace panda {
-using namespace std;
 
 using panda::make_shared;
 using panda::shared_ptr;
@@ -71,7 +70,7 @@ public:
     }
 
     bool equals(Ifunction<Ret, Args...>* oth) const override {
-        return this == oth;
+        return static_cast<const Ifunction<Ret, Args...>*>(this) == oth;
     }
 
     Func func;
@@ -105,7 +104,7 @@ auto make_abstract_function(Ret (*f)(Args...)) -> shared_ptr<abstract_function<R
 
 template <typename Ret, typename... Args,
           typename Functor, bool IsComp = is_comparable<typename std::remove_reference<Functor>::type>::value,
-          typename = decltype(std::declval<Functor>()(declval<Args>()...))>
+          typename = decltype(std::declval<Functor>()(std::declval<Args>()...))>
 shared_ptr<abstract_function<Functor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f) {
     return make_shared<abstract_function<Functor, Ret, IsComp, Args...>>(std::forward<Functor>(f));
 }

@@ -42,7 +42,7 @@ public:
     function(const shared_ptr<Derr>& f) : func(f) {}
 
     template<typename... F,
-             typename = decltype(make_abstract_function<Ret, Args...>(declval<F>()...)),
+             typename = decltype(make_abstract_function<Ret, Args...>(std::declval<F>()...)),
              typename = typename std::enable_if<!std::is_constructible<function, F...>::value>::type>
     function(F&&... f)
         : func(make_abstract_function<Ret, Args...>(std::forward<F>(f)...))

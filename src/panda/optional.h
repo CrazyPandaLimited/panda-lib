@@ -15,7 +15,7 @@ namespace panda {
     optional(const T& val) :val(val), exists(true) {}
 
     T value() const {
-      return value;
+      return val;
     }
 
     T value_or(const T& def) const {
