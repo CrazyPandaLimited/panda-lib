@@ -32,8 +32,8 @@ namespace panda {
 
   template <typename T>
   struct optional_tools {
-      static T default_value() {return T{};}
       using type = optional<T>;
+      static type default_value() {return type{};}
   };
 
   template <>

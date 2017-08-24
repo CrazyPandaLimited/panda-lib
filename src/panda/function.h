@@ -59,6 +59,10 @@ public:
         return (func && func->equals(oth.func.get())) || (!func && !oth.func);
     }
     bool operator !=(const function& oth) const {return !operator ==(oth);}
+
+    explicit operator bool() const {
+        return func;
+    }
 };
 
 template <typename Ret, typename... Args>

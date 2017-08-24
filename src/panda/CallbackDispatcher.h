@@ -11,10 +11,31 @@ template <typename Ret, typename... Args>
 class CallbackDispatcher {
 public:
     struct Event;
-    using Callback = function<Ret (Event&, Args...)>;
-    using CallbackList = lib::owning_list<Callback>;
-
     using RetType = typename optional_tools<Ret>::type;
+    using Callback = function<RetType (Event&, Args...)>;
+    using SimpleCallback = function<Ret (Args...)>;
+
+    struct Wrapper {
+        Callback real;
+        SimpleCallback simple;
+
+        Wrapper(Callback real, SimpleCallback simple = nullptr) : real(real), simple(simple) {}
+
+        template <typename... RealArgs>
+        RetType operator()(RealArgs&&... args) {
+            return real(args...);
+        }
+
+        bool operator ==(const Wrapper& oth) {
+            if (simple) {
+                return simple == oth.simple;
+            } else {
+                return real == oth.real;
+            }
+        }
+    };
+
+    using CallbackList = lib::owning_list<Wrapper>;
 
     struct Event {
         CallbackDispatcher& dispatcher;
@@ -26,12 +47,22 @@ public:
         }
     };
 
+
+
     void add(const Callback& callback) {
-        listeners.push_back(callback);
+        listeners.push_back(Wrapper(callback));
     }
 
     void add(Callback&& callback) {
-        listeners.push_back(std::forward<Callback>(callback));
+        listeners.push_back(Wrapper(std::forward<Callback>(callback)));
+    }
+
+    void add(const SimpleCallback& callback) {
+        auto wrapper = [callback](Event& e, Args... args) -> RetType {
+            callback(std::forward<Args>(args)...);
+            return e.next(std::forward<Args>(args)...);
+        };
+        listeners.push_back(Wrapper(wrapper, callback));
     }
 
     template <typename... RealArgs>

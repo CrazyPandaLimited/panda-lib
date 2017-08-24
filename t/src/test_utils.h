@@ -1,6 +1,7 @@
 #pragma once
 
 #include <panda/CallbackDispatcher.h>
+#include <panda/optional.h>
 
 namespace test {
 

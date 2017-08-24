@@ -10,7 +10,7 @@ using test::Tracer;
 
 
 static bool static_init = [](){
-    panda::Log::loggers().add([](panda::Log::Dispatcher::Event& e, panda::Log::Level l, std::string s) {
+    panda::Log::loggers().add([](panda::Log::Dispatcher::Event&, panda::Log::Level l, std::string s) {
         if (int(l) < int(panda::Log::WARNING)) {
             FAIL(s);
         } else {

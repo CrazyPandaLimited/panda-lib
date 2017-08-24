@@ -45,7 +45,7 @@ public:
     explicit abstract_function(F&& f) : func(std::forward<F>(f)) {}
 
     Ret operator()(Args... args) override {
-        static_assert(std::is_same<decltype(func(args...)), Ret>::value, "return type mismatch");
+        static_assert(std::is_convertible<decltype(func(args...)), Ret>::value, "return type mismatch");
         return func(args...);
     }
 

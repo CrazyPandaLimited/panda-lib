@@ -2,6 +2,7 @@
 #include "test_utils.h"
 #include <panda/function.h>
 #include <panda/refcnt.h>
+#include <panda/string.h>
 
 using panda::function;
 using panda::make_function;
@@ -135,3 +136,39 @@ TEST_CASE("function copy ellision", "[function]") {
     REQUIRE(Tracer::dtor_calls == 2);
 }
 
+TEST_CASE("covariant return type optional" , "[function]") {
+    function<panda::optional<int> (int)> cb = [](int a) -> int {
+        return a;
+    };
+    REQUIRE(cb(3).value_or(42) == 3);
+}
+
+TEST_CASE("covariant return type double" , "[function]") {
+    function<double (int)> cb = [](int a) -> int {
+        return a;
+    };
+    REQUIRE(cb(3) == 3.0);
+}
+
+TEST_CASE("conervariant arguments" , "[function]") {
+    function<double (int)> cb = [](double) -> int {
+        return 10;
+    };
+    REQUIRE(cb(3) == 10);
+}
+
+TEST_CASE("conervariant arguments classes" , "[function]") {
+    using panda::string;
+    struct Base {
+        virtual ~Base(){}
+        virtual string name() { return "base";}
+    };
+    struct Derrived : Base {
+        virtual string name() override { return "override";}
+    };
+    function<Base& (Derrived&)> cb = [](Base& b) -> Base& {
+        return b;
+    };
+    Derrived b;
+    REQUIRE(cb(b).name() == b.name());
+}
