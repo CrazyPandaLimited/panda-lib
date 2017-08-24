@@ -70,7 +70,6 @@ TEST_CASE("callback dispatcher copy ellision" , "[CallbackDispatcher]") {
     REQUIRE(Tracer::copy_calls == 0);
     REQUIRE(Tracer::move_calls == 1); // 1 construction from tmp object function<int(int)> f = Tracer(10);
     REQUIRE(Tracer::dtor_calls == 2);
-
 }
 
 TEST_CASE("callback dispatcher without event" , "[CallbackDispatcher]") {

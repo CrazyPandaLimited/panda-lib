@@ -199,7 +199,8 @@ static inline uint64_t _test_on_thread_start () {
 }
 
 inline bool run_all_cpp_tests() {
-    return Catch::Session().run() == 0;
+    std::vector<const char*> argv = {"test"};
+    return Catch::Session().run(argv.size(), argv.data()) == 0;
 }
 
 #ifdef _WIN32

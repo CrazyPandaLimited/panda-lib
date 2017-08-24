@@ -56,7 +56,7 @@ public:
         return func == foth->func;
     }
 
-    Func func;
+    typename std::remove_reference<Func>::type func;
 };
 
 template <typename Func, typename Ret, typename... Args>
@@ -73,7 +73,7 @@ public:
         return static_cast<const Ifunction<Ret, Args...>*>(this) == oth;
     }
 
-    Func func;
+    typename std::remove_reference<Func>::type func;
 };
 
 

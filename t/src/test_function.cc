@@ -8,6 +8,7 @@ using panda::function;
 using panda::make_function;
 using panda::make_shared;
 using panda::make_method;
+using test::Tracer;
 
 namespace test {
 
@@ -150,14 +151,14 @@ TEST_CASE("covariant return type double" , "[function]") {
     REQUIRE(cb(3) == 3.0);
 }
 
-TEST_CASE("conervariant arguments" , "[function]") {
+TEST_CASE("contravariance of arguments" , "[function]") {
     function<double (int)> cb = [](double) -> int {
         return 10;
     };
     REQUIRE(cb(3) == 10);
 }
 
-TEST_CASE("conervariant arguments classes" , "[function]") {
+TEST_CASE("contravariance of arguments classes" , "[function]") {
     using panda::string;
     struct Base {
         virtual ~Base(){}
@@ -171,4 +172,26 @@ TEST_CASE("conervariant arguments classes" , "[function]") {
     };
     Derrived b;
     REQUIRE(cb(b).name() == b.name());
+}
+
+function<int(int)> lamda() {
+    Tracer t(1);
+    std::cerr << "first" << std::endl;
+    auto wrapper = [t](int a) -> int {
+        Tracer o = t;
+        return a + 1;
+    };
+    return wrapper;
+}
+
+
+TEST_CASE("function memory", "[function], [this]") {
+
+    Tracer::refresh();
+    {
+        auto wrapper = lamda();
+        REQUIRE(wrapper(10) == 11);
+    }
+
+    REQUIRE(Tracer::ctor_total() == Tracer::dtor_calls);
 }

@@ -62,6 +62,7 @@ public:
             callback(std::forward<Args>(args)...);
             return e.next(std::forward<Args>(args)...);
         };
+
         listeners.push_back(Wrapper(wrapper, callback));
     }
 
