@@ -13,7 +13,7 @@ my %params = (
         CPLUS    => 11,
         INCLUDE  => {'src' => '/'},
     },
-	BIN_DEPS => ['CPP::catch::test'],
+    BIN_DEPS => ['CPP::catch::test'],
     CCFLAGS  => '-Wall -Wextra',
     OPTIMIZE  => '-g0 -O2',
     XS => {},
@@ -24,6 +24,10 @@ if ($ENV{TEST_FULL}) {
     ($params{DEFINE}||='') .= ' -DTEST_FULL';
     push @{$params{SRC}||=[]}, 't/src';
     $params{XS}{'lib.xs'} = 'lib.c';
+    ($params{CCFLAGS}||='') .= ' -fsanitize=undefined';
+    push @{$params{LIBS}||=[]}, '-lubsan'; #sanitizer
+    ($params{BIN_SHARE}{CCFLAGS}||='') .= ' -fsanitize=undefined -fno-sanitize=alignment';
+    push @{$params{BIN_SHARE}{LIBS}||=[]}, '-lubsan'; #sanitizer
 }
 
 write_makefile(%params);

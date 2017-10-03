@@ -13,7 +13,8 @@
 
 #undef seed
 #define CATCH_CONFIG_RUNNER
-#include "catch.hpp"
+#include <catch.hpp>
+#include <panda/log.h>
 
 using std::string_view;
 using namespace panda::lib;
@@ -199,6 +200,14 @@ static inline uint64_t _test_on_thread_start () {
 }
 
 inline bool run_all_cpp_tests() {
+    panda::Log::loggers().add([](panda::Log::Dispatcher::Event&, panda::Log::Level l, std::string s) {
+        if (int(l) < int(panda::Log::WARNING)) {
+            FAIL(s);
+        } else {
+            INFO(s);
+        }
+    });
+
     std::vector<const char*> argv = {"test"};
     return Catch::Session().run(argv.size(), argv.data()) == 0;
 }

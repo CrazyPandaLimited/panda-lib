@@ -44,10 +44,7 @@ public:
     using LogFunction = void (Level, const std::string&);
     using Dispatcher = CallbackDispatcher<LogFunction>;
 
-    static Dispatcher& loggers() {
-        static Dispatcher inst;
-        return inst;
-    }
+    static Dispatcher& loggers();
 
 private:
     std::string s;

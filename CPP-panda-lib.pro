@@ -10,6 +10,7 @@ SOURCES += \
     src/panda/lib/hash.cc \
     src/panda/lib/memory.cc \
     src/panda/lib.cc \
+    src/panda/log.cc \
     t/src/test_function.cc \
     t/src/test_dispatcher.cc \
     t/src/test_owning_list.cc
