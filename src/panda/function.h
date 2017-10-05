@@ -71,12 +71,12 @@ class function<Ret (Args...)> : public function<Ret, Args...>{
 };
 
 template <class Class, typename Ret, typename... Args>
-inline function<Ret, Args...> make_function(Ret (Class::*meth)(Args...), shared_ptr<Class> thiz = nullptr) {
+inline function<Ret( Args...)> make_function(Ret (Class::*meth)(Args...), shared_ptr<Class> thiz = nullptr) {
     return function<Ret(Args...)>(meth, thiz);
 }
 
 template <typename Ret, typename... Args>
-inline function<Ret, Args...> make_function(Ret (*f)(Args...)) {
+inline function<Ret (Args...)> make_function(Ret (*f)(Args...)) {
     return function<Ret(Args...)>(f);
 }
 
