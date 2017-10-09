@@ -185,7 +185,7 @@ function<int(int)> lamda() {
 }
 
 
-TEST_CASE("function memory", "[function], [this]") {
+TEST_CASE("function memory", "[function]") {
 
     Tracer::refresh();
     {
