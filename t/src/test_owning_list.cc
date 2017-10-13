@@ -4,21 +4,8 @@
 #include "test_utils.h"
 #include <panda/log.h>
 
-
 using panda::lib::owning_list;
 using test::Tracer;
-
-
-static bool static_init = [](){
-    panda::Log::loggers().add([](panda::Log::Dispatcher::Event&, panda::Log::Level l, std::string s) {
-        if (int(l) < int(panda::Log::WARNING)) {
-            FAIL(s);
-        } else {
-            INFO(s);
-        }
-    });
-    return true;
-}();
 
 TEST_CASE("empty owning_list" , "[owning_list]") {
     owning_list<int> list;

@@ -5,11 +5,34 @@
 #include <iostream>
 #include <vector>
 #include <panda/function.h>
+#include <panda/string_view.h>
 #include <panda/CallbackDispatcher.h>
 #include <string.h>
 #include <chrono>
+#include <math.h>
 
 namespace panda {
+
+namespace logger {
+    struct CodePoint {
+        std::string_view file;
+        uint32_t line;
+    };
+
+    template <typename S>
+    S& operator <<(S& stream, const CodePoint& cp) {
+        size_t total = cp.file.size() + log10(cp.line) + 2;
+        const char* whitespaces = "                        "; // 24 spaces
+        if (total < 24) {
+            whitespaces += total;
+        } else {
+            whitespaces = "";
+        }
+        stream << cp.file << ":" << cp.line << whitespaces;
+        return stream;
+    }
+}
+
 class Log
 {
 public:
@@ -22,9 +45,16 @@ public:
         DEBUG
     };
 
-    Log(Level log_level = DEBUG)
-        : level(log_level)
+    Log(logger::CodePoint cp, Level log_level = DEBUG)
+        : level(log_level),
+          cp(cp)
     {}
+
+    Log(Log&& oth) = default;
+
+    explicit operator bool() const {
+        return should_log(level, cp);
+    }
 
     template <typename T>
     std::ostringstream& operator <<(T&& t)
@@ -38,18 +68,22 @@ public:
         os.flush();
         s = os.str();
 
-        loggers()(level, s);
+        loggers()(level, cp, s);
     }
 
-    using LogFunction = void (Level, const std::string&);
+    using FilterFunction = function<bool (Level, logger::CodePoint)>;
+    using LogFunction = void (Level, logger::CodePoint, const std::string&);
     using Dispatcher = CallbackDispatcher<LogFunction>;
 
     static Dispatcher& loggers();
+    static void set_filter(const FilterFunction& filter);
 
+    static bool should_log(Level level, logger::CodePoint cp);
 private:
     std::string s;
     std::ostringstream os;
     Level level;
+    logger::CodePoint cp;
 };
 #ifdef WIN323
 #  define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
@@ -57,10 +91,10 @@ private:
 #  define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif // WIN32
 
+#define _panda_code_point_ panda::logger::CodePoint{__FILENAME__, __LINE__}
+#define _panda_log_impl_(LEVEL, MSG) panda::Log::should_log(panda::Log::LEVEL, _panda_code_point_) \
+                                 && (panda::Log(_panda_code_point_, panda::Log::LEVEL) << MSG)
 
-#define _panda_log_impl_(LEVEL, MSG) panda::Log(panda::Log::LEVEL) << __FILENAME__ << " " << __LINE__ << " " << MSG
-
-//#define panda_debug_v(VAR) Log(Log::DEBUG) << __FILENAME__ << " " << __LINE__ << " " << #VAR << " = " << (VAR)
 #define panda_debug_v(VAR) _panda_log_impl_(DEBUG, #VAR << " = " << (VAR))
 
 #define panda_log_debug(MSG) _panda_log_impl_(DEBUG, MSG)

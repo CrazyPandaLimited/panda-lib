@@ -200,12 +200,13 @@ static inline uint64_t _test_on_thread_start () {
 }
 
 inline bool run_all_cpp_tests() {
-    panda::Log::loggers().add([](panda::Log::Dispatcher::Event&, panda::Log::Level l, std::string s) {
+    panda::Log::loggers().add([](panda::Log::Dispatcher::Event& e, panda::Log::Level l, panda::logger::CodePoint cp, std::string s) {
         if (int(l) < int(panda::Log::WARNING)) {
             FAIL(s);
         } else {
             INFO(s);
         }
+        return e.next(l, cp, s);
     });
 
     std::vector<const char*> argv = {"test"};

@@ -176,7 +176,6 @@ TEST_CASE("contravariance of arguments classes" , "[function]") {
 
 function<int(int)> lamda() {
     Tracer t(1);
-    std::cerr << "first" << std::endl;
     auto wrapper = [t](int a) -> int {
         Tracer o = t;
         return a + 1;
