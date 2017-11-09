@@ -4,7 +4,6 @@
 
 namespace panda {
 
-using panda::make_shared;
 using panda::shared_ptr;
 
 template <typename Ret, typename... Args>
@@ -99,14 +98,14 @@ public:
 
 template <typename Ret, typename... Args>
 auto make_abstract_function(Ret (*f)(Args...)) -> shared_ptr<abstract_function<Ret (*)(Args...), Ret, true, Args...>> {
-    return make_shared<abstract_function<Ret (*)(Args...), Ret, true, Args...>>(f);
+    return panda::make_shared<abstract_function<Ret (*)(Args...), Ret, true, Args...>>(f);
 }
 
 template <typename Ret, typename... Args,
           typename Functor, bool IsComp = is_comparable<typename std::remove_reference<Functor>::type>::value,
           typename = decltype(std::declval<Functor>()(std::declval<Args>()...))>
 shared_ptr<abstract_function<Functor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f) {
-    return make_shared<abstract_function<Functor, Ret, IsComp, Args...>>(std::forward<Functor>(f));
+    return panda::make_shared<abstract_function<Functor, Ret, IsComp, Args...>>(std::forward<Functor>(f));
 }
 
 template <class Class, typename Ret, typename... Args>
@@ -150,11 +149,11 @@ private:
 
 template <class Class, typename Ret, typename... Args>
 inline shared_ptr<method<Class, Ret, Args...>> make_method(Ret (Class::*meth)(Args...), shared_ptr<Class> thiz = nullptr) {
-    return make_shared<method<Class, Ret, Args...>>(meth, thiz);
+    return panda::make_shared<method<Class, Ret, Args...>>(meth, thiz);
 }
 
 template <typename Ret, typename... Args, class Class>
 inline shared_ptr<method<Class, Ret, Args...>> make_abstract_function(Ret (Class::*meth)(Args...), shared_ptr<Class> thiz = nullptr) {
-    return make_shared<method<Class, Ret, Args...>>(meth, thiz);
+    return panda::make_shared<method<Class, Ret, Args...>>(meth, thiz);
 }
 }
