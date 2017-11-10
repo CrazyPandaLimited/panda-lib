@@ -33,6 +33,14 @@ public:
                 return real == oth.real;
             }
         }
+
+        bool operator ==(const SimpleCallback& oth) {
+            if (simple) {
+                return simple == oth;
+            } else {
+               return false;
+            }
+        }
     };
 
     using CallbackList = lib::owning_list<Wrapper>;
@@ -87,6 +95,10 @@ public:
 
     void remove_all() {
         listeners.clear();
+    }
+
+    bool has_listeners() const {
+        return listeners.size();
     }
 
 private:
