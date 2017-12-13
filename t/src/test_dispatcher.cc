@@ -113,6 +113,8 @@ TEST_CASE("remove callback comparable functor" , "[CallbackDispatcher]") {
         }
     };
 
+    static_assert(panda::has_call_operator<S, int>::value);
+
     S src;
     called = false;
     Dispatcher::SimpleCallback s = src;

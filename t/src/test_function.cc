@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include "test_utils.h"
 #include <panda/function.h>
+#include <panda/function_utils.h>
 #include <panda/refcnt.h>
 #include <panda/string.h>
 
@@ -193,4 +194,38 @@ TEST_CASE("function memory", "[function]") {
     }
 
     REQUIRE(Tracer::ctor_total() == Tracer::dtor_calls);
+}
+
+
+TEST_CASE("lambda self reference", "[function]") {
+    int a = 1;
+    int b;
+    function<void(void)> outer;
+    {
+        auto inner = [=, &b](function<void(void)> self) mutable {
+            if (a == 1) {
+                a++;
+                self();
+            } else {
+                b = 43;
+            }
+        };
+        outer = inner;
+    }
+    outer();
+    REQUIRE(b == 43);
+}
+
+TEST_CASE("no capture self reference", "[function]") {
+    static int a = 0;
+    function<void(int)> outer;
+    {
+        auto inner = [](function<void(int)> self, int val) {
+            while(false) {self(a);}
+            a = val;
+        };
+        outer = inner;
+    }
+    outer(1);
+    REQUIRE(a == 1);
 }

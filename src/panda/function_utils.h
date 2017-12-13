@@ -7,7 +7,10 @@ namespace panda {
 using panda::shared_ptr;
 
 template <typename Ret, typename... Args>
-struct Ifunction : public RefCounted {
+class function;
+
+template <typename Ret, typename... Args>
+struct Ifunction : virtual public RefCounted {
     virtual ~Ifunction() {}
     virtual Ret operator()(Args...) = 0;
     virtual bool equals(Ifunction* oth) const = 0;
@@ -27,14 +30,57 @@ struct is_comparable<T, true> {
     template < typename U > static std::false_type  test( type_check< bool (fallback::*)(const fallback&), &U::operator== >* = 0 );
     template < typename U > static std::true_type   test( ... );
 
-//    static const bool value = sizeof( yes ) == sizeof( test<mixed_type>(nullptr) );
-
     static const bool value = std::is_same<decltype(test<mixed_type>(nullptr)), std::true_type>::value;
+};
+
+
+template<typename T, typename... Args>
+struct has_call_operator {
+private:
+    typedef std::true_type yes;
+    typedef std::false_type no;
+
+    template<typename U> static auto test(int) -> decltype(std::declval<U>()(std::declval<Args>()...), yes());
+    template<typename> static no test(...);
+
+public:
+    static constexpr bool value = std::is_same<decltype(test<T>(0)),yes>::value;
 };
 
 
 template <typename Func, typename Ret, bool Comparable, typename... Args>
 class abstract_function {};
+
+template <typename Func, typename Ret, bool SELF, typename Self,  typename... Args>
+class callable {};
+
+template <typename Func, typename Ret, typename Self, typename... Args>
+class callable<Func, Ret, false, Self, Args...>
+{
+public:
+    template <typename F>
+    explicit callable(F&& f) : func(std::forward<F>(f)) {}
+
+    Ret operator()(Self&, Args... args) {
+        return func(args...);
+    }
+protected:
+    typename std::remove_reference<Func>::type func;
+};
+
+template <typename Func, typename Ret, typename Self, typename... Args>
+class callable<Func, Ret, true, Self, Args...>
+{
+public:
+    template <typename F>
+    explicit callable(F&& f) : func(std::forward<F>(f)) {}
+
+    Ret operator()(Self& self, Args... args) {
+        return func(self, args...);
+    }
+protected:
+    typename std::remove_reference<Func>::type func;
+};
 
 
 template <typename Func, typename Ret, typename... Args>
@@ -59,20 +105,34 @@ public:
 };
 
 template <typename Func, typename Ret, typename... Args>
-class abstract_function<Func, Ret, false, Args...> : public Ifunction<Ret, Args...>{
+class abstract_function<Func, Ret, false, Args...> : public Ifunction<Ret, Args...>
+        , public callable<Func, Ret, !has_call_operator<Func, Args...>::value, function<Ret(Args...)>, Args...>
+{
 public:
-    template <typename F>
-    explicit abstract_function(F&& f) : func(std::forward<F>(f)) {}
+    using Derfed = typename std::remove_reference<Func>::type;
+    using Caller = callable<Func, Ret, !has_call_operator<Func, Args...>::value, function<Ret(Args...)>, Args...>;
+
+    using Caller::callable;
 
     Ret operator()(Args... args) override {
-        return func(args...);
+        function<Ret(Args...)> self(this);
+        return Caller::operator ()(self, args...);
     }
 
     bool equals(Ifunction<Ret, Args...>* oth) const override {
         return static_cast<const Ifunction<Ret, Args...>*>(this) == oth;
     }
 
-    typename std::remove_reference<Func>::type func;
+private:
+    template <Ret(Derfed::*meth)(Args...)>
+    Ret call(Args... args) {
+       return (this->template func.*meth)(args...);
+    }
+
+//    template <Ret(Derfed::*meth)(int, Args...)>
+//    Ret call(Args... args) {
+//       return (this->template func.*meth)(10, args...);
+//    }
 };
 
 
@@ -103,10 +163,17 @@ auto make_abstract_function(Ret (*f)(Args...)) -> shared_ptr<abstract_function<R
 
 template <typename Ret, typename... Args,
           typename Functor, bool IsComp = is_comparable<typename std::remove_reference<Functor>::type>::value,
-          typename = decltype(std::declval<Functor>()(std::declval<Args>()...))>
-shared_ptr<abstract_function<Functor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f) {
+          typename Check = decltype(std::declval<Functor>()(std::declval<Args>()...))>
+shared_ptr<abstract_function<Functor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f, Check(*)() = 0) {
     return panda::make_shared<abstract_function<Functor, Ret, IsComp, Args...>>(std::forward<Functor>(f));
 }
+
+ template <typename Ret, typename... Args,
+           typename Functor, bool IsComp = is_comparable<typename std::remove_reference<Functor>::type>::value,
+           typename Check = decltype(std::declval<Functor>()(function<Ret(Args...)>(), std::declval<Args>()...))>
+ shared_ptr<abstract_function<Functor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f) {
+     return panda::make_shared<abstract_function<Functor, Ret, IsComp, Args...>>(std::forward<Functor>(f));
+ }
 
 template <class Class, typename Ret, typename... Args>
 struct method : public Ifunction<Ret, Args...>{

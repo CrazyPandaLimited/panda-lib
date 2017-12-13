@@ -71,6 +71,8 @@ public:
             return e.next(std::forward<Args>(args)...);
         };
 
+        static_assert(panda::has_call_operator<decltype(wrapper), Event&, Args...>::value);
+
         listeners.push_back(Wrapper(wrapper, callback));
     }
 

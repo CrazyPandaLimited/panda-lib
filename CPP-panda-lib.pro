@@ -47,4 +47,5 @@ DISTFILES += \
     t/src/string.xsi \
     t/src/string_containers.xsi \
     t/src/test.xsi \
-    lib.xs
+    lib.xs \
+    Makefile.PL

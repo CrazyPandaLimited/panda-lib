@@ -48,6 +48,9 @@ public:
         : func(make_abstract_function<Ret, Args...>(std::forward<F>(f)...))
     {}
 
+
+    function(Func func) : func(func) {};
+
     function(const function& oth) = default;
     function(function&& oth) = default;
 
