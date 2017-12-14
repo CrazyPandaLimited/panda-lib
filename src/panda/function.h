@@ -70,7 +70,10 @@ public:
 
 template <typename Ret, typename... Args>
 class function<Ret (Args...)> : public function<Ret, Args...>{
+public:
     using function<Ret, Args...>::function;
+    using ArgsTuple = std::tuple<Args...>;
+    using RetType = Ret;
 };
 
 template <class Class, typename Ret, typename... Args>
