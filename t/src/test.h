@@ -11,6 +11,11 @@
 #include <panda/unordered_string_map.h>
 #include <panda/unordered_string_set.h>
 
+#undef seed
+#define CATCH_CONFIG_RUNNER
+#include <catch.hpp>
+#include <panda/log.h>
+
 using std::string_view;
 using namespace panda::lib;
 
@@ -192,6 +197,20 @@ static inline uint64_t _test_on_thread_start () {
         StaticMemoryPool<16>::tls_instance()->deallocate(mem);
     }
     return ret;
+}
+
+inline bool run_all_cpp_tests() {
+    panda::Log::loggers().add([](panda::Log::Dispatcher::Event& e, panda::Log::Level l, panda::logger::CodePoint cp, std::string s) {
+        if (int(l) < int(panda::Log::WARNING)) {
+            FAIL(s);
+        } else {
+            INFO(s);
+        }
+        return e.next(l, cp, s);
+    });
+
+    std::vector<const char*> argv = {"test"};
+    return Catch::Session().run(argv.size(), argv.data()) == 0;
 }
 
 #ifdef _WIN32
