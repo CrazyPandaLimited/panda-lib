@@ -74,10 +74,56 @@ TEST_CASE("callback dispatcher copy ellision" , "[CallbackDispatcher]") {
 
 TEST_CASE("callback dispatcher without event" , "[CallbackDispatcher]") {
     Dispatcher d;
-    Dispatcher::SimpleCallback s = [](int a) {
+    bool called = false;
+    Dispatcher::SimpleCallback s = [&](int a) {
+        called = true;
         return a;
     };
     d.add(s);
     REQUIRE(d(2).value_or(42) == 42);
+    REQUIRE(called);
+}
+
+TEST_CASE("remove callback dispatcher without event" , "[CallbackDispatcher]") {
+    Dispatcher d;
+    bool called = false;
+    Dispatcher::SimpleCallback s = [&](int a) {
+        called = true;
+        return a;
+    };
+    d.add(s);
+    REQUIRE(d(2).value_or(42) == 42);
+    REQUIRE(called);
+    d.remove(s);
+    called = false;
+    REQUIRE(d(2).value_or(42) == 42);
+    REQUIRE(!called);
+}
+
+TEST_CASE("remove callback comparable functor" , "[CallbackDispatcher]") {
+    Dispatcher d;
+    static bool called;
+    struct S {
+        int operator()(int a) {
+            called = true;
+            return a +10;
+        }
+        bool operator ==(const S& oth) const {
+            return true;
+        }
+    };
+
+    static_assert(panda::has_call_operator<S, int>::value);
+
+    S src;
+    called = false;
+    Dispatcher::SimpleCallback s = src;
+    d.add(s);
+    CHECK(d(2).value_or(42) == 42);
+    CHECK(called);
+    d.remove(s);
+    called = false;
+    CHECK(d(2).value_or(42) == 42);
+    CHECK(!called);
 }
 

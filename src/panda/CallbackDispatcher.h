@@ -33,6 +33,14 @@ public:
                 return real == oth.real;
             }
         }
+
+        bool operator ==(const SimpleCallback& oth) {
+            if (simple) {
+                return simple == oth;
+            } else {
+               return false;
+            }
+        }
     };
 
     using CallbackList = lib::owning_list<Wrapper>;
@@ -63,6 +71,8 @@ public:
             return e.next(std::forward<Args>(args)...);
         };
 
+        static_assert(panda::has_call_operator<decltype(wrapper), Event&, Args...>::value);
+
         listeners.push_back(Wrapper(wrapper, callback));
     }
 
@@ -87,6 +97,10 @@ public:
 
     void remove_all() {
         listeners.clear();
+    }
+
+    bool has_listeners() const {
+        return listeners.size();
     }
 
 private:
