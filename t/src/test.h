@@ -200,14 +200,17 @@ static inline uint64_t _test_on_thread_start () {
 }
 
 inline bool run_all_cpp_tests() {
-    panda::Log::loggers().add([](panda::Log::Dispatcher::Event& e, panda::Log::Level l, panda::logger::CodePoint cp, std::string s) {
-        if (int(l) < int(panda::Log::WARNING)) {
-            FAIL(s);
-        } else {
-            INFO(s);
+    struct CatchLogger : panda::logger::ILogger {
+        virtual void log(panda::logger::Level l, panda::logger::CodePoint cp, const std::string& s) override {
+            if (int(l) < int(panda::logger::WARNING)) {
+                FAIL(cp << "\t" << s);
+            } else {
+                INFO(cp << "\t" << s);
+            }
         }
-        return e.next(l, cp, s);
-    });
+    };
+
+    panda::Log::logger().reset(new CatchLogger);
 
     std::vector<const char*> argv = {"test"};
     return Catch::Session().run(argv.size(), argv.data()) == 0;

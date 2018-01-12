@@ -10,7 +10,7 @@ my %params = (
     SRC           => ['src'],
     INC           => '-Isrc',
     BIN_SHARE     => {
-        CPLUS    => 11,
+        CPLUS    => 14,
         INCLUDE  => {'src' => '/'},
     },
     BIN_DEPS => ['CPP::catch::test'],
