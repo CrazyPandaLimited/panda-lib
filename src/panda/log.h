@@ -14,9 +14,21 @@
 namespace panda {
 
 namespace logger {
+    struct CodePoint;
+
+    template <typename S>
+    S& operator <<(S& stream, const CodePoint& cp);
+
     struct CodePoint {
         std::string_view file;
         uint32_t line;
+
+        std::string to_string() const {
+            std::ostringstream os;
+            os << *this;
+            os.flush();
+            return os.str();
+        }
     };
 
     template <typename S>
@@ -31,11 +43,8 @@ namespace logger {
         stream << cp.file << ":" << cp.line << whitespaces;
         return stream;
     }
-}
 
-class Log
-{
-public:
+
     enum Level {
         EMERGENCY,
         CRITICAL,
@@ -45,7 +54,17 @@ public:
         DEBUG
     };
 
-    Log(logger::CodePoint cp, Level log_level = DEBUG)
+    struct ILogger {
+        virtual bool should_log(Level, CodePoint) {return true;}
+        virtual void log(Level, CodePoint, const std::string&) = 0;
+    };
+}
+
+class Log
+{
+public:
+
+    Log(logger::CodePoint cp, logger::Level log_level = logger::DEBUG)
         : level(log_level),
           cp(cp)
     {}
@@ -65,24 +84,25 @@ public:
 
     ~Log()
     {
+        if (!logger()) {
+            return;
+        }
         os.flush();
         s = os.str();
 
-        loggers()(level, cp, s);
+        logger()->log(level, cp, s);
     }
 
-    using FilterFunction = function<bool (Level, logger::CodePoint)>;
-    using LogFunction = void (Level, logger::CodePoint, const std::string&);
-    using Dispatcher = CallbackDispatcher<LogFunction>;
+    static std::unique_ptr<logger::ILogger>& logger();
 
-    static Dispatcher& loggers();
-    static void set_filter(const FilterFunction& filter);
+    static bool should_log(logger::Level level, logger::CodePoint cp);
 
-    static bool should_log(Level level, logger::CodePoint cp);
+    static void set_max_level(logger::Level val);
+
 private:
     std::string s;
     std::ostringstream os;
-    Level level;
+    logger::Level level;
     logger::CodePoint cp;
 };
 #ifdef WIN323
@@ -92,8 +112,8 @@ private:
 #endif // WIN32
 
 #define _panda_code_point_ panda::logger::CodePoint{__FILENAME__, __LINE__}
-#define _panda_log_impl_(LEVEL, MSG) panda::Log::should_log(panda::Log::LEVEL, _panda_code_point_) \
-                                 && (panda::Log(_panda_code_point_, panda::Log::LEVEL) << MSG)
+#define _panda_log_impl_(LEVEL, MSG) panda::Log::should_log(panda::logger::LEVEL, _panda_code_point_) \
+                                 && (panda::Log(_panda_code_point_, panda::logger::LEVEL) << MSG)
 
 #define panda_debug_v(VAR) _panda_log_impl_(DEBUG, #VAR << " = " << (VAR))
 

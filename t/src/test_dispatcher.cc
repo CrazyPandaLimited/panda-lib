@@ -108,7 +108,7 @@ TEST_CASE("remove callback comparable functor" , "[CallbackDispatcher]") {
             called = true;
             return a +10;
         }
-        bool operator ==(const S& oth) const {
+        bool operator ==(const S&) const {
             return true;
         }
     };

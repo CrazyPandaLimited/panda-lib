@@ -3,6 +3,7 @@
 #include <atomic>
 #include <stdint.h>
 #include <stddef.h>
+#include <type_traits>
 #include <panda/cast.h>
 
 namespace panda {
