@@ -9,6 +9,7 @@ using panda::function;
 using panda::make_function;
 using panda::make_shared;
 using panda::make_method;
+using panda::tmp_abstract_function;
 using test::Tracer;
 
 namespace test {
@@ -27,12 +28,16 @@ int foo2() {return 1;};
 class Test {
 public:
     int value = 0;
+
+    Test(int value) : value(value) {}
+    Test() : value(0) {}
+
     void foo(int) {}
     void foo2(int) {}
     int bar() {return value + 40;}
 
     int operator()(int v) {return v;}
-    //bool operator == (const Test& oth) const { return false;}
+    bool operator == (const Test& oth) const { return value == oth.value;}
 };
 }
 
@@ -82,6 +87,9 @@ TEST_CASE("function ptr comparations", "[function]") {
 
     REQUIRE(f1_void == f2_void);
     REQUIRE(f1_void != f3_void);
+
+    REQUIRE(f1_void == tmp_abstract_function(&void_func));
+    REQUIRE(f1_void != tmp_abstract_function(&void_func2));
 }
 
 TEST_CASE("methods comparations", "[function]") {
@@ -122,6 +130,18 @@ TEST_CASE("mixed function comparations", "[function]") {
     REQUIRE(l != f);
     REQUIRE(m != l);
     REQUIRE(m != f);
+}
+
+TEST_CASE("functors comparations", "[function]") {
+    function<int(int)> f1 = Test(1);
+    function<int(int)> f2 = Test(2);
+    function<int(int)> f11 = Test(1);
+
+    REQUIRE(f1 != f2);
+    REQUIRE(f1 == f11);
+
+    auto tmp1 = tmp_abstract_function<int, int>(Test(1)); // inited from rvalue
+    REQUIRE(f1 == tmp1);
 }
 
 TEST_CASE("function copy ellision", "[function]") {
