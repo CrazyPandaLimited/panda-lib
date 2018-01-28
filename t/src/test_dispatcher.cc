@@ -135,9 +135,7 @@ TEST_CASE("remove callback comparable functor" , "[CallbackDispatcher]") {
     CHECK(d(2).value_or(42) == 42);
     CHECK(called);
 
-    auto tmp = tmp_abstract_function<int, int>(src);
-    bool smt = s == tmp;
-    d.remove(tmp);
+    d.remove_object(S(src));
     called = false;
     CHECK(d(2).value_or(42) == 42);
     CHECK(!called);
