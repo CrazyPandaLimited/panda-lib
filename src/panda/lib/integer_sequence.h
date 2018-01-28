@@ -1,5 +1,5 @@
 #pragma once
-#if __cplusplus > 201402L
+#if __cplusplus >= 201402L
 #  include <utility>
 #else
 namespace std {
