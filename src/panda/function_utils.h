@@ -109,17 +109,16 @@ public:
 
 template <typename Func, typename Ret, typename... Args>
 class abstract_function<Func, Ret, false, Args...> : public Ifunction<Ret, Args...>
-        , public callable<Func, Ret, !has_call_operator<Func, Args...>::value, function<Ret(Args...)>, Args...>
+        , public callable<Func, Ret, !has_call_operator<Func, Args...>::value, Ifunction<Ret, Args...>, Args...>
 {
 public:
     using Derfed = typename std::remove_reference<Func>::type;
-    using Caller = callable<Func, Ret, !has_call_operator<Func, Args...>::value, function<Ret(Args...)>, Args...>;
+    using Caller = callable<Func, Ret, !has_call_operator<Func, Args...>::value, Ifunction<Ret, Args...>, Args...>;
 
     using Caller::callable;
 
     Ret operator()(Args... args) override {
-        function<Ret(Args...)> self(this);
-        return Caller::operator ()(self, args...);
+        return Caller::operator()(*this, args...);
     }
 
     bool equals(const Ifunction<Ret, Args...>* oth) const override {
@@ -188,7 +187,7 @@ abstract_function<DeFunctor, Ret, IsComp, Args...> tmp_abstract_function(Functor
 template <typename Ret, typename... Args,
           typename Functor, bool IsComp = is_comparable<typename std::remove_reference<Functor>::type>::value,
           typename DeFunctor = typename std::remove_reference<Functor>::type,
-          typename Check = decltype(std::declval<Functor>()(function<Ret(Args...)>(), std::declval<Args>()...))>
+          typename Check = decltype(std::declval<Functor>()(std::declval<Ifunction<Ret, Args...>&>(), std::declval<Args>()...))>
 shared_ptr<abstract_function<DeFunctor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f) {
     return panda::make_shared<abstract_function<DeFunctor, Ret, IsComp, Args...>>(std::forward<Functor>(f));
 }
@@ -196,7 +195,7 @@ shared_ptr<abstract_function<DeFunctor, Ret, IsComp, Args...>> make_abstract_fun
 template <typename Ret, typename... Args,
           typename Functor, bool IsComp = is_comparable<typename std::remove_reference<Functor>::type>::value,
           typename DeFunctor = typename std::remove_reference<Functor>::type,
-          typename Check = decltype(std::declval<Functor>()(function<Ret(Args...)>(), std::declval<Args>()...))>
+          typename Check = decltype(std::declval<Functor>()(std::declval<Ifunction<Ret, Args...>&>(), std::declval<Args>()...))>
 abstract_function<DeFunctor, Ret, IsComp, Args...> tmp_abstract_function(Functor&& f) {
     return abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
 }

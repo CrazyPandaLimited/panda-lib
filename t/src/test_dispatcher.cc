@@ -2,6 +2,7 @@
 #include "test_utils.h"
 #include <panda/CallbackDispatcher.h>
 #include <panda/function_utils.h>
+#include <panda/lib/from_chars.h>
 
 using panda::CallbackDispatcher;
 using test::Tracer;
@@ -175,6 +176,24 @@ TEST_CASE("remove callback comparable full functor" , "[CallbackDispatcher]") {
     CHECK(d(2).value_or(42) == 12);
     CHECK(called);
     d.remove_object(S(src));
+    called = false;
+    CHECK(d(2).value_or(42) == 42);
+    CHECK(!called);
+}
+
+TEST_CASE("remove callback self lambda" , "[CallbackDispatcher]") {
+    Dispatcher d;
+    static bool called;
+    auto l = [&](panda::Ifunction<int, int>& self, int a) {
+        d.remove(self);
+        called = true;
+        return a + 10;
+    };
+
+    Dispatcher::SimpleCallback s = l;
+    d.add(s);
+    CHECK(d(2).value_or(42) == 42);
+    CHECK(called);
     called = false;
     CHECK(d(2).value_or(42) == 42);
     CHECK(!called);

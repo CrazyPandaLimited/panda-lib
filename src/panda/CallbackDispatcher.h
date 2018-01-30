@@ -34,15 +34,7 @@ public:
             }
         }
 
-        bool equal(const SimpleCallback& oth) {
-            if (simple) {
-                return simple == oth;
-            } else {
-               return false;
-            }
-        }
-
-        template <typename T, typename = decltype(simple == std::declval<T>())>
+        template <typename T, typename = decltype(simple == std::declval<const T&>())>
         bool equal(const T& oth) {
             if (simple) {
                 return simple == oth;

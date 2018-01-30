@@ -222,10 +222,10 @@ TEST_CASE("lambda self reference", "[function]") {
     int b;
     function<void(void)> outer;
     {
-        auto inner = [=, &b](function<void(void)> self) mutable {
+        auto inner = [=, &b](panda::Ifunction<void>& self) mutable {
             if (a == 1) {
                 a++;
-                self();
+                self();;
             } else {
                 b = 43;
             }
@@ -240,7 +240,7 @@ TEST_CASE("no capture self reference", "[function]") {
     static int a = 0;
     function<void(int)> outer;
     {
-        auto inner = [](function<void(int)> self, int val) {
+        auto inner = [](panda::Ifunction<void, int>& self, int val) {
             while(false) {self(a);}
             a = val;
         };
