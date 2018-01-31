@@ -1,7 +1,9 @@
 #pragma once
 #include <memory>
+#include <atomic>
 #include <stdint.h>
 #include <stddef.h>
+#include <type_traits>
 #include <panda/cast.h>
 
 namespace panda {
@@ -45,19 +47,25 @@ namespace {
     };
 }
 
-class RefCounted {
+template <typename Storage>
+class RefCountedImpl {
 public:
     void    retain  () const { ++_refcnt; on_retain(); }
     void    release () const { bool delete_me = --_refcnt <= 0; on_release(); if (delete_me && _refcnt <= 0) delete this; }
     int32_t refcnt  () const { return _refcnt; }
 protected:
-    RefCounted () : _refcnt(0) {}
+    RefCountedImpl () : _refcnt(0) {}
     virtual void on_retain  () const {}
     virtual void on_release () const {}
-    virtual ~RefCounted () {}
+    virtual ~RefCountedImpl () {}
 private:
-    mutable int32_t _refcnt;
+    mutable Storage _refcnt;
 };
+
+using RefCounted = RefCountedImpl<int32_t>;
+
+template<bool SAFE = true>
+using RefCountedThreadSafe = RefCountedImpl< typename std::conditional<SAFE, std::atomic<int32_t>, int32_t>::type >;
 
 template <typename T, bool A = IsRefCounted<T>::value>
 class shared_ptr {};
