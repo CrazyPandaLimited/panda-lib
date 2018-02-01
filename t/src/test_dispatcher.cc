@@ -163,20 +163,19 @@ TEST_CASE("remove callback comparable full functor" , "[CallbackDispatcher]") {
     called = false;
     Dispatcher::Callback s = src;
     d.add(s);
-    CHECK(d(2).value_or(42) == 12);
-    CHECK(called);
-    d.remove(s);
-    called = false;
-    CHECK(d(2).value_or(42) == 42);
-    CHECK(!called);
-
-    d.add(s);
-    called = false;
 
     CHECK(d(2).value_or(42) == 12);
     CHECK(called);
-    d.remove_object(S(src));
     called = false;
+
+    SECTION("standatd remove") {
+        d.remove(s);
+    }
+
+    SECTION("fast remove") {
+        d.remove_object(S(src));
+    }
+
     CHECK(d(2).value_or(42) == 42);
     CHECK(!called);
 }
