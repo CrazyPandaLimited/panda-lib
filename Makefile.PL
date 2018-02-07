@@ -15,8 +15,8 @@ my %params = (
     },
     BIN_DEPS => ['CPP::catch::test'],
     CCFLAGS  => '-Wall -Wextra',
-    #OPTIMIZE  => '-g0 -O2',
-    OPTIMIZE  => '-g0',
+    OPTIMIZE  => '-g0 -O2',
+    #OPTIMIZE  => '-g0',
     XS => {},
     #CC => 'clang++',
 );
