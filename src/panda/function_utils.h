@@ -112,7 +112,8 @@ public:
     using Derfed = typename std::remove_reference<Func>::type;
     using Caller = callable<Func, Ret, !has_call_operator<Func, Args...>::value, function<Ret(Args...)>, Args...>;
 
-    using Caller::callable;
+    template <typename F>
+    explicit abstract_function(F&& f) : Caller(std::forward<F>(f)) {}
 
     Ret operator()(Args... args) override {
         function<Ret(Args...)> self(this);

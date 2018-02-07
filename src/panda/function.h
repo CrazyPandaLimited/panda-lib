@@ -36,7 +36,7 @@ public:
 
 public:
     function(){}
-    function(nullptr_t){}
+    function(std::nullptr_t){}
 
     template <typename Derr>
     function(const shared_ptr<Derr>& f) : func(f) {}

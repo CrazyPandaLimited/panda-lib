@@ -1,5 +1,4 @@
-#include "catch.hpp"
-#include "test_utils.h"
+#include "test.h"
 #include <panda/CallbackDispatcher.h>
 
 using panda::CallbackDispatcher;

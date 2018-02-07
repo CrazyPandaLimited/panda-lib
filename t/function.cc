@@ -1,5 +1,4 @@
-#include "catch.hpp"
-#include "test_utils.h"
+#include "test.h"
 #include <panda/function.h>
 #include <panda/function_utils.h>
 #include <panda/refcnt.h>
@@ -15,12 +14,6 @@ namespace test {
 
 void void_func(){}
 void void_func2(){}
-
-int Tracer::copy_calls = 0;
-int Tracer::ctor_calls = 0;
-int Tracer::move_calls = 0;
-int Tracer::dtor_calls = 0;
-
 
 int foo2() {return 1;};
 
