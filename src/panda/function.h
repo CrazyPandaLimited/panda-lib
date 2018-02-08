@@ -63,6 +63,11 @@ public:
     }
     bool operator !=(const function& oth) const {return !operator ==(oth);}
 
+    bool operator ==(const Ifunction<Ret, Args...>& oth) const {
+        return func && func->equals(&oth);
+    }
+    bool operator !=(const Ifunction<Ret, Args...>& oth) const {return !operator ==(oth);}
+
     explicit operator bool() const {
         return func;
     }
