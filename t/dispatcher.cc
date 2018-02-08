@@ -1,5 +1,4 @@
-#include "catch.hpp"
-#include "test_utils.h"
+#include "test.h"
 #include <panda/CallbackDispatcher.h>
 #include <panda/function_utils.h>
 #include <panda/lib/from_chars.h>
