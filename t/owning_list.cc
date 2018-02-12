@@ -1,7 +1,6 @@
-#include "catch.hpp"
+#include "test.h"
 #include <panda/lib/owning_list.h>
 #include <iostream>
-#include "test_utils.h"
 #include <panda/log.h>
 
 using panda::lib::owning_list;

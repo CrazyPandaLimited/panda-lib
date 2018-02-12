@@ -40,7 +40,8 @@ HEADERS += \
     src/panda/log.h \
     t/src/test.h \
     t/src/test_utils.h \
-    src/panda/lib/owning_list.h
+    src/panda/lib/owning_list.h \
+    src/panda/lib/integer_sequence.h
 
 DISTFILES += \
     t/src/from_chars.xsi \

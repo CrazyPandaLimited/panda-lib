@@ -1,9 +1,12 @@
-#include "catch.hpp"
-#include "test_utils.h"
+#include "test.h"
 #include <panda/CallbackDispatcher.h>
+#include <panda/function_utils.h>
+#include <panda/lib/from_chars.h>
 
 using panda::CallbackDispatcher;
 using test::Tracer;
+using panda::tmp_abstract_function;
+using panda::make_abstract_function;
 
 using Dispatcher = CallbackDispatcher<int(int)>;
 using Event = Dispatcher::Event;
@@ -126,5 +129,70 @@ TEST_CASE("remove callback comparable functor" , "[CallbackDispatcher]") {
     called = false;
     CHECK(d(2).value_or(42) == 42);
     CHECK(!called);
+
+    called = false;
+    d.add(s);
+    CHECK(d(2).value_or(42) == 42);
+    CHECK(called);
+
+    d.remove_object(S(src));
+    called = false;
+    CHECK(d(2).value_or(42) == 42);
+    CHECK(!called);
 }
 
+TEST_CASE("remove callback comparable full functor" , "[CallbackDispatcher]") {
+    Dispatcher d;
+    static bool called;
+    struct S {
+        int operator()(Dispatcher::Event& e, int a) {
+            called = true;
+            e.next(a);
+            return a + 10;
+        }
+        bool operator ==(const S&) const {
+            return true;
+        }
+    };
+
+    static_assert(panda::has_call_operator<S,Dispatcher::Event&, int>::value,
+                  "S shuld be callable, it can be wrong implementation of panda::has_call_operator or a compiler error");
+
+    S src;
+    called = false;
+    Dispatcher::Callback s = src;
+    d.add(s);
+
+    CHECK(d(2).value_or(42) == 12);
+    CHECK(called);
+    called = false;
+
+    SECTION("standatd remove") {
+        d.remove(s);
+    }
+
+    SECTION("fast remove") {
+        d.remove_object(S(src));
+    }
+
+    CHECK(d(2).value_or(42) == 42);
+    CHECK(!called);
+}
+
+TEST_CASE("remove callback self lambda" , "[CallbackDispatcher]") {
+    Dispatcher d;
+    static bool called;
+    auto l = [&](panda::Ifunction<int, int>& self, int a) {
+        d.remove(self);
+        called = true;
+        return a + 10;
+    };
+
+    Dispatcher::SimpleCallback s = l;
+    d.add(s);
+    CHECK(d(2).value_or(42) == 42);
+    CHECK(called);
+    called = false;
+    CHECK(d(2).value_or(42) == 42);
+    CHECK(!called);
+}
