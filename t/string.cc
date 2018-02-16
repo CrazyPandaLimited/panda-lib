@@ -1178,11 +1178,9 @@ struct test_string {
         const String& ss = s;
         String tmp(s);
         get_allocs();
-        // TODO: use_count() == 1 would FAIL if change 'ss' to 's', because front(), at(), [] and back() now detaches even for reading
-        // TODO: should be fixed in basic_string.h
 
         SECTION("front") {
-            REQUIRE(ss.front() == (T)'0');
+            REQUIRE(s.front() == (T)'0');
             REQUIRE(s.use_count() == 2); // not detached
             s.front() = (T)'9';
             REQUIRE_STRM(String(s, 0, 10), mstr("9123456789"));
@@ -1190,17 +1188,19 @@ struct test_string {
         }
 
         SECTION("at") {
-            REQUIRE(ss.at(1) == (T)'1');
-            REQUIRE(ss.at(2) == (T)'2');
-            REQUIRE_THROWS(ss.at(1000));
+            REQUIRE(s.at(1) == (T)'1');
+            REQUIRE(s.at(2) == (T)'2');
+            REQUIRE_THROWS(s.at(1000));
             REQUIRE(s.use_count() == 2); // not detached
             s.at(1) = (T)'8';
             REQUIRE_STRM(String(s, 0, 10), mstr("0823456789"));
             REQUIRE(s.use_count() == 1); //string detached
+            s.at(0) = s.at(1);
+            REQUIRE_STRM(String(s, 0, 10), mstr("8823456789"));
         }
 
         SECTION("op[]") {
-            REQUIRE(ss[3] == (T)'3');
+            REQUIRE(s[3] == (T)'3');
             REQUIRE(s.use_count() == 2); // not detached
             s[2] = (T)'7';
             REQUIRE_STRM(String(s, 0, 10), mstr("0173456789"));
@@ -1208,7 +1208,7 @@ struct test_string {
         }
 
         SECTION("back") {
-            REQUIRE(ss.back() == (T)'9');
+            REQUIRE(s.back() == (T)'9');
             REQUIRE(s.use_count() == 2); // not detached
             s.back() = (T)'0';
             REQUIRE_STRM(String(s, 40, 10), mstr("0123456780"));
@@ -1222,6 +1222,70 @@ struct test_string {
             REQUIRE_STR(s, exp, 0);
             s = EMPTY;
             REQUIRE_ALLOCS();
+        }
+    }
+
+    static void test_iterator () {
+        String s(cstr("0123456789", 5));
+        const String& ss = s;
+        String tmp(s);
+        get_allocs();
+
+        SECTION("begin + mutations") {
+            auto it = s.begin();
+            REQUIRE(*it++ == (T)'0');
+            REQUIRE(*it++ == (T)'1');
+            REQUIRE(*(it += 2) == (T)'4');
+            REQUIRE(*(it -= 1) == (T)'3');
+
+            REQUIRE(s.use_count() == 2); // not detached
+            *it = (T)'x';
+            REQUIRE(s.use_count() == 1); // detached
+            REQUIRE_STRM(String(s, 0, 10), mstr("012x456789"));
+        }
+        SECTION("end") {
+            auto it = s.end();
+            REQUIRE(*(--it) == (T)'9');
+            REQUIRE(*(--it) == (T)'8');
+            std::advance(it, -2);
+            REQUIRE(*it == (T)'6');
+        }
+
+        SECTION("diffence & eq & ne") {
+            auto b = s.begin();
+            auto e = s.end();
+            REQUIRE(b == b);
+            REQUIRE(b != e);
+            REQUIRE(e - b == s.length());
+        }
+
+        SECTION("ordening relations") {
+            auto b = s.begin();
+            auto e = s.end();
+            REQUIRE(b >= b);
+            REQUIRE(!(b > b));
+            REQUIRE(e > b);
+            REQUIRE(b < e);
+            REQUIRE(b <= e);
+            REQUIRE(e <= e);
+            REQUIRE(!(e < e ));
+        }
+
+        SECTION("global -+ operators") {
+            auto b = s.begin();
+            auto e = s.end();
+
+            REQUIRE(*(b + 1) == (T)'1');
+            REQUIRE(*(2 + b) == (T)'2');
+            REQUIRE(*(e - 1) == (T)'9');
+            REQUIRE(*(2 - e) == (T)'8');
+        }
+
+        SECTION("as const iterator") {
+            auto b = s.begin();
+            auto cb = (const T*)b;
+            REQUIRE(*cb++ == (T)'0');
+            REQUIRE(*cb++ == (T)'1');
         }
     }
 
@@ -2386,6 +2450,7 @@ struct test_string {
             REQUIRE_STRM(s, mstr("hello suka"));
             REQUIRE_THROWS(s.replace(s.cend()+1, s.end(), a));
         }
+
         SECTION("it/fstr") {
             s.replace(s.cbegin()+1, s.cend(), a2);
             REQUIRE_STRM(s, mstr("h suka"));
@@ -2604,6 +2669,7 @@ struct test_string {
 
     static void run () {
         get_allocs();
+
         SECTION("ctor") { test_ctor(); }
         SECTION("copy ctor") {
             SECTION("local")   { test_copy_ctor<String>();  }
@@ -2632,7 +2698,10 @@ struct test_string {
         SECTION("to_bool, empty") { test_bool_empty(); }
         SECTION("use_count") { test_use_count(); }
         SECTION("detach") { test_detach(); }
+
         SECTION("at/op[]/front/[pop_]back") { test_at_front_back(); }
+        SECTION("iterator") { test_iterator(); }
+
         SECTION("erase") { test_erase(); }
         SECTION("compare") {
             SECTION("local")   { test_compare<String>(); }
