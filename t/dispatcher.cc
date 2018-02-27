@@ -179,7 +179,7 @@ TEST_CASE("remove callback comparable full functor" , "[CallbackDispatcher]") {
     CHECK(!called);
 }
 
-TEST_CASE("remove callback self lambda" , "[CallbackDispatcher]") {
+TEST_CASE("remove simple callback self lambda" , "[CallbackDispatcher]") {
     Dispatcher d;
     static bool called;
     auto l = [&](panda::Ifunction<int, int>& self, int a) {
@@ -191,6 +191,26 @@ TEST_CASE("remove callback self lambda" , "[CallbackDispatcher]") {
     Dispatcher::SimpleCallback s = l;
     d.add(s);
     CHECK(d(2).value_or(42) == 42);
+    CHECK(called);
+    called = false;
+    CHECK(d(2).value_or(42) == 42);
+    CHECK(!called);
+}
+
+
+TEST_CASE("remove callback self lambda" , "[CallbackDispatcher]") {
+    using panda::optional;
+    Dispatcher d;
+    static bool called;
+    auto l = [&](panda::Ifunction<optional<int>, Dispatcher::Event&, int>& self, Dispatcher::Event&, int a) {
+        d.remove(self);
+        called = true;
+        return a + 10;
+    };
+
+    Dispatcher::Callback s = l;
+    d.add(s);
+    CHECK(d(2).value_or(42) == 12);
     CHECK(called);
     called = false;
     CHECK(d(2).value_or(42) == 42);
