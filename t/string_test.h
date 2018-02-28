@@ -1258,8 +1258,9 @@ struct test_string {
             auto b = s.begin();
             auto e = s.end();
             REQUIRE(b == b);
+            REQUIRE(e == e);
             REQUIRE(b != e);
-            REQUIRE(e - b == s.length());
+            REQUIRE(size_t(e - b) == s.length());
         }
 
         SECTION("ordening relations") {
@@ -1289,6 +1290,13 @@ struct test_string {
             auto cb = (const T*)b;
             REQUIRE(*cb++ == (T)'0');
             REQUIRE(*cb++ == (T)'1');
+        }
+
+        SECTION("plus and as const iterator") {
+            auto b = s.begin() + 2;
+            auto cb = (const T*)b;
+            REQUIRE(*cb++ == (T)'2');
+            REQUIRE(*cb++ == (T)'3');
         }
     }
 
