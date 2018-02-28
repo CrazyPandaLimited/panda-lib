@@ -16,10 +16,13 @@ SOURCES += \
     t/function.cc \
     t/iptr.cc \
     t/owning_list.cc \
-    t/string.cc \
     t/string_containers.cc \
     t/test.cc \
-    t/to_chars.cc
+    t/to_chars.cc \
+    t/string_char.cc \
+    t/string_wchar.cc \
+    t/string_char16.cc \
+    t/string_char32.cc
 
 HEADERS += \
     src/panda/lib/endian.h \
@@ -46,8 +49,9 @@ HEADERS += \
     src/panda/log.h \
     src/panda/lib/owning_list.h \
     src/panda/lib/integer_sequence.h \
-    t/test.h
+    t/test.h \
+    t/string_test.h
 
 DISTFILES += \
-    lib.xs \
-    Makefile.PL
+    Makefile.PL \
+    t/xs.xs
