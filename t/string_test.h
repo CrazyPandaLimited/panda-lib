@@ -1,9 +1,12 @@
+#pragma once
+
 #include "test.h"
 #include <panda/string.h>
 #include <panda/string_view.h>
 
+namespace test {
+
 using namespace panda;
-using namespace test;
 
 template <typename T>
 struct test_string {
@@ -1255,8 +1258,9 @@ struct test_string {
             auto b = s.begin();
             auto e = s.end();
             REQUIRE(b == b);
+            REQUIRE(e == e);
             REQUIRE(b != e);
-            REQUIRE(e - b == s.length());
+            REQUIRE(size_t(e - b) == s.length());
         }
 
         SECTION("ordening relations") {
@@ -1286,6 +1290,13 @@ struct test_string {
             auto cb = (const T*)b;
             REQUIRE(*cb++ == (T)'0');
             REQUIRE(*cb++ == (T)'1');
+        }
+
+        SECTION("plus and as const iterator") {
+            auto b = s.begin() + 2;
+            auto cb = (const T*)b;
+            REQUIRE(*cb++ == (T)'2');
+            REQUIRE(*cb++ == (T)'3');
         }
     }
 
@@ -2732,7 +2743,4 @@ template <class T> const T                            test_string<T>::EMPTY[1]  
 template <class T> typename test_string<T>::StdString test_string<T>::defexp      = test_string<T>::mstr("this string is definitely longer than max sso chars");
 template <class T> size_t                             test_string<T>::defsz       = test_string<T>::BUF_CHARS + test_string<T>::defexp.size();
 
-TEST_CASE("basic_string<char>",     "[string]") { test_string<char>::run(); }
-TEST_CASE("basic_string<wchar_t>",  "[string]") { test_string<wchar_t>::run(); }
-TEST_CASE("basic_string<char16_t>", "[string]") { test_string<char16_t>::run(); }
-TEST_CASE("basic_string<char32_t>", "[string]") { test_string<char32_t>::run(); }
+}

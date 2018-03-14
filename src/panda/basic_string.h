@@ -87,8 +87,8 @@ public:
     }
     operator value_type() const { return _string._str[_pos]; }
 private:
-    size_type _pos;
     S& _string;
+    size_type _pos;
 };
 
 } // end of anonymous namespace
@@ -260,9 +260,9 @@ public:
         iterator(basic_string& string, size_type pos): _string(string), _pos(pos) {}
 
         iterator& operator++()                      { ++_pos; return *this; }
-        iterator operator++(int junk)               { iterator copy{_string, _pos }; ++_pos; return copy; }
+        iterator operator++(int)                    { iterator copy{_string, _pos }; ++_pos; return copy; }
         iterator& operator--()                      { --_pos; return *this; }
-        iterator operator--(int junk)               { iterator copy{_string, _pos }; --_pos; return copy; }
+        iterator operator--(int)                    { iterator copy{_string, _pos }; --_pos; return copy; }
         iterator& operator+=(int delta)             { _pos += delta; return *this; }
         iterator& operator-=(int delta)             { _pos -= delta; return *this; }
         reference operator*()                       { return reference{_string, _pos}; }
@@ -278,7 +278,7 @@ public:
         bool operator<=(const iterator& rhs) { return rhs._pos - _pos >= 0; }
         bool operator>=(const iterator& rhs) { return _pos - rhs._pos >= 0; }
 
-        operator const_iterator() { return _string.data(); }
+        operator const_iterator() { return _string.data() + _pos; }
 
         friend inline iterator operator+(int delta, const iterator& it) { return iterator{it._string, it._pos + delta}; }
         friend inline iterator operator+(const iterator& it, int delta) { return iterator{it._string, it._pos + delta}; }
@@ -286,8 +286,8 @@ public:
         friend inline iterator operator-(const iterator& it, int delta) { return iterator{it._string, it._pos - delta}; }
 
     private:
-        size_type _pos;
         basic_string& _string;
+        size_type _pos;
     };
 
 

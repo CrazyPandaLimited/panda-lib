@@ -11,9 +11,18 @@ SOURCES += \
     src/panda/lib/memory.cc \
     src/panda/lib.cc \
     src/panda/log.cc \
-    t/src/test_function.cc \
-    t/src/test_dispatcher.cc \
-    t/src/test_owning_list.cc
+    t/dispatcher.cc \
+    t/from_chars.cc \
+    t/function.cc \
+    t/iptr.cc \
+    t/owning_list.cc \
+    t/string_containers.cc \
+    t/test.cc \
+    t/to_chars.cc \
+    t/string_char.cc \
+    t/string_wchar.cc \
+    t/string_char16.cc \
+    t/string_char32.cc
 
 HEADERS += \
     src/panda/lib/endian.h \
@@ -38,15 +47,11 @@ HEADERS += \
     src/panda/lib.h \
     src/panda/optional.h \
     src/panda/log.h \
-    t/src/test.h \
-    t/src/test_utils.h \
     src/panda/lib/owning_list.h \
-    src/panda/lib/integer_sequence.h
+    src/panda/lib/integer_sequence.h \
+    t/test.h \
+    t/string_test.h
 
 DISTFILES += \
-    t/src/from_chars.xsi \
-    t/src/string.xsi \
-    t/src/string_containers.xsi \
-    t/src/test.xsi \
-    lib.xs \
-    Makefile.PL
+    Makefile.PL \
+    t/xs.xs

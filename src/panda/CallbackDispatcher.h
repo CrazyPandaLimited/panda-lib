@@ -19,7 +19,7 @@ public:
         Callback real;
         SimpleCallback simple;
 
-        Wrapper(Callback real, SimpleCallback simple = nullptr) : real(real), simple(simple) {}
+        explicit Wrapper(Callback real, SimpleCallback simple = nullptr) : real(real), simple(simple) {}
 
         template <typename... RealArgs>
         RetType operator()(RealArgs&&... args) {
@@ -43,7 +43,7 @@ public:
             }
         }
 
-        template <typename T, typename Check = decltype(real == std::declval<T>())>
+        template <typename T, typename Check = decltype(real == std::declval<const T&>())>
         bool equal(const T& oth, Check* = nullptr) {
             return real == oth;
         }
