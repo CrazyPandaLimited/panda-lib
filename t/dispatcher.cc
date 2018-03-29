@@ -216,3 +216,11 @@ TEST_CASE("remove callback self lambda" , "[CallbackDispatcher]") {
     CHECK(d(2).value_or(42) == 42);
     CHECK(!called);
 }
+
+TEST_CASE("dispatcher to function conversion" , "[CallbackDispatcher]") {
+    Dispatcher d;
+    d.add([](Dispatcher::Event& e, int a){return a*2;});
+    function<panda::optional<int>(int)> f = d;
+    REQUIRE(f(10).value_or(0) == 20);
+
+}
