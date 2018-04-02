@@ -19,6 +19,16 @@ TEST_CASE("empty callback dispatcher" , "[CallbackDispatcher]") {
     REQUIRE(true);
 }
 
+TEST_CASE("dispatcher void()" , "[CallbackDispatcher]") {
+    CallbackDispatcher<void()> d;
+    bool called = false;
+    CallbackDispatcher<void()>::SimpleCallback f = [&](){called = true;};
+    d.add(f);
+    d();
+    REQUIRE(called);
+
+}
+
 TEST_CASE("simplest callback dispatcher" , "[CallbackDispatcher]") {
     Dispatcher d;
     function<panda::optional<int> (Dispatcher::Event&, int)> cb = [](Event& e, int a) -> int {
@@ -219,7 +229,7 @@ TEST_CASE("remove callback self lambda" , "[CallbackDispatcher]") {
 
 TEST_CASE("dispatcher to function conversion" , "[CallbackDispatcher]") {
     Dispatcher d;
-    d.add([](Dispatcher::Event& e, int a){return a*2;});
+    d.add([](Dispatcher::Event&, int a){return a*2;});
     function<panda::optional<int>(int)> f = d;
     REQUIRE(f(10).value_or(0) == 20);
 
