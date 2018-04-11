@@ -20,7 +20,7 @@ PROTOTYPES: DISABLE
 bool test_run_all_cpp_tests() {
     struct CatchLogger : panda::logger::ILogger {
         virtual void log (panda::logger::Level l, panda::logger::CodePoint cp, const std::string& s) override {
-            if (int(l) < int(panda::logger::WARNING)) {
+            if (int(l) > int(panda::logger::WARNING)) {
                 FAIL(cp.to_string() << "\t" << s);
             } else {
                 INFO(cp << "\t" << s);

@@ -46,12 +46,15 @@ namespace logger {
 
 
     enum Level {
-        EMERGENCY,
-        CRITICAL,
-        WARNING,
+        VERBOSE_DEBUG = 0,
+        DEBUG,
         INFO,
-        VERBOSE,
-        DEBUG
+        NOTICE,
+        WARNING,
+        ERROR,
+        CRITICAL,
+        ALERT,
+        EMERGENCY
     };
 
     struct ILogger {
@@ -76,14 +79,12 @@ public:
     }
 
     template <typename T>
-    std::ostringstream& operator <<(T&& t)
-    {
+    std::ostringstream& operator <<(T&& t) {
         os << t;
         return os;
     }
 
-    ~Log()
-    {
+    ~Log() {
         if (!logger()) {
             return;
         }
@@ -97,7 +98,7 @@ public:
 
     static bool should_log(logger::Level level, logger::CodePoint cp);
 
-    static void set_max_level(logger::Level val);
+    static void set_level(logger::Level val);
 
 private:
     std::string s;
@@ -118,11 +119,13 @@ private:
 #define panda_debug_v(VAR) _panda_log_impl_(DEBUG, #VAR << " = " << (VAR))
 
 #define panda_log_debug(MSG) _panda_log_impl_(DEBUG, MSG)
-#define panda_log_verbose(MSG) _panda_log_impl_(VERBOSE, MSG)
 #define panda_log_info(MSG) _panda_log_impl_(INFO, MSG)
+#define panda_log_notice(MSG) _panda_log_impl_(NOTICE, MSG)
 #define panda_log_warn(MSG) _panda_log_impl_(WARNING, MSG)
 
+#define panda_log_error(MSG) _panda_log_impl_(ERROR, MSG)
 #define panda_log_critical(MSG) _panda_log_impl_(CRITICAL, MSG)
+#define panda_log_alert(MSG) _panda_log_impl_(ALERT, MSG)
 #define panda_log_emergency(MSG) _panda_log_impl_(EMERGENCY, MSG)
 
 
