@@ -13,8 +13,8 @@ bool Log::should_log(logger::Level level, logger::CodePoint cp) {
     return level >= min_level && logger() && logger()->should_log(level, cp);
 }
 
-void Log::set_max_level(logger::Level val) {
-    max_level = val;
+void Log::set_level(logger::Level val) {
+    min_level = val;
 }
 
 }
