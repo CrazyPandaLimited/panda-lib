@@ -17,5 +17,3 @@ if ($full_tests) {
     warn "rebuild Makefile.PL adding TEST_FULL=1 to enable all tests'" unless $full_tests;
     ok 1;
 }
-
-done_testing();
