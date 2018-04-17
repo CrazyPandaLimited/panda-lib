@@ -1,4 +1,4 @@
-use 5.012;
+use strict;
 use warnings;
 use lib 't/lib';
 use Test::More qw/no_plan/;
