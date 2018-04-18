@@ -118,6 +118,7 @@ private:
 
 #define panda_debug_v(VAR) _panda_log_impl_(DEBUG, #VAR << " = " << (VAR))
 
+#define panda_log_verbose_debug(MSG) _panda_log_impl_(VERBOSE_DEBUG, MSG)
 #define panda_log_debug(MSG) _panda_log_impl_(DEBUG, MSG)
 #define panda_log_info(MSG) _panda_log_impl_(INFO, MSG)
 #define panda_log_notice(MSG) _panda_log_impl_(NOTICE, MSG)
