@@ -61,6 +61,13 @@ namespace logger {
         virtual bool should_log(Level, CodePoint) {return true;}
         virtual void log(Level, CodePoint, const std::string&) = 0;
     };
+
+    struct escaped {
+        std::string_view src;
+    };
+
+    std::ostream& operator << (std::ostream& stream, const escaped& str);
+
 }
 
 class Log
