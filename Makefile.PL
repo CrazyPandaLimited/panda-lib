@@ -18,14 +18,13 @@ my %params = (
     OPTIMIZE         => '-g0 -O2',
     MIN_PERL_VERSION => '5.12.0',
     #OPTIMIZE  => '-g0',
-    XS => {},
+    XS => $ENV{TEST_FULL} ? {'t/xs.xs' => 't/xs.cc'} : {'lib.xs' => 'lib.cc'},
     #CC => 'clang++',
 );
 
 if ($ENV{TEST_FULL}) {
     ($params{DEFINE}||='') .= ' -DTEST_FULL';
     push @{$params{SRC}||=[]}, 't';
-    $params{XS}{'t/xs.xs'} = 't/xs.cc';
     ($params{CCFLAGS}||='') .= ' -fsanitize=undefined';
     push @{$params{LIBS}||=[]}, '-lubsan'; #sanitizer
 }
