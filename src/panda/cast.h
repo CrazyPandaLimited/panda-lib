@@ -20,7 +20,7 @@ namespace {
 template <class DERIVED_PTR, class BASE>
 DERIVED_PTR dyn_cast (BASE* obj) {
     typedef typename std::remove_pointer<DERIVED_PTR>::type DERIVED;
-    if (std::is_same<BASE,DERIVED>::value) return (DERIVED_PTR)obj;
+    if (std::is_same<BASE,DERIVED>::value) return reinterpret_cast<DERIVED_PTR>(obj);
     if (!obj) return NULL;
     intptr_t key = (intptr_t)typeid(*obj).name();
     DynCastCacheMap::iterator it = DynCastCache<DERIVED,BASE>::map.find(key);
@@ -35,7 +35,7 @@ DERIVED_PTR dyn_cast (BASE* obj) {
 template <class DERIVED_REF, class BASE>
 DERIVED_REF dyn_cast (BASE& obj) {
     typedef typename std::remove_reference<DERIVED_REF>::type DERIVED;
-    if (std::is_same<BASE,DERIVED>::value) return (DERIVED_REF)obj;
+    if (std::is_same<BASE,DERIVED>::value) return reinterpret_cast<DERIVED_REF>(obj);
     intptr_t key = (intptr_t)typeid(obj).name();
     DynCastCacheMap::iterator it = DynCastCache<DERIVED,BASE>::map.find(key);
     if (it != DynCastCache<DERIVED,BASE>::map.end() && it->second != INCORRECT_PTRDIFF)
