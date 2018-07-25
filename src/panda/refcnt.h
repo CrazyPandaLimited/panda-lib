@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <panda/cast.h>
+#include <assert.h>
 
 namespace panda {
 

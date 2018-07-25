@@ -18,7 +18,6 @@ my %params = (
     OPTIMIZE         => '-O2',
     MIN_PERL_VERSION => '5.12.0',
     XS               => $ENV{TEST_FULL} ? {'t/xs.xs' => 't/xs.cc'} : {'lib.xs' => 'lib.cc'},
-    #CC               => 'clang++',
 );
 
 if ($ENV{TEST_FULL}) {
