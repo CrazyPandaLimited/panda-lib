@@ -88,6 +88,12 @@ public:
 
     uint32_t use_count () const { return refcnt_get(ptr); }
 
+    T* detach () {
+        auto ret = ptr;
+        ptr = nullptr;
+        return ret;
+    }
+
 private:
     T* ptr;
 };
