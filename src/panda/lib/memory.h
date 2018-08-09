@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <assert.h>
 
-namespace panda { namespace lib {
+namespace panda { namespace lib __attribute__ ((visibility ("default"))) {
 
 class MemoryPool {
 public:
@@ -20,7 +20,9 @@ public:
     }
 
     void deallocate (void* elem) {
-        //assert(is_mine(elem)); // protection for debugging, normally you MUST NEVER pass a pointer that wasn't created via current mempool
+#ifdef TEST_FULL
+        if(!is_mine(elem)) abort(); // protection for debugging, normally you MUST NEVER pass a pointer that wasn't created via current mempool
+#endif
         *((void**)elem) = first_free;
         first_free = elem;
     }
@@ -42,36 +44,39 @@ private:
 
 };
 
+// !!!! It cannot be used !!!!
+// StaticMemoryPool::instance and StaticMemoryPool::tls_instance are different in different .so
+// Let it stay commented till probles is not solved
 // !!!!!!!!! DO NOT return &_tls_inst from tls_instance() !!!!!!!!!!!! On some compilers, performance drop down up to 4x may occur.
+//template <int BLOCKSIZE>
+//class StaticMemoryPool {
+//public:
+//    static MemoryPool* instance () { return &_inst; }
 
-template <int BLOCKSIZE>
-class StaticMemoryPool {
-public:
-    static MemoryPool* instance () { return &_inst; }
 
-    static MemoryPool* tls_instance () {
-        static thread_local MemoryPool* ptr;
-        if (!ptr) {
-            static thread_local MemoryPool inst(BLOCKSIZE);
-            ptr = &inst;
-        }
-        return ptr;
-    }
+//    static MemoryPool*  tls_instance () {
+//        static thread_local MemoryPool*  ptr;
+//        if (!ptr) {
+//            static thread_local MemoryPool inst(BLOCKSIZE);
+//            ptr = &inst;
+//        }
+//        return ptr;
+//    }
 
-private:
-    static MemoryPool _inst;
-};
+//private:
+//    static MemoryPool _inst;
+//};
 
-template <int T>
-MemoryPool StaticMemoryPool<T>::_inst(T);
+//template <int T>
+//MemoryPool StaticMemoryPool<T>::_inst(T);
 
-template <> struct StaticMemoryPool<7> : StaticMemoryPool<8> {};
-template <> struct StaticMemoryPool<6> : StaticMemoryPool<8> {};
-template <> struct StaticMemoryPool<5> : StaticMemoryPool<8> {};
-template <> struct StaticMemoryPool<4> : StaticMemoryPool<8> {};
-template <> struct StaticMemoryPool<3> : StaticMemoryPool<8> {};
-template <> struct StaticMemoryPool<2> : StaticMemoryPool<8> {};
-template <> struct StaticMemoryPool<1> : StaticMemoryPool<8> {};
+//template <> struct StaticMemoryPool<7> : StaticMemoryPool<8> {};
+//template <> struct StaticMemoryPool<6> : StaticMemoryPool<8> {};
+//template <> struct StaticMemoryPool<5> : StaticMemoryPool<8> {};
+//template <> struct StaticMemoryPool<4> : StaticMemoryPool<8> {};
+//template <> struct StaticMemoryPool<3> : StaticMemoryPool<8> {};
+//template <> struct StaticMemoryPool<2> : StaticMemoryPool<8> {};
+//template <> struct StaticMemoryPool<1> : StaticMemoryPool<8> {};
 
 class ObjectAllocator {
 public:
@@ -125,27 +130,22 @@ private:
 template <class TARGET, bool TLS_ALLOC = true>
 struct AllocatedObject {
     static void* operator new (size_t size) {
-        if (size == sizeof(TARGET)) return StaticMemoryPool<sizeof(TARGET)>::tls_instance()->allocate();
         return ObjectAllocator::tls_instance()->allocate(size);
-
     }
 
     static void operator delete (void* p, size_t size) {
-        if (size == sizeof(TARGET)) StaticMemoryPool<sizeof(TARGET)>::tls_instance()->deallocate(p);
-        else ObjectAllocator::tls_instance()->deallocate(p, size);
+        ObjectAllocator::tls_instance()->deallocate(p, size);
     }
 };
 
 template <class TARGET>
 struct AllocatedObject<TARGET, false> {
     static void* operator new (size_t size) {
-        if (size == sizeof(TARGET)) return StaticMemoryPool<sizeof(TARGET)>::instance()->allocate();
         return ObjectAllocator::instance()->allocate(size);
     }
 
     static void operator delete (void* p, size_t size) {
-        if (size == sizeof(TARGET)) StaticMemoryPool<sizeof(TARGET)>::instance()->deallocate(p);
-        else ObjectAllocator::instance()->deallocate(p, size);
+        ObjectAllocator::instance()->deallocate(p, size);
     }
 };
 
