@@ -3,6 +3,7 @@
            - removed panda::shared_ptr, panda::Refcounted (use panda::Refcnt instead)
            - iptr now uses refcnt_inc/dec/get proxies
            - dyn_cast is now no-op if classes match
+           - moved to XS::Install
 1.1.4    14.06.2018
            - fix dll loading for Windows
 1.1.3    18.05.2018

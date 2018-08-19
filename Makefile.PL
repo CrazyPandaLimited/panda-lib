@@ -1,6 +1,6 @@
 use 5.012;
 use Config;
-use Panda::Install;
+use XS::Install;
 
 my %params = (
     NAME          => 'CPP::panda::lib',

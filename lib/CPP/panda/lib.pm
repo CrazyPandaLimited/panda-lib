@@ -1,8 +1,8 @@
 package CPP::panda::lib;
+use XS::Loader;
 
 our $VERSION = '1.1.5';
 
-require Panda::XSLoader;
-Panda::XSLoader::load();
+XS::Loader::load();
 
 1;
