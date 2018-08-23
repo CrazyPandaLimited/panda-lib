@@ -15,7 +15,7 @@ my %params = (
     },
     BIN_DEPS         => ['CPP::catch::test'],
     CCFLAGS          => '-Wall -Wextra',
-    OPTIMIZE         => '-O2',
+    OPTIMIZE         => '-O2 -g',
     MIN_PERL_VERSION => '5.12.0',
     XS               => $ENV{TEST_FULL} ? {'t/xs.xs' => 't/xs.cc'} : {'lib.xs' => 'lib.cc'},
 );
