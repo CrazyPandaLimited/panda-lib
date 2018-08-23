@@ -2,11 +2,13 @@
 #include <panda/CallbackDispatcher.h>
 #include <panda/function_utils.h>
 #include <panda/lib/from_chars.h>
+#include <panda/string.h>
 
 using panda::CallbackDispatcher;
 using test::Tracer;
 using panda::tmp_abstract_function;
 using panda::make_abstract_function;
+using panda::string;
 
 using Dispatcher = CallbackDispatcher<int(int)>;
 using Event = Dispatcher::Event;
@@ -233,4 +235,12 @@ TEST_CASE("dispatcher to function conversion" , "[CallbackDispatcher]") {
     function<panda::optional<int>(int)> f = d;
     REQUIRE(f(10).value_or(0) == 20);
 
+}
+
+TEST_CASE("dispatcher 2 string calls" , "[CallbackDispatcher]") {
+    using Dispatcher = CallbackDispatcher<void(string)>;
+    Dispatcher d;
+    d.add([](string s){REQUIRE(s == "value");});
+    d.add([](string s){REQUIRE(s == "value");});
+    d("value");
 }
