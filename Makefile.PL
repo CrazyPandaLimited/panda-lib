@@ -1,6 +1,6 @@
 use 5.012;
 use Config;
-use Panda::Install;
+use XS::Install;
 
 my %params = (
     NAME          => 'CPP::panda::lib',
@@ -15,7 +15,7 @@ my %params = (
     },
     BIN_DEPS         => ['CPP::catch::test'],
     CCFLAGS          => '-Wall -Wextra',
-    OPTIMIZE         => '-O2',
+    OPTIMIZE         => '-O2 -g',
     MIN_PERL_VERSION => '5.12.0',
     XS               => $ENV{TEST_FULL} ? {'t/xs.xs' => 't/xs.cc'} : {'lib.xs' => 'lib.cc'},
 );

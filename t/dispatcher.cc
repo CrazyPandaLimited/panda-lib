@@ -12,6 +12,7 @@ using Dispatcher = CallbackDispatcher<int(int)>;
 using Event = Dispatcher::Event;
 
 using panda::function;
+using panda::string;
 
 TEST_CASE("empty callback dispatcher" , "[CallbackDispatcher]") {
     Dispatcher d;
@@ -233,4 +234,12 @@ TEST_CASE("dispatcher to function conversion" , "[CallbackDispatcher]") {
     function<panda::optional<int>(int)> f = d;
     REQUIRE(f(10).value_or(0) == 20);
 
+}
+
+TEST_CASE("dispatcher 2 string calls" , "[CallbackDispatcher]") {
+    using Dispatcher = CallbackDispatcher<void(string)>;
+    Dispatcher d;
+    d.add([](string s){REQUIRE(s == "value");});
+    d.add([](string s){REQUIRE(s == "value");});
+    d("value");
 }

@@ -7,6 +7,14 @@
 
 namespace panda {
 
+inline void trace_args() {}
+
+template <typename Head, typename... Tail>
+void trace_args(Head&& h, Tail&&... t) {
+    std::cerr << h << ",";
+    trace_args(t...);
+}
+
 template <typename Ret, typename... Args>
 class CallbackDispatcher {
 public:
@@ -60,8 +68,6 @@ public:
             return dispatcher.next(*this, std::forward<RealArgs>(args)...);
         }
     };
-
-
 
     void add(const Callback& callback) {
         if (!callback) {
@@ -138,6 +144,7 @@ public:
 private:
     template <typename... RealArgs>
     RetType next(Event& e, RealArgs&&... args) {
+        trace_args(args...);
         ++e.state;
         if (e.state != listeners.end()) {
             return (*e.state)(e, std::forward<RealArgs>(args)...);
@@ -145,6 +152,8 @@ private:
             return optional_tools<Ret>::default_value();
         }
     }
+
+
 
     CallbackList listeners;
 };
