@@ -239,7 +239,9 @@ TEST_CASE("dispatcher to function conversion" , "[CallbackDispatcher]") {
 TEST_CASE("dispatcher 2 string calls" , "[CallbackDispatcher]") {
     using Dispatcher = CallbackDispatcher<void(string)>;
     Dispatcher d;
-    d.add([](string s){REQUIRE(s == "value");});
-    d.add([](string s){REQUIRE(s == "value");});
-    d("value");
+    d.add([](string s){CHECK(s == "value");});
+    d.add([](string s){CHECK(s == "value");});
+    d(string("value"));
+    string s = "value";
+    d(s);
 }
