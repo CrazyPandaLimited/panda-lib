@@ -118,6 +118,19 @@ public:
         ++_size;
     }
 
+    template<typename TT = T>
+    void push_front(TT&& val) {
+        node_sp node = new node_t(std::forward<TT>(val));
+        if (first) {
+            node->next = first;
+            first->prev = node;
+            first = node;
+        } else {
+            first = last = node;
+        }
+        ++_size;
+    }
+
 
     void remove(const T& val) {
         node_sp node = first;

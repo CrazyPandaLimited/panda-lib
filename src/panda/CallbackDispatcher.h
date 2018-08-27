@@ -56,25 +56,31 @@ public:
         }
     };
 
-    void add (const Callback& callback) {
+    void add (const Callback& callback, bool back = false) {
         if (!callback) return;
-        listeners.push_back(Wrapper(callback));
+        if (back) listeners.push_back(Wrapper(callback));
+        else      listeners.push_front(Wrapper(callback));
     }
 
-    void add (Callback&& callback) {
+    void add (Callback&& callback, bool back = false) {
         if (!callback) return;
-        listeners.push_back(Wrapper(std::forward<Callback>(callback)));
+        if (back) listeners.push_back(Wrapper(std::forward<Callback>(callback)));
+        else      listeners.push_front(Wrapper(std::forward<Callback>(callback)));
     }
 
-    void add (const SimpleCallback& callback) {
+    void add (const SimpleCallback& callback, bool back = false) {
         if (!callback) return;
-        listeners.push_back(Wrapper(callback));
+        if (back) listeners.push_back(Wrapper(callback));
+        else      listeners.push_front(Wrapper(callback));
     }
 
-    void add (SimpleCallback&& callback) {
+    void add (SimpleCallback&& callback, bool back = false) {
         if (!callback) return;
-        listeners.push_back(Wrapper(std::forward<SimpleCallback>(callback)));
+        if (back) listeners.push_back(Wrapper(std::forward<SimpleCallback>(callback)));
+        else      listeners.push_front(Wrapper(std::forward<SimpleCallback>(callback)));
     }
+
+    template <class T> void add_back (T&& callback) { add(std::forward<T>(callback), true); }
 
     template <typename... RealArgs >
     auto operator() (RealArgs&&... args) -> decltype(std::declval<Wrapper>()(std::declval<Event&>(), std::forward<RealArgs>(args)...)) {
