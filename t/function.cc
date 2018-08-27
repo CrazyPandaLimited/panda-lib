@@ -104,7 +104,7 @@ TEST_CASE("function ptr comparations covariant", "[function]") {
         }
     };
 
-    function<void, int>    f1(&func_int);
+    function<void(int)>    f1(&func_int);
     function<void(double)> f2(&func_int);
     function<void(double)> f3(&func_double);
     function<void(double)> f4(&func_int);
