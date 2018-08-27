@@ -50,7 +50,8 @@ HEADERS += \
     src/panda/lib/owning_list.h \
     src/panda/lib/integer_sequence.h \
     t/test.h \
-    t/string_test.h
+    t/string_test.h \
+    src/panda/lib/traits.h
 
 DISTFILES += \
     Makefile.PL \

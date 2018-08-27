@@ -82,11 +82,11 @@ public:
             return;
         }
         auto wrapper = [callback](Event& e, Args... args) -> RetType {
-            callback(std::forward<Args>(args)...);
+            callback(args...);
             return e.next(std::forward<Args>(args)...);
         };
 
-        static_assert(panda::has_call_operator<decltype(wrapper), Event&, Args...>::value,
+        static_assert(panda::lib::traits::has_call_operator<decltype(wrapper), Event&, Args...>::value,
                       "argument of CallbackDispatcher::add should be callable with Args..." );
 
         listeners.push_back(Wrapper(wrapper, callback));
@@ -113,17 +113,17 @@ public:
 
     template <typename T>
     void remove_object(T&& makable,
-                       decltype(tmp_abstract_function<Ret, Args...>(std::forward<T>(std::declval<T>())))* = nullptr)
+                       decltype(function_details::tmp_abstract_function<Ret, Args...>(std::forward<T>(std::declval<T>())))* = nullptr)
     {
-        auto tmp = tmp_abstract_function<Ret, Args...>(std::forward<T>(makable));
+        auto tmp = function_details::tmp_abstract_function<Ret, Args...>(std::forward<T>(makable));
         remove(tmp);
     }
 
     template <typename T>
     void remove_object(T&& makable,
-                       decltype(tmp_abstract_function<RetType, Event&, Args...>(std::forward<T>(std::declval<T>())))* = nullptr)
+                       decltype(function_details::tmp_abstract_function<RetType, Event&, Args...>(std::forward<T>(std::declval<T>())))* = nullptr)
     {
-        auto tmp = tmp_abstract_function<RetType, Event&, Args...>(std::forward<T>(makable));
+        auto tmp = function_details::tmp_abstract_function<RetType, Event&, Args...>(std::forward<T>(makable));
         remove(tmp);
     }
 

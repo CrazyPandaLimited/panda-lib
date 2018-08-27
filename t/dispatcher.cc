@@ -6,8 +6,8 @@
 
 using panda::CallbackDispatcher;
 using test::Tracer;
-using panda::tmp_abstract_function;
-using panda::make_abstract_function;
+using panda::function_details::tmp_abstract_function;
+using panda::function_details::make_abstract_function;
 using panda::string;
 
 using Dispatcher = CallbackDispatcher<int(int)>;
@@ -115,6 +115,22 @@ TEST_CASE("remove callback dispatcher without event" , "[CallbackDispatcher]") {
     REQUIRE(!called);
 }
 
+TEST_CASE("remove callback dispatcher with compatible type" , "[CallbackDispatcher]") {
+    Dispatcher d;
+    bool called = false;
+    function<int(int16_t)> s = [&](int a) {
+        called = true;
+        return a;
+    };
+    d.add(s);
+    REQUIRE(d(2).value_or(42) == 42);
+    REQUIRE(called);
+    d.remove(s);
+    called = false;
+    REQUIRE(d(2).value_or(42) == 42);
+    REQUIRE(!called);
+}
+
 TEST_CASE("remove callback comparable functor" , "[CallbackDispatcher]") {
     Dispatcher d;
     static bool called;
@@ -128,7 +144,7 @@ TEST_CASE("remove callback comparable functor" , "[CallbackDispatcher]") {
         }
     };
 
-    static_assert(panda::has_call_operator<S, int>::value,
+    static_assert(panda::lib::traits::has_call_operator<S, int>::value,
                   "S shuld be callable, it can be wrong implementation of panda::has_call_operator or a compiler error");
 
     S src;
@@ -167,7 +183,7 @@ TEST_CASE("remove callback comparable full functor" , "[CallbackDispatcher]") {
         }
     };
 
-    static_assert(panda::has_call_operator<S,Dispatcher::Event&, int>::value,
+    static_assert(panda::lib::traits::has_call_operator<S,Dispatcher::Event&, int>::value,
                   "S shuld be callable, it can be wrong implementation of panda::has_call_operator or a compiler error");
 
     S src;
