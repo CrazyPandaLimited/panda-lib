@@ -102,8 +102,8 @@ public:
     }
 
     template <typename T>
-    void remove_object (T&& makable, decltype(tmp_abstract_function<Ret, Args...>(std::forward<T>(std::declval<T>())))* = nullptr) {
-        auto tmp = tmp_abstract_function<Ret, Args...>(std::forward<T>(makable));
+    void remove_object (T&& makable, decltype(tmp_abstract_function<void, Args...>(std::forward<T>(std::declval<T>())))* = nullptr) {
+        auto tmp = tmp_abstract_function<void, Args...>(std::forward<T>(makable));
         remove(tmp);
     }
 
