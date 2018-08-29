@@ -109,7 +109,7 @@ namespace test {
         }
 
         static void shared_buf_free (T* mem, size_t size) {
-            panda::lib::ObjectAllocator::instance()->deallocate(mem, size);
+            panda::lib::ObjectAllocator::instance()->deallocate(mem, size * sizeof(T));
             allocs.ext_shbuf_deallocated++;
         }
     };
