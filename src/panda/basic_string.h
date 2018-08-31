@@ -1122,6 +1122,15 @@ public:
         return ret;
     }
 
+    const CharT* c_str () const {
+        if (_state == State::LITERAL) return _str; // LITERALs are NT
+        if (shared_capacity() > _length && _str[_length] == 0) return _str; // if we have r/o space after string, let's see if it's already NT
+        // string is not NT
+        if (capacity() <= _length) const_cast<basic_string*>(this)->_reserve_save(_length + 1); // we're in COW mode or don't have space
+        _str[_length] = 0;
+        return _str;
+    }
+
     ~basic_string () { _release(); }
 
 private:
