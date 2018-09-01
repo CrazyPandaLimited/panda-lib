@@ -24,13 +24,11 @@ public:
     function(const iptr<Derr>& f) : func(f) {}
 
     template<typename... F,
-             typename = decltype(make_abstract_function<Ret, Args...>(std::declval<F>()...)),
+             typename = decltype(function_details::make_abstract_function<Ret, Args...>(std::declval<F>()...)),
              typename = typename std::enable_if<!std::is_constructible<function, F...>::value>::type>
     function(F&&... f)
-        : func(make_abstract_function<Ret, Args...>(std::forward<F>(f)...))
+        : func(function_details::make_abstract_function<Ret, Args...>(std::forward<F>(f)...))
     {}
-
-
 
     function(Func func) : func(func) {};
 
@@ -41,10 +39,16 @@ public:
     function& operator=(function&& oth) = default;
 
     Ret operator ()(Args... args) const {return func->operator ()(std::forward<Args>(args)...);}
-    bool operator ==(const function& oth) const {
+
+    template <typename ORet, typename... OArgs,
+              typename = typename std::enable_if<std::is_convertible<function<ORet, OArgs...>, function>::value>::type>
+    bool operator ==(const function<ORet, OArgs...>& oth) const {
         return (func && func->equals(oth.func.get())) || (!func && !oth.func);
     }
-    bool operator !=(const function& oth) const {return !operator ==(oth);}
+
+    template <typename ORet, typename... OArgs,
+              typename = typename std::enable_if<std::is_convertible<function<ORet, OArgs...>, function>::value>::type>
+    bool operator !=(const function<ORet, OArgs...>& oth) const {return !operator ==(oth);}
 
     bool operator ==(const Ifunction<Ret, Args...>& oth) const {
         return func && func->equals(&oth);
