@@ -22,10 +22,10 @@ public:
 
         template <typename... RealArgs>
         auto operator() (Event& e, RealArgs&&... args) -> decltype(real(e, args...)) {
-            if (real) return real(e, std::forward<Args>(args)...);
+            if (real) return real(e, std::forward<RealArgs>(args)...);
 
             simple(args...);
-            return e.next(std::forward<Args>(args)...);
+            return e.next(std::forward<RealArgs>(args)...);
         }
 
         bool equal (const Wrapper& oth) {

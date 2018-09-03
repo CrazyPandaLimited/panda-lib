@@ -5,8 +5,9 @@
 
 using panda::CallbackDispatcher;
 using test::Tracer;
-using panda::tmp_abstract_function;
-using panda::make_abstract_function;
+using panda::function_details::tmp_abstract_function;
+using panda::function_details::make_abstract_function;
+using panda::iptr;
 
 using Dispatcher = CallbackDispatcher<int(int)>;
 using Event = Dispatcher::Event;
@@ -124,7 +125,7 @@ TEST_CASE("remove callback comparable functor" , "[CallbackDispatcher]") {
         }
     };
 
-    static_assert(panda::has_call_operator<S, int>::value,
+    static_assert(panda::lib::traits::has_call_operator<S, int>::value,
                   "S shuld be callable, it can be wrong implementation of panda::has_call_operator or a compiler error");
 
     S src;
@@ -163,7 +164,7 @@ TEST_CASE("remove callback comparable full functor" , "[CallbackDispatcher]") {
         }
     };
 
-    static_assert(panda::has_call_operator<S,Dispatcher::Event&, int>::value,
+    static_assert(panda::lib::traits::has_call_operator<S,Dispatcher::Event&, int>::value,
                   "S shuld be callable, it can be wrong implementation of panda::has_call_operator or a compiler error");
 
     S src;
@@ -262,4 +263,18 @@ TEST_CASE("back order", "[CallbackDispatcher]") {
     d.add_back([&]{ res.push_back(3); });
     d();
     REQUIRE(res == std::vector<int>({1,2,3}));
+}
+
+TEST_CASE("dispatcher const ref arg move" , "[CallbackDispatcher]") {
+    struct S : public panda::Refcnt {
+        using Dispatcher = CallbackDispatcher<void(const iptr<S>&)>;
+        Dispatcher d;
+
+        void call() {
+            d(this);
+        }
+
+    };
+    S s;
+    s.call();
 }
