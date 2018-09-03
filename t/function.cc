@@ -292,3 +292,34 @@ TEST_CASE("no capture self reference", "[function]") {
     outer(1);
     REQUIRE(a == 1);
 }
+
+TEST_CASE("function from null", "[function]") {
+    void (*fptr)();
+    fptr = nullptr;
+    function<void()> f = fptr;
+    REQUIRE(!f);
+}
+
+TEST_CASE("function from null method", "[function]") {
+    auto meth = &Test::bar;
+    meth = nullptr;
+    auto m = make_function(meth);
+    REQUIRE(!m);
+}
+
+TEST_CASE("function from nullable object", "[function]") {
+    struct S {
+        void operator()() const {}
+        explicit operator bool() const {
+            return val;
+        }
+        bool val;
+    };
+
+    S s{false};
+    function<void()> f = s;
+    REQUIRE(!f);
+    s.val = true;
+    f = s;
+    REQUIRE(f);
+}
