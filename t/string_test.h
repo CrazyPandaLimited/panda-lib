@@ -91,7 +91,7 @@ struct test_string {
     }
 
     static ExternalShared* shared_buf_alloc () {
-        return (ExternalShared*)panda::lib::StaticMemoryPool<100>::instance()->allocate();
+        return (ExternalShared*)panda::lib::ObjectAllocator::instance()->allocate(sizeof(ExternalShared));
     }
 
     template <class U = String> static U create_external      (StdString exp, size_t cap) { return U(extstr(exp), exp.size(), cap, &Allocator::ext_free); }
@@ -2678,6 +2678,62 @@ struct test_string {
         };
     }
 
+    static void test_cstr () {
+        SECTION("empty") {
+            String s;
+            REQUIRE(s.c_str()[0] == 0);
+            REQUIRE_STR(s, EMPTY);
+            REQUIRE_ALLOCS();
+        }
+        SECTION("literal") {
+            String s(LITERAL);
+            REQUIRE(s.c_str()[LITERAL_LEN] == 0);
+            REQUIRE_STR(s, LITERAL, LITERAL_LEN, 0);
+            REQUIRE_ALLOCS();
+        }
+        SECTION("sso") {
+            SECTION("self") {
+                auto exp = mstr("ab");
+                String s(exp.c_str());
+                REQUIRE(s.c_str()[exp.length()] == 0);
+                REQUIRE_STR(s, exp, MAX_SSO_CHARS);
+                REQUIRE_ALLOCS();
+            }
+            SECTION("detach") {
+                auto exp = mstr("a", 50);
+                String src(exp.c_str());
+                get_allocs();
+                String s = src.substr(0, 2);
+                REQUIRE(s.c_str()[2] == 0);
+                REQUIRE_STR(s, mstr("aa"), MAX_SSO_CHARS);
+                REQUIRE_ALLOCS();
+            }
+        }
+        SECTION("internal") {
+            SECTION("self") {
+                auto exp = mstr("ab", 50);
+                String s(exp.c_str());
+                get_allocs();
+                REQUIRE(s.c_str()[exp.length()] == 0);
+                REQUIRE_STR(s, exp, exp.length() + 1);
+                REQUIRE_ALLOCS(0,0,0,0,1,1);
+                s.c_str();
+                REQUIRE_ALLOCS();
+            }
+            SECTION("detach") {
+                auto exp = mstr("ab", 50);
+                String s(exp.c_str());
+                get_allocs();
+                String s2(s);
+                REQUIRE(s.c_str()[exp.length()] == 0);
+                REQUIRE_STR(s, exp, exp.length() + 1);
+                REQUIRE_ALLOCS(1,BUF_CHARS+exp.size()+1,0,0,0,0);
+                s.c_str();
+                REQUIRE_ALLOCS();
+            }
+        }
+    }
+
     static void run () {
         get_allocs();
 
@@ -2735,6 +2791,7 @@ struct test_string {
         SECTION("shared_detach") { test_shared_detach(); }
         SECTION("to/from_number") { test_to_from_number(); }
         SECTION("from foreign allocator") { test_foreign_allocator(); }
+        SECTION("c_str") { test_cstr(); }
     }
 };
 

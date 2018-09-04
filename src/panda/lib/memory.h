@@ -9,7 +9,7 @@ namespace panda { namespace lib __attribute__ ((visibility ("default"))) {
 class MemoryPool {
 public:
     MemoryPool (size_t blocksize) : first_free(NULL) {
-        this->blocksize = blocksize > 8 ? blocksize : 8;
+        this->blocksize = round_up(blocksize);
     }
 
     void* allocate () {
@@ -41,6 +41,15 @@ private:
 
     void grow    ();
     bool is_mine (void* elem);
+
+    inline static size_t round_up(size_t size) {
+        assert(size > 0);
+        const size_t factor = sizeof(void*);
+        if ((size & (factor-1)) == 0) return size;
+        size += factor;
+        size &= ~((size_t)(factor-1));
+        return size;
+    }
 
 };
 

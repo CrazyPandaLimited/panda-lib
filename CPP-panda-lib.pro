@@ -22,7 +22,8 @@ SOURCES += \
     t/string_char.cc \
     t/string_wchar.cc \
     t/string_char16.cc \
-    t/string_char32.cc
+    t/string_char32.cc \
+    t/traits.cc
 
 HEADERS += \
     src/panda/lib/endian.h \
@@ -50,7 +51,8 @@ HEADERS += \
     src/panda/lib/owning_list.h \
     src/panda/lib/integer_sequence.h \
     t/test.h \
-    t/string_test.h
+    t/string_test.h \
+    src/panda/lib/traits.h
 
 DISTFILES += \
     Makefile.PL \
