@@ -83,7 +83,7 @@ public:
     template <class T> void add_back (T&& callback) { add(std::forward<T>(callback), true); }
 
     template <typename... RealArgs >
-    auto operator() (RealArgs&&... args) -> decltype(std::declval<Wrapper>()(std::declval<Event&>(), std::forward<RealArgs>(args)...)) {
+    auto operator() (RealArgs&&... args) -> decltype(std::declval<Wrapper>()(std::declval<Event&>(), args...)) {
         auto iter = listeners.begin();
         if (iter == listeners.end()) return optional_tools<Ret>::default_value();
 
