@@ -6,6 +6,18 @@ namespace panda {
 namespace lib {
 namespace traits {
 
+/// bool_or returns its first argument converted to bool if it is possible, or default value (second arg) if type is not convertible to bool
+template <typename T>
+inline bool bool_or(T&& val, decltype(bool(val))) {
+    return bool(val);
+}
+
+template <typename T, typename = typename std::enable_if<!std::is_constructible<bool, T>::value>::type>
+inline bool bool_or(T&&, bool default_val) {
+    return default_val;
+}
+
+
 template<typename T, bool Trivial = std::is_class<T>::value>
 struct is_comparable {
     static const bool value = true;

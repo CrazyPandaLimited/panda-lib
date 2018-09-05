@@ -22,7 +22,8 @@ SOURCES += \
     t/string_char.cc \
     t/string_wchar.cc \
     t/string_char16.cc \
-    t/string_char32.cc
+    t/string_char32.cc \
+    t/traits.cc
 
 HEADERS += \
     src/panda/lib/endian.h \
