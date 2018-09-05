@@ -22,10 +22,10 @@ public:
 
         template <typename... RealArgs>
         auto operator() (Event& e, RealArgs&&... args) -> decltype(real(e, args...)) {
-            if (real) return real(e, std::forward<Args>(args)...);
+            if (real) return real(e, std::forward<RealArgs>(args)...);
 
             simple(args...);
-            return e.next(std::forward<Args>(args)...);
+            return e.next(std::forward<RealArgs>(args)...);
         }
 
         bool equal (const Wrapper& oth) {
@@ -83,7 +83,7 @@ public:
     template <class T> void add_back (T&& callback) { add(std::forward<T>(callback), true); }
 
     template <typename... RealArgs >
-    auto operator() (RealArgs&&... args) -> decltype(std::declval<Wrapper>()(std::declval<Event&>(), std::forward<RealArgs>(args)...)) {
+    auto operator() (RealArgs&&... args) -> decltype(std::declval<Wrapper>()(std::declval<Event&>(), args...)) {
         auto iter = listeners.begin();
         if (iter == listeners.end()) return optional_tools<Ret>::default_value();
 
