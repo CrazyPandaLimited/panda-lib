@@ -2,6 +2,7 @@
 #include <iostream>
 #include <panda/refcnt.h>
 #include <panda/lib/traits.h>
+#include <assert.h>
 
 namespace panda {
 
@@ -168,11 +169,13 @@ struct is_panda_function_t<function<Params...>> {
 
 template <typename Ret, typename... Args>
 auto make_abstract_function(Ret (*f)(Args...)) -> iptr<abstract_function<Ret (*)(Args...), Ret, true, Args...>> {
+    if (!f) return nullptr;
     return new abstract_function<Ret (*)(Args...), Ret, true, Args...>(f);
 }
 
 template <typename Ret, typename... Args>
 auto tmp_abstract_function(Ret (*f)(Args...)) -> abstract_function<Ret (*)(Args...), Ret, true, Args...> {
+    assert(f);
     return abstract_function<Ret (*)(Args...), Ret, true, Args...>(f);
 }
 
@@ -183,6 +186,7 @@ template <typename Ret, typename... Args,
           typename = typename std::enable_if<!std::is_same<Functor, Ret(&)(Args...)>::value>::type,
           typename = typename std::enable_if<!is_panda_function_t<DeFunctor>::value>::type>
 iptr<abstract_function<DeFunctor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f, Check(*)() = 0) {
+    if (!lib::traits::bool_or(f, true)) return nullptr;
     return new abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
 }
 
@@ -192,6 +196,7 @@ template <typename Ret, typename... Args,
           typename Check = decltype(std::declval<Functor>()(std::declval<Args>()...)),
           typename = typename std::enable_if<!std::is_same<Functor, Ret(&)(Args...)>::value>::type>
 abstract_function<DeFunctor, Ret, IsComp, Args...> tmp_abstract_function(Functor&& f, Check(*)() = 0) {
+    assert(lib::traits::bool_or(f, true));
     return abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
 }
 
@@ -200,6 +205,7 @@ template <typename Ret, typename... Args,
           typename DeFunctor = typename std::remove_reference<Functor>::type,
           typename Check = decltype(std::declval<Functor>()(std::declval<Ifunction<Ret, Args...>&>(), std::declval<Args>()...))>
 iptr<abstract_function<DeFunctor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f) {
+    if (!lib::traits::bool_or(f, true)) return nullptr;
     return new abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
 }
 
@@ -208,12 +214,14 @@ template <typename Ret, typename... Args,
           typename DeFunctor = typename std::remove_reference<Functor>::type,
           typename Check = decltype(std::declval<Functor>()(std::declval<Ifunction<Ret, Args...>&>(), std::declval<Args>()...))>
 abstract_function<DeFunctor, Ret, IsComp, Args...> tmp_abstract_function(Functor&& f) {
+    assert(lib::traits::bool_or(f, true));
     return abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
 }
 
 template <typename Ret, typename... Args, typename ORet, typename... OArgs,
           typename = typename std::enable_if<lib::traits::has_call_operator<function<ORet, OArgs...>, Args...>::value>::type>
 auto make_abstract_function(const function<ORet, OArgs...>& func) -> iptr<function_caster<decltype(func.func), Ret, Args...>> {
+    if (!func) return nullptr;
     return new function_caster<decltype(func.func), Ret, Args...>(func.func);
 }
 
@@ -259,16 +267,19 @@ private:
 
 template <class Class, typename Ret, typename... Args>
 inline iptr<method<Class, Ret, Args...>> make_method(Ret (Class::*meth)(Args...), iptr<Class> thiz = nullptr) {
+    if (!meth) return nullptr;
     return new method<Class, Ret, Args...>(meth, thiz);
 }
 
 template <typename Ret, typename... Args, class Class>
 inline iptr<method<Class, Ret, Args...>> make_abstract_function(Ret (Class::*meth)(Args...), iptr<Class> thiz = nullptr) {
+    if (!meth) return nullptr;
     return new method<Class, Ret, Args...>(meth, thiz);
 }
 
 template <typename Ret, typename... Args, class Class>
 inline method<Class, Ret, Args...> tmp_abstract_function(Ret (Class::*meth)(Args...), iptr<Class> thiz = nullptr) {
+    assert(meth);
     return method<Class, Ret, Args...>(meth, thiz);
 }
 }
