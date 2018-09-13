@@ -18,7 +18,7 @@ const string_view val2  = "22222222222222222222222222222222222222222222222222";
 const string_view val3  = "333333333333333333333333333333333333333333333333333333333333";
 const string_view nokey = "nokeynokeynokeynokeynokeynokeynokeynokeynokeynokeynokeynokeynokeynokeynokeynokeynokeynokeynokeynokey";
 
-TEST_CASE("string_map", "[string_containers]") {
+TEST_CASE("string_map", "[panda-lib][string_containers]") {
     string_map<String, string> c;
     c.emplace(key1, val1);
     c.emplace(key2, val2);
@@ -80,7 +80,7 @@ TEST_CASE("string_map", "[string_containers]") {
     }
 }
 
-TEST_CASE("string_multimap", "[string_containers]") {
+TEST_CASE("string_multimap", "[panda-lib][string_containers]") {
     string_multimap<String, string> c;
     c.emplace(key1, val1);
     c.emplace(key2, val2);
@@ -138,7 +138,7 @@ TEST_CASE("string_multimap", "[string_containers]") {
     }
 }
 
-TEST_CASE("unordered_string_map", "[string_containers]") {
+TEST_CASE("unordered_string_map", "[panda-lib][string_containers]") {
     unordered_string_map<String, string> c;
     c.emplace(key1, val1);
     c.emplace(key2, val2);
@@ -188,7 +188,7 @@ TEST_CASE("unordered_string_map", "[string_containers]") {
     }
 }
 
-TEST_CASE("unordered_string_multimap", "[string_containers]") {
+TEST_CASE("unordered_string_multimap", "[panda-lib][string_containers]") {
     unordered_string_multimap<String, string> c;
     c.emplace(key1, val1);
     c.emplace(key2, val2);
@@ -238,7 +238,7 @@ TEST_CASE("unordered_string_multimap", "[string_containers]") {
     }
 }
 
-TEST_CASE("string_set", "[string_containers]") {
+TEST_CASE("string_set", "[panda-lib][string_containers]") {
     string_set<String> c;
     c.emplace(key1);
     c.emplace(key2);
@@ -294,7 +294,7 @@ TEST_CASE("string_set", "[string_containers]") {
     }
 }
 
-TEST_CASE("string_multiset", "[string_containers]") {
+TEST_CASE("string_multiset", "[panda-lib][string_containers]") {
     string_multiset<String> c;
     c.emplace(key1);
     c.emplace(key2);
@@ -352,7 +352,7 @@ TEST_CASE("string_multiset", "[string_containers]") {
     }
 }
 
-TEST_CASE("unordered_string_set", "[string_containers]") {
+TEST_CASE("unordered_string_set", "[panda-lib][string_containers]") {
     unordered_string_set<String> c;
     c.emplace(key1);
     c.emplace(key2);
@@ -396,7 +396,7 @@ TEST_CASE("unordered_string_set", "[string_containers]") {
     }
 }
 
-TEST_CASE("unordered_string_multiset", "[string_containers]") {
+TEST_CASE("unordered_string_multiset", "[panda-lib][string_containers]") {
     unordered_string_multiset<String> c;
     c.emplace(key1);
     c.emplace(key2);

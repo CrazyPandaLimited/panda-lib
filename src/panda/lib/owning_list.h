@@ -77,11 +77,11 @@ public:
             return res;
         }
 
-        bool operator ==(const base_iterator& oth) {
+        bool operator ==(const base_iterator& oth) const {
             return node == oth.node;
         }
 
-        bool operator !=(const base_iterator& oth) {
+        bool operator !=(const base_iterator& oth) const {
             return !operator==(oth);
         }
     };
