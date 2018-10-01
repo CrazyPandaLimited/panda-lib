@@ -15,13 +15,13 @@ using Event = Dispatcher::Event;
 
 using panda::function;
 
-TEST_CASE("empty callback dispatcher" , "[CallbackDispatcher]") {
+TEST_CASE("empty callback dispatcher" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     d(1);
     REQUIRE(true);
 }
 
-TEST_CASE("dispatcher void()" , "[CallbackDispatcher]") {
+TEST_CASE("dispatcher void()" , "[panda-lib][callbackdispatcher]") {
     CallbackDispatcher<void()> d;
     bool called = false;
     CallbackDispatcher<void()>::SimpleCallback f = [&](){called = true;};
@@ -31,7 +31,7 @@ TEST_CASE("dispatcher void()" , "[CallbackDispatcher]") {
 
 }
 
-TEST_CASE("simplest callback dispatcher" , "[CallbackDispatcher]") {
+TEST_CASE("simplest callback dispatcher" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     function<panda::optional<int> (Dispatcher::Event&, int)> cb = [](Event& e, int a) -> int {
         return 1 + e.next(a).value_or(0);
@@ -43,7 +43,7 @@ TEST_CASE("simplest callback dispatcher" , "[CallbackDispatcher]") {
     REQUIRE(d(2).value_or(0) == 3);
 }
 
-TEST_CASE("remove callback dispatcher" , "[CallbackDispatcher]") {
+TEST_CASE("remove callback dispatcher" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     d.add([](Event& e, int a) -> int {
         return 1 + e.next(a).value_or(0);
@@ -57,7 +57,7 @@ TEST_CASE("remove callback dispatcher" , "[CallbackDispatcher]") {
     REQUIRE(d(2).value_or(0) == 1);
 }
 
-TEST_CASE("remove_all in process" , "[CallbackDispatcher]") {
+TEST_CASE("remove_all in process" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     d.add([&](Event& e, int a) -> int {
         d.remove_all();
@@ -69,7 +69,7 @@ TEST_CASE("remove_all in process" , "[CallbackDispatcher]") {
     REQUIRE(d(2).value_or(0) == 1);
 }
 
-TEST_CASE("callback dispatcher copy ellision" , "[CallbackDispatcher]") {
+TEST_CASE("callback dispatcher copy ellision" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     Tracer::refresh();
     {
@@ -87,7 +87,7 @@ TEST_CASE("callback dispatcher copy ellision" , "[CallbackDispatcher]") {
     REQUIRE(Tracer::dtor_calls == 2);
 }
 
-TEST_CASE("callback dispatcher without event" , "[CallbackDispatcher]") {
+TEST_CASE("callback dispatcher without event" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     bool called = false;
     Dispatcher::SimpleCallback s = [&](int a) {
@@ -99,7 +99,7 @@ TEST_CASE("callback dispatcher without event" , "[CallbackDispatcher]") {
     REQUIRE(called);
 }
 
-TEST_CASE("remove callback dispatcher without event" , "[CallbackDispatcher]") {
+TEST_CASE("remove callback dispatcher without event" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     bool called = false;
     Dispatcher::SimpleCallback s = [&](int a) {
@@ -115,7 +115,7 @@ TEST_CASE("remove callback dispatcher without event" , "[CallbackDispatcher]") {
     REQUIRE(!called);
 }
 
-TEST_CASE("remove callback dispatcher with compatible type" , "[CallbackDispatcher]") {
+TEST_CASE("remove callback dispatcher with compatible type" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     bool called = false;
     function<int(int16_t)> s = [&](int a) {
@@ -131,7 +131,7 @@ TEST_CASE("remove callback dispatcher with compatible type" , "[CallbackDispatch
     REQUIRE(!called);
 }
 
-TEST_CASE("remove callback comparable functor" , "[CallbackDispatcher]") {
+TEST_CASE("remove callback comparable functor" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     static bool called;
     struct S {
@@ -169,7 +169,7 @@ TEST_CASE("remove callback comparable functor" , "[CallbackDispatcher]") {
     CHECK(!called);
 }
 
-TEST_CASE("remove callback comparable full functor" , "[CallbackDispatcher]") {
+TEST_CASE("remove callback comparable full functor" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     static bool called;
     struct S {
@@ -207,7 +207,7 @@ TEST_CASE("remove callback comparable full functor" , "[CallbackDispatcher]") {
     CHECK(!called);
 }
 
-TEST_CASE("remove simple callback self lambda" , "[CallbackDispatcher]") {
+TEST_CASE("remove simple callback self lambda" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     static bool called;
     auto l = [&](panda::Ifunction<int, int>& self, int a) {
@@ -226,7 +226,7 @@ TEST_CASE("remove simple callback self lambda" , "[CallbackDispatcher]") {
 }
 
 
-TEST_CASE("remove callback self lambda" , "[CallbackDispatcher]") {
+TEST_CASE("remove callback self lambda" , "[panda-lib][callbackdispatcher]") {
     using panda::optional;
     Dispatcher d;
     static bool called;
@@ -245,7 +245,7 @@ TEST_CASE("remove callback self lambda" , "[CallbackDispatcher]") {
     CHECK(!called);
 }
 
-TEST_CASE("dispatcher to function conversion" , "[CallbackDispatcher]") {
+TEST_CASE("dispatcher to function conversion" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     d.add([](Dispatcher::Event&, int a){return a*2;});
     function<panda::optional<int>(int)> f = d;
@@ -253,7 +253,7 @@ TEST_CASE("dispatcher to function conversion" , "[CallbackDispatcher]") {
 
 }
 
-TEST_CASE("dispatcher 2 string calls" , "[CallbackDispatcher]") {
+TEST_CASE("dispatcher 2 string calls" , "[panda-lib][callbackdispatcher]") {
     using Dispatcher = CallbackDispatcher<void(string)>;
     Dispatcher d;
     d.add([](string s){REQUIRE(s == "value");});

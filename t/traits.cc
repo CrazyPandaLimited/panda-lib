@@ -5,7 +5,7 @@
 using namespace panda::lib::traits;
 using namespace panda;
 
-TEST_CASE("bool_or") {
+TEST_CASE("bool_or", "[panda-lib]") {
     struct N {};
 
     REQUIRE(bool_or(nullptr, true) == false);
