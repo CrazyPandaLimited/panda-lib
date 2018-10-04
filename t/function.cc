@@ -41,37 +41,37 @@ public:
 
 using namespace test;
 
-TEST_CASE("simplest function", "[function]") {
+TEST_CASE("simplest function", "[panda-lib][function]") {
     function<void(void)> f = &void_func;
     REQUIRE(true);
 }
 
-TEST_CASE("simplest function call", "[function]") {
+TEST_CASE("simplest function call", "[panda-lib][function]") {
     function<int(int)> f;
     f = &plus_one;
     REQUIRE(f(1) == 2);
 }
 
-TEST_CASE("function by reference call", "[function]") {
+TEST_CASE("function by reference call", "[panda-lib][function]") {
     function<int(int)> f;
     f = plus_one;
     REQUIRE(f(1) == 2);
 }
 
-TEST_CASE("simplest lambda call", "[function]") {
+TEST_CASE("simplest lambda call", "[panda-lib][function]") {
     int a = 13;
     function<int(void)> f = [&](){return a;};
     REQUIRE(f() == 13);
 }
 
-TEST_CASE("simplest method call", "[function]") {
+TEST_CASE("simplest method call", "[panda-lib][function]") {
     iptr<Test> t = new Test();
     t->value = 14;
     auto m = make_function(&Test::bar, t);
     REQUIRE(m() == 54);
 }
 
-TEST_CASE("mixedcall", "[function]") {
+TEST_CASE("mixedcall", "[panda-lib][function]") {
     iptr<Test> t = new Test();
     t->value = 14;
     auto f = make_function(&Test::bar, t);
@@ -85,7 +85,7 @@ TEST_CASE("mixedcall", "[function]") {
     REQUIRE(f() == 13);
 }
 
-TEST_CASE("function ptr comparations", "[function]") {
+TEST_CASE("function ptr comparations", "[panda-lib][function]") {
     function<void(void)> f1_void = &void_func;
     function<void(void)> f2_void = &void_func;
     function<void(void)> f3_void = &void_func2;
@@ -97,7 +97,7 @@ TEST_CASE("function ptr comparations", "[function]") {
     REQUIRE(f1_void != tmp_abstract_function(&void_func2));
 }
 
-TEST_CASE("function ptr comparations covariant", "[function]") {
+TEST_CASE("function ptr comparations covariant", "[panda-lib][function]") {
     struct Int {
         void operator()(int) {}
         bool operator==(const Int&) const {
@@ -122,7 +122,7 @@ TEST_CASE("function ptr comparations covariant", "[function]") {
     CHECK(ff1 == ff2);
 }
 
-TEST_CASE("function covariant copy comparations", "[function]") {
+TEST_CASE("function covariant copy comparations", "[panda-lib][function]") {
     bool called = false;
     auto lambda = [&](int a) {
         called = true;
@@ -136,7 +136,7 @@ TEST_CASE("function covariant copy comparations", "[function]") {
     CHECK(f2 == f1);
 }
 
-TEST_CASE("methods comparations", "[function]") {
+TEST_CASE("methods comparations", "[panda-lib][function]") {
     iptr<Test> t = new Test();
     auto m1 = make_function(&Test::foo, t);
     auto m2 = make_method(&Test::foo);
@@ -154,7 +154,7 @@ TEST_CASE("methods comparations", "[function]") {
 
 }
 
-TEST_CASE("lambdas comparations", "[function]") {
+TEST_CASE("lambdas comparations", "[panda-lib][function]") {
     int a = 10;
     function<int(void)> l1 = [&](){return a;};
     auto l2 = l1;
@@ -164,7 +164,7 @@ TEST_CASE("lambdas comparations", "[function]") {
     REQUIRE(l1 != l3);
 }
 
-TEST_CASE("mixed function comparations", "[function]") {
+TEST_CASE("mixed function comparations", "[panda-lib][function]") {
     int a = 10;
     function<int(void)> l = [&](){return a;};
     function<int(void)> f = &foo2;
@@ -176,7 +176,7 @@ TEST_CASE("mixed function comparations", "[function]") {
     REQUIRE(m != f);
 }
 
-TEST_CASE("functors comparations", "[function]") {
+TEST_CASE("functors comparations", "[panda-lib][function]") {
     function<int(int)> f1 = Test(1);
     function<int(int)> f2 = Test(2);
     function<int(int)> f11 = Test(1);
@@ -188,7 +188,7 @@ TEST_CASE("functors comparations", "[function]") {
     REQUIRE(f1 == tmp1);
 }
 
-TEST_CASE("function copy ellision", "[function]") {
+TEST_CASE("function copy ellision", "[panda-lib][function]") {
     Tracer::refresh();
     {
         function<int(int)> f = Tracer(10);
@@ -202,28 +202,28 @@ TEST_CASE("function copy ellision", "[function]") {
     REQUIRE(Tracer::dtor_calls == 2);
 }
 
-TEST_CASE("covariant return type optional" , "[function]") {
+TEST_CASE("covariant return type optional" , "[panda-lib][function]") {
     function<panda::optional<int> (int)> cb = [](int a) -> int {
         return a;
     };
     REQUIRE(cb(3).value_or(42) == 3);
 }
 
-TEST_CASE("covariant return type double" , "[function]") {
+TEST_CASE("covariant return type double" , "[panda-lib][function]") {
     function<double (int)> cb = [](int a) -> int {
         return a;
     };
     REQUIRE(cb(3) == 3.0);
 }
 
-TEST_CASE("contravariance of arguments" , "[function]") {
+TEST_CASE("contravariance of arguments" , "[panda-lib][function]") {
     function<double (int)> cb = [](double) -> int {
         return 10;
     };
     REQUIRE(cb(3) == 10);
 }
 
-TEST_CASE("contravariance of arguments classes" , "[function]") {
+TEST_CASE("contravariance of arguments classes" , "[panda-lib][function]") {
     using panda::string;
     struct Base {
         virtual ~Base(){}
@@ -249,7 +249,7 @@ function<int(int)> lamda() {
 }
 
 
-TEST_CASE("function memory", "[function]") {
+TEST_CASE("function memory", "[panda-lib][function]") {
 
     Tracer::refresh();
     {
@@ -261,7 +261,7 @@ TEST_CASE("function memory", "[function]") {
 }
 
 
-TEST_CASE("lambda self reference", "[function]") {
+TEST_CASE("lambda self reference", "[panda-lib][function]") {
     int a = 1;
     int b;
     function<void(void)> outer;
@@ -280,7 +280,7 @@ TEST_CASE("lambda self reference", "[function]") {
     REQUIRE(b == 43);
 }
 
-TEST_CASE("no capture self reference", "[function]") {
+TEST_CASE("no capture self reference", "[panda-lib][function]") {
     static int a = 0;
     function<void(int)> outer;
     {
@@ -294,21 +294,21 @@ TEST_CASE("no capture self reference", "[function]") {
     REQUIRE(a == 1);
 }
 
-TEST_CASE("function from null", "[function]") {
+TEST_CASE("function from null", "[panda-lib][function]") {
     void (*fptr)();
     fptr = nullptr;
     function<void()> f = fptr;
     REQUIRE(!f);
 }
 
-TEST_CASE("function from null method", "[function]") {
+TEST_CASE("function from null method", "[panda-lib][function]") {
     auto meth = &Test::bar;
     meth = nullptr;
     auto m = make_function(meth);
     REQUIRE(!m);
 }
 
-TEST_CASE("function from nullable object", "[function]") {
+TEST_CASE("function from nullable object", "[panda-lib][function]") {
     struct S {
         void operator()() const {}
         explicit operator bool() const {
