@@ -8,11 +8,14 @@ extern "C" {
 #  undef do_open
 #  undef do_close
 }
+#include <iostream>
 #include <string>
 #include <panda/log.h>
 #undef seed
 #define CATCH_CONFIG_RUNNER
+#define CATCH_CONFIG_DEFAULT_REPORTER "tap"
 #include <catch.hpp>
+#include <catch_reporter_tap.hpp>
    
 MODULE = CPP::panda::lib                PACKAGE = CPP::panda::lib::Test
 PROTOTYPES: DISABLE
@@ -28,7 +31,8 @@ bool test_run_all_cpp_tests() {
         }
     };
     panda::Log::logger().reset(new CatchLogger);
-        
-    std::vector<const char*> argv = {"test"};
-    RETVAL = Catch::Session().run(argv.size(), argv.data()) == 0;
+
+    std::vector<const char*> argv = {"test", "-s"};
+    Catch::Session session;    
+    RETVAL = session.applyCommandLine(argv.size(), argv.data()) == 0 && session.run() == 0;
 }

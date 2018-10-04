@@ -271,12 +271,12 @@ public:
 
         difference_type operator-(const iterator& rhs) const { return static_cast<difference_type>(_pos - rhs._pos); }
 
-        bool operator==(const iterator& rhs) { return _pos == rhs._pos; }
-        bool operator!=(const iterator& rhs) { return _pos != rhs._pos; }
-        bool operator< (const iterator& rhs) { return rhs._pos - _pos > 0; }
-        bool operator> (const iterator& rhs) { return _pos - rhs._pos > 0; }
-        bool operator<=(const iterator& rhs) { return rhs._pos - _pos >= 0; }
-        bool operator>=(const iterator& rhs) { return _pos - rhs._pos >= 0; }
+        bool operator==(const iterator& rhs) const { return _pos == rhs._pos; }
+        bool operator!=(const iterator& rhs) const { return _pos != rhs._pos; }
+        bool operator< (const iterator& rhs) const { return rhs._pos - _pos > 0; }
+        bool operator> (const iterator& rhs) const { return _pos - rhs._pos > 0; }
+        bool operator<=(const iterator& rhs) const { return rhs._pos - _pos >= 0; }
+        bool operator>=(const iterator& rhs) const { return _pos - rhs._pos >= 0; }
 
         operator const_iterator() { return _string.data() + _pos; }
 
