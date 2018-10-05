@@ -6,12 +6,13 @@
 
 using panda::function;
 using panda::make_function;
-using panda::make_shared;
+using panda::iptr;
 using panda::function_details::make_method;
 using panda::function_details::tmp_abstract_function;
 using test::Tracer;
 
 namespace test {
+
 
 void void_func(){}
 void void_func2(){}
@@ -22,7 +23,7 @@ void func_double(int){}
 int foo2() {return 1;}
 int plus_one(int a) { return a + 1;}
 
-class Test {
+class Test : public panda::Refcnt {
 public:
     int value = 0;
 
@@ -64,14 +65,14 @@ TEST_CASE("simplest lambda call", "[panda-lib][function]") {
 }
 
 TEST_CASE("simplest method call", "[panda-lib][function]") {
-    auto t = make_shared<Test>();
+    iptr<Test> t = new Test();
     t->value = 14;
     auto m = make_function(&Test::bar, t);
     REQUIRE(m() == 54);
 }
 
 TEST_CASE("mixedcall", "[panda-lib][function]") {
-    auto t = make_shared<Test>();
+    iptr<Test> t = new Test();
     t->value = 14;
     auto f = make_function(&Test::bar, t);
     REQUIRE(f() == 54);
@@ -136,7 +137,7 @@ TEST_CASE("function covariant copy comparations", "[panda-lib][function]") {
 }
 
 TEST_CASE("methods comparations", "[panda-lib][function]") {
-    auto t = make_shared<Test>();
+    iptr<Test> t = new Test();
     auto m1 = make_function(&Test::foo, t);
     auto m2 = make_method(&Test::foo);
     REQUIRE(m1 != *m2);
@@ -144,7 +145,7 @@ TEST_CASE("methods comparations", "[panda-lib][function]") {
     m2->bind(t);
     REQUIRE(m1 == function<void(int)>(m2));
 
-    auto t2 = make_shared<Test>();
+    iptr<Test> t2 = new Test();
     m2->bind(t2);
     REQUIRE(m1 != *m2);
 
@@ -167,7 +168,7 @@ TEST_CASE("mixed function comparations", "[panda-lib][function]") {
     int a = 10;
     function<int(void)> l = [&](){return a;};
     function<int(void)> f = &foo2;
-    auto t = make_shared<Test>();
+    iptr<Test> t = new Test();
     auto m = make_function(&Test::bar, t);
 
     REQUIRE(l != f);

@@ -1,13 +1,10 @@
 #pragma once
-
-#include <panda/refcnt.h>
 #include <iostream>
+#include <panda/refcnt.h>
 #include <panda/lib/traits.h>
 #include <assert.h>
 
 namespace panda {
-
-using panda::shared_ptr;
 
 template <typename Ret, typename... Args>
 class function;
@@ -24,7 +21,7 @@ namespace function_details {
 
 
 template <typename Ret, typename... Args>
-struct Ifunction : public function_details::AnyFunction, virtual public RefCounted {
+struct Ifunction : function_details::AnyFunction, virtual Refcnt {
     virtual ~Ifunction() {}
     virtual Ret operator()(Args...) = 0;
     virtual bool equals(const function_details::AnyFunction* oth) const = 0;
@@ -171,9 +168,9 @@ struct is_panda_function_t<function<Params...>> {
 };
 
 template <typename Ret, typename... Args>
-auto make_abstract_function(Ret (*f)(Args...)) -> shared_ptr<abstract_function<Ret (*)(Args...), Ret, true, Args...>> {
+auto make_abstract_function(Ret (*f)(Args...)) -> iptr<abstract_function<Ret (*)(Args...), Ret, true, Args...>> {
     if (!f) return nullptr;
-    return panda::make_shared<abstract_function<Ret (*)(Args...), Ret, true, Args...>>(f);
+    return new abstract_function<Ret (*)(Args...), Ret, true, Args...>(f);
 }
 
 template <typename Ret, typename... Args>
@@ -188,9 +185,9 @@ template <typename Ret, typename... Args,
           typename Check = decltype(std::declval<Functor>()(std::declval<Args>()...)),
           typename = typename std::enable_if<!std::is_same<Functor, Ret(&)(Args...)>::value>::type,
           typename = typename std::enable_if<!is_panda_function_t<DeFunctor>::value>::type>
-shared_ptr<abstract_function<DeFunctor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f, Check(*)() = 0) {
+iptr<abstract_function<DeFunctor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f, Check(*)() = 0) {
     if (!lib::traits::bool_or(f, true)) return nullptr;
-    return panda::make_shared<abstract_function<DeFunctor, Ret, IsComp, Args...>>(std::forward<Functor>(f));
+    return new abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
 }
 
 template <typename Ret, typename... Args,
@@ -207,9 +204,9 @@ template <typename Ret, typename... Args,
           typename Functor, bool IsComp = lib::traits::is_comparable<typename std::remove_reference<Functor>::type>::value,
           typename DeFunctor = typename std::remove_reference<Functor>::type,
           typename Check = decltype(std::declval<Functor>()(std::declval<Ifunction<Ret, Args...>&>(), std::declval<Args>()...))>
-shared_ptr<abstract_function<DeFunctor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f) {
+iptr<abstract_function<DeFunctor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f) {
     if (!lib::traits::bool_or(f, true)) return nullptr;
-    return panda::make_shared<abstract_function<DeFunctor, Ret, IsComp, Args...>>(std::forward<Functor>(f));
+    return new abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
 }
 
 template <typename Ret, typename... Args,
@@ -223,7 +220,7 @@ abstract_function<DeFunctor, Ret, IsComp, Args...> tmp_abstract_function(Functor
 
 template <typename Ret, typename... Args, typename ORet, typename... OArgs,
           typename = typename std::enable_if<lib::traits::has_call_operator<function<ORet, OArgs...>, Args...>::value>::type>
-auto make_abstract_function(const function<ORet, OArgs...>& func) -> shared_ptr<function_caster<decltype(func.func), Ret, Args...>> {
+auto make_abstract_function(const function<ORet, OArgs...>& func) -> iptr<function_caster<decltype(func.func), Ret, Args...>> {
     if (!func) return nullptr;
     return new function_caster<decltype(func.func), Ret, Args...>(func.func);
 }
@@ -234,10 +231,10 @@ struct method : public Ifunction<Ret, Args...>{
     using Method = Ret (Class::*)(Args...);
     using ifunction = Ifunction<Ret, Args...>;
 
-    method(Method method, shared_ptr<Class> thiz = nullptr) : thiz(thiz), meth(method) {}
-    shared_ptr<method, true> bind(shared_ptr<Class> thiz) {
+    method(Method method, iptr<Class> thiz = nullptr) : thiz(thiz), meth(method) {}
+    iptr<method> bind(iptr<Class> thiz) {
         this->thiz = thiz;
-        return shared_ptr<method, true>(this);
+        return iptr<method>(this);
     }
 
     Ret operator()(Args... args) override {
@@ -264,24 +261,24 @@ struct method : public Ifunction<Ret, Args...>{
     }
 
 private:
-    shared_ptr<Class> thiz;
+    iptr<Class> thiz;
     Method meth;
 };
 
 template <class Class, typename Ret, typename... Args>
-inline shared_ptr<method<Class, Ret, Args...>> make_method(Ret (Class::*meth)(Args...), shared_ptr<Class> thiz = nullptr) {
+inline iptr<method<Class, Ret, Args...>> make_method(Ret (Class::*meth)(Args...), iptr<Class> thiz = nullptr) {
     if (!meth) return nullptr;
-    return panda::make_shared<method<Class, Ret, Args...>>(meth, thiz);
+    return new method<Class, Ret, Args...>(meth, thiz);
 }
 
 template <typename Ret, typename... Args, class Class>
-inline shared_ptr<method<Class, Ret, Args...>> make_abstract_function(Ret (Class::*meth)(Args...), shared_ptr<Class> thiz = nullptr) {
+inline iptr<method<Class, Ret, Args...>> make_abstract_function(Ret (Class::*meth)(Args...), iptr<Class> thiz = nullptr) {
     if (!meth) return nullptr;
-    return panda::make_shared<method<Class, Ret, Args...>>(meth, thiz);
+    return new method<Class, Ret, Args...>(meth, thiz);
 }
 
 template <typename Ret, typename... Args, class Class>
-inline method<Class, Ret, Args...> tmp_abstract_function(Ret (Class::*meth)(Args...), shared_ptr<Class> thiz = nullptr) {
+inline method<Class, Ret, Args...> tmp_abstract_function(Ret (Class::*meth)(Args...), iptr<Class> thiz = nullptr) {
     assert(meth);
     return method<Class, Ret, Args...>(meth, thiz);
 }

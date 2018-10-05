@@ -1,13 +1,10 @@
 #pragma once
-
 #include <utility>
 #include <panda/refcnt.h>
 #include "function_utils.h"
 
 namespace panda {
 
-using panda::shared_ptr;
-using panda::make_shared;
 using std::remove_reference;
 
 template <typename Ret, typename... Args>
@@ -16,7 +13,7 @@ class function;
 template <typename Ret, typename... Args>
 class function {
 public:
-    using Func = shared_ptr<Ifunction<Ret, Args...>>;
+    using Func = iptr<Ifunction<Ret, Args...>>;
     Func func;
 
 public:
@@ -24,7 +21,7 @@ public:
     function(std::nullptr_t){}
 
     template <typename Derr>
-    function(const shared_ptr<Derr>& f) : func(f) {}
+    function(const iptr<Derr>& f) : func(f) {}
 
     template<typename... F,
              typename = decltype(function_details::make_abstract_function<Ret, Args...>(std::declval<F>()...)),
@@ -72,7 +69,7 @@ public:
 };
 
 template <class Class, typename Ret, typename... Args>
-inline function<Ret( Args...)> make_function(Ret (Class::*meth)(Args...), shared_ptr<Class> thiz = nullptr) {
+inline function<Ret( Args...)> make_function(Ret (Class::*meth)(Args...), iptr<Class> thiz = nullptr) {
     return function<Ret(Args...)>(meth, thiz);
 }
 

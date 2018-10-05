@@ -2,18 +2,18 @@
 #include <panda/CallbackDispatcher.h>
 #include <panda/function_utils.h>
 #include <panda/lib/from_chars.h>
-#include <panda/string.h>
 
 using panda::CallbackDispatcher;
 using test::Tracer;
 using panda::function_details::tmp_abstract_function;
 using panda::function_details::make_abstract_function;
-using panda::string;
+using panda::iptr;
 
 using Dispatcher = CallbackDispatcher<int(int)>;
 using Event = Dispatcher::Event;
 
 using panda::function;
+using panda::string;
 
 TEST_CASE("empty callback dispatcher" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
@@ -59,12 +59,12 @@ TEST_CASE("remove callback dispatcher" , "[panda-lib][callbackdispatcher]") {
 
 TEST_CASE("remove_all in process" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
+    d.add([](Event&, int) -> int {
+        return 2;
+    });
     d.add([&](Event& e, int a) -> int {
         d.remove_all();
         return 1 + e.next(a).value_or(0);
-    });
-    d.add([](Event&, int) -> int {
-        return 2;
     });
     REQUIRE(d(2).value_or(0) == 1);
 }
@@ -90,9 +90,8 @@ TEST_CASE("callback dispatcher copy ellision" , "[panda-lib][callbackdispatcher]
 TEST_CASE("callback dispatcher without event" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     bool called = false;
-    Dispatcher::SimpleCallback s = [&](int a) {
+    Dispatcher::SimpleCallback s = [&](int) {
         called = true;
-        return a;
     };
     d.add(s);
     REQUIRE(d(2).value_or(42) == 42);
@@ -102,9 +101,8 @@ TEST_CASE("callback dispatcher without event" , "[panda-lib][callbackdispatcher]
 TEST_CASE("remove callback dispatcher without event" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     bool called = false;
-    Dispatcher::SimpleCallback s = [&](int a) {
+    Dispatcher::SimpleCallback s = [&](int) {
         called = true;
-        return a;
     };
     d.add(s);
     REQUIRE(d(2).value_or(42) == 42);
@@ -135,9 +133,8 @@ TEST_CASE("remove callback comparable functor" , "[panda-lib][callbackdispatcher
     Dispatcher d;
     static bool called;
     struct S {
-        int operator()(int a) {
+        void operator()(int) {
             called = true;
-            return a +10;
         }
         bool operator ==(const S&) const {
             return true;
@@ -210,10 +207,9 @@ TEST_CASE("remove callback comparable full functor" , "[panda-lib][callbackdispa
 TEST_CASE("remove simple callback self lambda" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     static bool called;
-    auto l = [&](panda::Ifunction<int, int>& self, int a) {
+    auto l = [&](panda::Ifunction<void, int>& self, int) {
         d.remove(self);
         called = true;
-        return a + 10;
     };
 
     Dispatcher::SimpleCallback s = l;
@@ -256,7 +252,45 @@ TEST_CASE("dispatcher to function conversion" , "[panda-lib][callbackdispatcher]
 TEST_CASE("dispatcher 2 string calls" , "[panda-lib][callbackdispatcher]") {
     using Dispatcher = CallbackDispatcher<void(string)>;
     Dispatcher d;
-    d.add([](string s){REQUIRE(s == "value");});
-    d.add([](string s){REQUIRE(s == "value");});
-    d("value");
+    d.add([](string s) {CHECK(s == "value");});
+    d.add([](string s) {CHECK(s == "value");});
+    d(string("value"));
+    string s = "value";
+    d(s);
+}
+
+TEST_CASE("front order", "[CallbackDispatcher]") {
+    using Dispatcher = CallbackDispatcher<void()>;
+    Dispatcher d;
+    std::vector<int> res;
+    d.add([&]{ res.push_back(1); });
+    d.add([&]{ res.push_back(2); });
+    d.add([&](Dispatcher::Event& e){ res.push_back(3); e.next(); });
+    d();
+    REQUIRE(res == std::vector<int>({3,2,1}));
+}
+
+TEST_CASE("back order", "[CallbackDispatcher]") {
+    using Dispatcher = CallbackDispatcher<void()>;
+    Dispatcher d;
+    std::vector<int> res;
+    d.add([&](Dispatcher::Event& e){ res.push_back(1); e.next(); }, true);
+    d.add([&]{ res.push_back(2); }, true);
+    d.add_back([&]{ res.push_back(3); });
+    d();
+    REQUIRE(res == std::vector<int>({1,2,3}));
+}
+
+TEST_CASE("dispatcher const ref arg move" , "[CallbackDispatcher]") {
+    struct S : public panda::Refcnt {
+        using Dispatcher = CallbackDispatcher<void(const iptr<S>&)>;
+        Dispatcher d;
+
+        void call() {
+            d(this);
+        }
+
+    };
+    S s;
+    s.call();
 }
