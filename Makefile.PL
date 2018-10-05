@@ -13,7 +13,7 @@ my %params = (
         CPLUS    => 11,
         INCLUDE  => {'src' => '/'},
     },
-    BIN_DEPS         => ['CPP::catch::test'],
+    BIN_DEPS         => ['CPP::catch'],
     CCFLAGS          => '-Wall -Wextra',
     OPTIMIZE         => '-O2 -g',
     MIN_PERL_VERSION => '5.12.0',
