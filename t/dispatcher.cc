@@ -116,9 +116,8 @@ TEST_CASE("remove callback dispatcher without event" , "[panda-lib][callbackdisp
 TEST_CASE("remove callback dispatcher with compatible type" , "[panda-lib][callbackdispatcher]") {
     Dispatcher d;
     bool called = false;
-    function<int(int16_t)> s = [&](int a) {
+    function<void(int16_t)> s = [&](int) {
         called = true;
-        return a;
     };
     d.add(s);
     REQUIRE(d(2).value_or(42) == 42);
@@ -259,7 +258,7 @@ TEST_CASE("dispatcher 2 string calls" , "[panda-lib][callbackdispatcher]") {
     d(s);
 }
 
-TEST_CASE("front order", "[CallbackDispatcher]") {
+TEST_CASE("front order", "[panda-lib][callbackdispatcher]") {
     using Dispatcher = CallbackDispatcher<void()>;
     Dispatcher d;
     std::vector<int> res;
@@ -270,7 +269,7 @@ TEST_CASE("front order", "[CallbackDispatcher]") {
     REQUIRE(res == std::vector<int>({3,2,1}));
 }
 
-TEST_CASE("back order", "[CallbackDispatcher]") {
+TEST_CASE("back order", "[panda-lib][callbackdispatcher]") {
     using Dispatcher = CallbackDispatcher<void()>;
     Dispatcher d;
     std::vector<int> res;
@@ -281,8 +280,8 @@ TEST_CASE("back order", "[CallbackDispatcher]") {
     REQUIRE(res == std::vector<int>({1,2,3}));
 }
 
-TEST_CASE("dispatcher const ref arg move" , "[CallbackDispatcher]") {
-    struct S : public panda::Refcnt {
+TEST_CASE("dispatcher const ref arg move" , "[panda-lib][callbackdispatcher]") {
+    struct S : panda::Refcnt {
         using Dispatcher = CallbackDispatcher<void(const iptr<S>&)>;
         Dispatcher d;
 
