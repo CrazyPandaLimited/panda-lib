@@ -6,7 +6,7 @@
 using panda::lib::owning_list;
 using test::Tracer;
 
-TEST_CASE("empty owning_list" , "[panda-lib][owning_list]") {
+TEST_CASE("empty owning_list" , "[owning_list]") {
     owning_list<int> list;
     REQUIRE(list.size() == 0);
     for (auto iter = list.begin(); iter != list.end(); ++iter) {
@@ -15,7 +15,7 @@ TEST_CASE("empty owning_list" , "[panda-lib][owning_list]") {
     REQUIRE(true);
 }
 
-TEST_CASE("simple owning_list" , "[panda-lib][owning_list]") {
+TEST_CASE("simple owning_list" , "[owning_list]") {
     owning_list<int> list;
     list.push_back(10);
     REQUIRE(list.size() == 1);
@@ -27,7 +27,7 @@ TEST_CASE("simple owning_list" , "[panda-lib][owning_list]") {
     REQUIRE(++iter == list.end());
 }
 
-TEST_CASE("2 elements owning_list" , "[panda-lib][owning_list]") {
+TEST_CASE("2 elements owning_list" , "[owning_list]") {
     owning_list<int> list;
     list.push_back(0);
     list.push_back(1);
@@ -41,7 +41,7 @@ TEST_CASE("2 elements owning_list" , "[panda-lib][owning_list]") {
     REQUIRE(iter == list.end());
 }
 
-TEST_CASE("owning_list::remove 0" , "[panda-lib][owning_list]") {
+TEST_CASE("owning_list::remove 0" , "[owning_list]") {
     owning_list<int> list;
     list.push_back(10);
     list.remove(10);
@@ -52,7 +52,7 @@ TEST_CASE("owning_list::remove 0" , "[panda-lib][owning_list]") {
 }
 
 
-TEST_CASE("owning_list::remove 1" , "[panda-lib][owning_list]") {
+TEST_CASE("owning_list::remove 1" , "[owning_list]") {
     owning_list<int> list;
     list.push_back(0);
     list.push_back(2);
@@ -65,7 +65,7 @@ TEST_CASE("owning_list::remove 1" , "[panda-lib][owning_list]") {
     REQUIRE(list.size() == 2);
 }
 
-TEST_CASE("owning_list::remove in iteration" , "[panda-lib][owning_list]") {
+TEST_CASE("owning_list::remove in iteration" , "[owning_list]") {
     owning_list<int> list;
     list.push_back(0);
     list.push_back(2);
@@ -81,7 +81,7 @@ TEST_CASE("owning_list::remove in iteration" , "[panda-lib][owning_list]") {
     REQUIRE(list.size() == 2);
 }
 
-TEST_CASE("owning_list::remove in iteration 2" , "[panda-lib][owning_list]") {
+TEST_CASE("owning_list::remove in iteration 2" , "[owning_list]") {
     owning_list<int> list;
     list.push_back(0);
     list.push_back(1);
@@ -94,7 +94,7 @@ TEST_CASE("owning_list::remove in iteration 2" , "[panda-lib][owning_list]") {
     REQUIRE(list.size() == 1);
 }
 
-TEST_CASE("owning_list::remove in iteration reverse" , "[panda-lib][owning_list]") {
+TEST_CASE("owning_list::remove in iteration reverse" , "[owning_list]") {
     owning_list<int> list;
     list.push_back(0);
     list.push_back(1);
@@ -107,7 +107,7 @@ TEST_CASE("owning_list::remove in iteration reverse" , "[panda-lib][owning_list]
     REQUIRE(list.size() == 1);
 }
 
-TEST_CASE("owning_list::remove in iteration reverse ++" , "[panda-lib][owning_list]") {
+TEST_CASE("owning_list::remove in iteration reverse ++" , "[owning_list]") {
     owning_list<int> list;
     list.push_back(0);
     list.push_back(1);
@@ -121,7 +121,7 @@ TEST_CASE("owning_list::remove in iteration reverse ++" , "[panda-lib][owning_li
     REQUIRE(list.size() == 2);
 }
 
-TEST_CASE("owning_list::erase in iteration reverse ++" , "[panda-lib][owning_list]") {
+TEST_CASE("owning_list::erase in iteration reverse ++" , "[owning_list]") {
     owning_list<int> list;
     list.push_back(0);
     list.push_back(1);
@@ -135,7 +135,7 @@ TEST_CASE("owning_list::erase in iteration reverse ++" , "[panda-lib][owning_lis
     REQUIRE(list.size() == 2);
 }
 
-TEST_CASE("owning_list::clear Tracer" , "[panda-lib][owning_list]") {
+TEST_CASE("owning_list::clear Tracer" , "[owning_list]") {
     Tracer::refresh();
     owning_list<Tracer> list;
     list.push_back(Tracer(0));
@@ -148,7 +148,7 @@ TEST_CASE("owning_list::clear Tracer" , "[panda-lib][owning_list]") {
     REQUIRE(list.size() == 0);
 }
 
-TEST_CASE("owning_list::remove Tracer" , "[panda-lib][owning_list]") {
+TEST_CASE("owning_list::remove Tracer" , "[owning_list]") {
     Tracer::refresh();
     owning_list<Tracer> list;
     list.push_back(Tracer(0));

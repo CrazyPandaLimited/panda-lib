@@ -105,12 +105,12 @@ void to_chars_test() {
     test_sign_dependent<Int>::run();
 }
 
-TEST_CASE("to_chars int8_t",   "[panda-lib][to_chars]") { to_chars_test<int8_t>(); }
-TEST_CASE("to_chars int16_t",  "[panda-lib][to_chars]") { to_chars_test<int16_t>(); }
-TEST_CASE("to_chars int32_t",  "[panda-lib][to_chars]") { to_chars_test<int32_t>(); }
-TEST_CASE("to_chars int64_t",  "[panda-lib][to_chars]") { to_chars_test<int64_t>(); }
-TEST_CASE("to_chars uint8_t",  "[panda-lib][to_chars]") { to_chars_test<uint8_t>(); }
-TEST_CASE("to_chars uint16_t", "[panda-lib][to_chars]") { to_chars_test<uint16_t>(); }
-TEST_CASE("to_chars uint32_t", "[panda-lib][to_chars]") { to_chars_test<uint32_t>(); }
-TEST_CASE("to_chars uint64_t", "[panda-lib][to_chars]") { to_chars_test<uint64_t>(); }
+TEST_CASE("to_chars int8_t",   "[to_chars]") { to_chars_test<int8_t>(); }
+TEST_CASE("to_chars int16_t",  "[to_chars]") { to_chars_test<int16_t>(); }
+TEST_CASE("to_chars int32_t",  "[to_chars]") { to_chars_test<int32_t>(); }
+TEST_CASE("to_chars int64_t",  "[to_chars]") { to_chars_test<int64_t>(); }
+TEST_CASE("to_chars uint8_t",  "[to_chars]") { to_chars_test<uint8_t>(); }
+TEST_CASE("to_chars uint16_t", "[to_chars]") { to_chars_test<uint16_t>(); }
+TEST_CASE("to_chars uint32_t", "[to_chars]") { to_chars_test<uint32_t>(); }
+TEST_CASE("to_chars uint64_t", "[to_chars]") { to_chars_test<uint64_t>(); }
 
