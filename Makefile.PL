@@ -16,7 +16,7 @@ my %params = (
     CCFLAGS          => '-Wall -Wextra',
     OPTIMIZE         => '-O2',
     MIN_PERL_VERSION => '5.12.0',
-    CTEST            => 't',
+    test             => {SRC => 't'},
 );
 
 if ($ENV{TEST_FULL}) {

@@ -1,4 +1,4 @@
 use strict;
 use warnings;
-use CPP::panda::lib;
+use lib 't'; use MyTest;
 use CPP::catch '[string_char16]';
