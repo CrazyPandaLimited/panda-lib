@@ -1,4 +1,4 @@
 use strict;
 use warnings;
 use lib 't'; use MyTest;
-use CPP::catch '[callbackdispatcher]';
+use Test::Catch '[callbackdispatcher]';

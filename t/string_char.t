@@ -1,4 +1,4 @@
 use strict;
 use warnings;
 use lib 't'; use MyTest;
-use CPP::catch '[string_char]';
+use Test::Catch '[string_char]';

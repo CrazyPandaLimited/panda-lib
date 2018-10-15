@@ -1,4 +1,4 @@
 use strict;
 use warnings;
 use lib 't'; use MyTest;
-use CPP::catch '[string_wchar]';
+use Test::Catch '[string_wchar]';
