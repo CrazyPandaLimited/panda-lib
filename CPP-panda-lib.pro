@@ -3,7 +3,7 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-INCLUDEPATH += src ../CPP-catch-test/src
+INCLUDEPATH += src ../CPP-catch/src
 
 SOURCES += \
     src/panda/lib/from_chars.cc \
