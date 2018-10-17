@@ -19,6 +19,7 @@ protected:
     Refcnt () : _refcnt(0) {}
     virtual ~Refcnt () {}
 private:
+
     mutable uint32_t _refcnt;
 };
 

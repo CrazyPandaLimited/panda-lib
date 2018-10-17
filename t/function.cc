@@ -131,7 +131,6 @@ TEST_CASE("function covariant copy comparations", "[function]") {
 
     function<int(int16_t)> f1 = lambda;
     function<int(int)> f2(f1);
-    bool b;
     CHECK(f1 == f2);
     CHECK(f2 == f1);
 }

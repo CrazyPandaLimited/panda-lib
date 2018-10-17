@@ -91,7 +91,7 @@ public:
         return os;
     }
 
-    ~Log() {
+    ~Log() noexcept(false) {
         if (!logger()) {
             return;
         }
