@@ -16,7 +16,7 @@ class TestChild : public Test {
 using TestSP      = iptr<Test>;
 using TestChildSP = iptr<TestChild>;
 
-TEST_CASE("ctor", "[panda-lib][iptr]") {
+TEST_CASE("ctor", "[iptr]") {
     Tracer::reset();
 
     SECTION("empty") {
@@ -89,7 +89,7 @@ TEST_CASE("ctor", "[panda-lib][iptr]") {
     }
 }
 
-TEST_CASE("reset", "[panda-lib][iptr]") {
+TEST_CASE("reset", "[iptr]") {
     Tracer::reset();
 
     SECTION("no args") {
@@ -125,7 +125,7 @@ TEST_CASE("reset", "[panda-lib][iptr]") {
     }
 }
 
-TEST_CASE("assign", "[panda-lib][iptr]") {
+TEST_CASE("assign", "[iptr]") {
     Tracer::reset();
 
     SECTION("NULL") {
@@ -335,7 +335,7 @@ TEST_CASE("assign", "[panda-lib][iptr]") {
     }
 }
 
-TEST_CASE("dereference", "[panda-lib][iptr]") {
+TEST_CASE("dereference", "[iptr]") {
     auto obj = new Test(123);
     auto p = TestSP(obj);
     REQUIRE(p->value == 123);

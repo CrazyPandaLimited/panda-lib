@@ -328,7 +328,6 @@ struct test_string {
         }
         SECTION("from external") {
             auto exp = mstr("c", 50);
-            auto sz = BUF_CHARS + exp.size();
             {
                 FString src(extstr(exp), exp.size(), exp.size(), &Allocator::ext_free);
                 REQUIRE_ALLOCS(1,EBUF_CHARS);
@@ -1178,7 +1177,6 @@ struct test_string {
 
     static void test_at_front_back () {
         String s(cstr("0123456789", 5));
-        const String& ss = s;
         String tmp(s);
         get_allocs();
 
@@ -1230,7 +1228,6 @@ struct test_string {
 
     static void test_iterator () {
         String s(cstr("0123456789", 5));
-        const String& ss = s;
         String tmp(s);
         get_allocs();
 

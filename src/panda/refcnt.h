@@ -99,6 +99,11 @@ private:
     T* ptr;
 };
 
+template <typename T, typename... Args>
+iptr<T> make_iptr(Args&&... args) {
+    return iptr<T>(new T(std::forward<Args>(args)...));
+}
+
 inline void     refcnt_inc (const Refcnt* o) { o->retain(); }
 inline void     refcnt_dec (const Refcnt* o) { o->release(); }
 inline uint32_t refcnt_get (const Refcnt* o) { return o->refcnt(); }
