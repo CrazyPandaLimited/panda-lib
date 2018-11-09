@@ -41,7 +41,7 @@ namespace std {
         }
     };
 
-    namespace literals { namespace string_view_literals {
+    inline namespace literals { namespace string_view_literals {
 
         // uncomment when -Wno-literal-suffix works
         //constexpr string_view    operator "" sv (const char*     str, size_t len) noexcept { return string_view(str, len); }
