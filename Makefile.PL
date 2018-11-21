@@ -14,7 +14,6 @@ my %params = (
     },
     BIN_DEPS         => ['Test::Catch'],
     CCFLAGS          => '-Wall -Wextra',
-    OPTIMIZE         => '-O2',
     MIN_PERL_VERSION => '5.12.0',
     test             => {SRC => 't'},
 );
