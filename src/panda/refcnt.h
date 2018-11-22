@@ -25,6 +25,8 @@ private:
 
 template <typename T>
 class iptr {
+    template<class U> using _Constructible = typename std::enable_if<std::is_convertible<U*, T*>::value>::type;
+
 public:
     template <class U> friend class iptr;
     typedef T element_type;
@@ -32,7 +34,7 @@ public:
     iptr ()                   : ptr(NULL)    {}
     iptr (T* pointer)         : ptr(pointer) { if (ptr) refcnt_inc(ptr); }
     iptr (const iptr& oth)    : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
-    template<class U>
+    template<class U, typename=_Constructible<U>>
     iptr (const iptr<U>& oth) : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
 
     iptr (iptr&& oth) {
@@ -40,7 +42,7 @@ public:
         oth.ptr = NULL;
     }
 
-    template<class U>
+    template<class U, typename=_Constructible<U>>
     iptr (iptr<U>&& oth) {
         ptr = oth.ptr;
         oth.ptr = NULL;
@@ -56,7 +58,7 @@ public:
     }
 
     iptr& operator= (const iptr& oth)    { return operator=(oth.ptr); }
-    template<class U>
+    template<class U, typename=_Constructible<U>>
     iptr& operator= (const iptr<U>& oth) { return operator=(oth.ptr); }
 
     iptr& operator= (iptr&& oth) {
@@ -64,7 +66,7 @@ public:
         return *this;
     }
 
-    template<class U>
+    template<class U, typename=_Constructible<U>>
     iptr& operator= (iptr<U>&& oth) {
         if (ptr) refcnt_dec(ptr);
         ptr = oth.ptr;
