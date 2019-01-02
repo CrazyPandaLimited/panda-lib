@@ -168,14 +168,14 @@ template <typename T> struct IntrusiveChain {
         return true;
     }
 
-    const_iterator insert (const const_iterator& pos, const T& node) {
-        if (pos.current) {
-            auto prev = intrusive_chain_prev(pos.current);
+    const_iterator insert (const T& pos, const T& node) {
+        if (pos) {
+            auto prev = intrusive_chain_prev(pos);
             if (prev) {
                 intrusive_chain_prev(node, prev);
-                intrusive_chain_next(node, pos.current);
+                intrusive_chain_next(node, pos);
                 intrusive_chain_next(prev, node);
-                intrusive_chain_prev(pos.current, node);
+                intrusive_chain_prev(pos, node);
             }
             else push_front(node);
         }
@@ -184,16 +184,18 @@ template <typename T> struct IntrusiveChain {
         return const_iterator(tail, node);
     }
 
-    const_iterator erase (const const_iterator& pos) {
-        if (!pos.current) return end();
+    const_iterator insert (const const_iterator& pos, const T& node) { return insert(pos.current, node); }
 
-        auto prev = intrusive_chain_prev(pos.current);
+    const_iterator erase (const T& pos) {
+        if (!pos) return end();
+
+        auto prev = intrusive_chain_prev(pos);
         if (!prev) {
             pop_front();
             return cbegin();
         }
 
-        auto next = intrusive_chain_next(pos.current);
+        auto next = intrusive_chain_next(pos);
         if (!next) {
             pop_back();
             return cend();
@@ -201,11 +203,13 @@ template <typename T> struct IntrusiveChain {
 
         intrusive_chain_next(prev, next);
         intrusive_chain_prev(next, prev);
-        intrusive_chain_next(pos.current, T());
-        intrusive_chain_prev(pos.current, T());
+        intrusive_chain_next(pos, T());
+        intrusive_chain_prev(pos, T());
 
         return const_iterator(tail, next);
     }
+
+    const_iterator erase (const const_iterator& pos) { return erase(pos.current); }
 
     void clear () {
         for (auto node = head; node;) {

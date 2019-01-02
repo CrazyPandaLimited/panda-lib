@@ -131,6 +131,15 @@ struct Test {
             it = list.insert(it, v[3]);
             check_content(list, v[1], v[3], v[0], v[2]);
             CHECK(*it == v[3]);
+
+            list.insert(T(), v[4]);
+            check_content(list, v[1], v[3], v[0], v[2], v[4]);
+
+            list.insert(v[1], v[5]);
+            check_content(list, v[5], v[1], v[3], v[0], v[2], v[4]);
+
+            list.insert(v[3], v[6]);
+            check_content(list, v[5], v[1], v[6], v[3], v[0], v[2], v[4]);
         }
 
         SECTION("erase") {
@@ -140,6 +149,8 @@ struct Test {
                 auto it = list.erase(list.end());
                 check_content(list, v[0], v[1], v[2], v[3]);
                 CHECK(it == list.end());
+                list.erase(T());
+                check_content(list, v[0], v[1], v[2], v[3]);
             }
 
             SECTION("from head") {
@@ -152,6 +163,14 @@ struct Test {
                 check_content(list, v[2], v[3]);
                 CHECK(*it == v[2]);
                 check_removed(v[1]);
+
+                list.erase(v[2]);
+                check_content(list, v[3]);
+                check_removed(v[2]);
+
+                list.erase(v[3]);
+                check_content(list);
+                check_removed(v[3]);
             }
 
             SECTION("from tail") {
@@ -166,6 +185,14 @@ struct Test {
                 check_content(list, v[0], v[1]);
                 CHECK(it == list.end());
                 check_removed(v[2]);
+
+                list.erase(v[1]);
+                check_content(list, v[0]);
+                check_removed(v[1]);
+
+                list.erase(v[0]);
+                check_content(list);
+                check_removed(v[0]);
             }
 
             SECTION("from the middle") {
@@ -180,6 +207,17 @@ struct Test {
                 check_content(list, v[0], v[3]);
                 CHECK(*it == v[3]);
                 check_removed(v[1]);
+
+                list.push_back(v[4]);
+                list.push_back(v[5]);
+
+                list.erase(v[3]);
+                check_content(list, v[0], v[4], v[5]);
+                check_removed(v[3]);
+
+                list.erase(v[4]);
+                check_content(list, v[0], v[5]);
+                check_removed(v[4]);
             }
         }
 
