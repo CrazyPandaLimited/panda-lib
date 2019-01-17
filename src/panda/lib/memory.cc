@@ -6,7 +6,8 @@ namespace panda { namespace lib {
 
 static const int START_SIZE = 16;
 
-ObjectAllocator ObjectAllocator::_inst;
+ObjectAllocator* ObjectAllocator::_inst = new ObjectAllocator();
+thread_local ObjectAllocator* ObjectAllocator::_tls_inst = new ObjectAllocator();
 
 void MemoryPool::grow () {
     size_t pools_cnt = pools.size();
@@ -47,18 +48,6 @@ MemoryPool::~MemoryPool () {
         delete[] pool->list;
         pool++;
     }
-}
-
-ObjectAllocator* ObjectAllocator::tls_instance()
-{
-    //std::cerr << "tls_instance for thread " << std::this_thread::get_id() << std::endl;
-    static thread_local ObjectAllocator* ptr;
-    if (!ptr) {
-        static thread_local ObjectAllocator inst;
-        ptr = &inst;
-    }
-    return ptr;
-
 }
 
 ObjectAllocator::ObjectAllocator () {

@@ -89,9 +89,8 @@ private:
 
 class ObjectAllocator {
 public:
-    static ObjectAllocator* instance () { return &_inst; }
-
-    static ObjectAllocator* tls_instance ();
+    static ObjectAllocator* instance     () { return _inst; }
+    static ObjectAllocator* tls_instance () { return _tls_inst; }
 
     ObjectAllocator ();
 
@@ -128,8 +127,9 @@ public:
     ~ObjectAllocator ();
 
 private:
-    static const int POOLS_CNT = 256;
-    static ObjectAllocator _inst;
+    static constexpr const int POOLS_CNT = 256;
+    static ObjectAllocator* _inst;
+    static thread_local ObjectAllocator* _tls_inst;
     MemoryPool* small_pools[POOLS_CNT];
     MemoryPool* medium_pools[POOLS_CNT];
     MemoryPool* big_pools[POOLS_CNT];
