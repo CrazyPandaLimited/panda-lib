@@ -7,22 +7,6 @@
 
 namespace panda {
 
-class Refcnt {
-public:
-    void retain  () const { ++_refcnt; }
-    void release () const {
-        if (_refcnt > 1) --_refcnt;
-        else delete this;
-    }
-    uint32_t refcnt () const { return _refcnt; }
-protected:
-    Refcnt () : _refcnt(0) {}
-    virtual ~Refcnt () {}
-private:
-
-    mutable uint32_t _refcnt;
-};
-
 template <typename T>
 class iptr {
     template<class U> using _Constructible = typename std::enable_if<std::is_convertible<U*, T*>::value>::type;
@@ -106,6 +90,29 @@ iptr<T> make_iptr(Args&&... args) {
     return iptr<T>(new T(std::forward<Args>(args)...));
 }
 
+namespace helper {
+    struct weak_storage;
+}
+
+class Refcnt {
+public:
+    void retain  () const { ++_refcnt; }
+    void release () const {
+        if (_refcnt > 1) --_refcnt;
+        else delete this;
+    }
+    uint32_t refcnt () const { return _refcnt; }
+
+    iptr<helper::weak_storage> get_weak();
+protected:
+    Refcnt () : _refcnt(0) {}
+    virtual ~Refcnt ();
+private:
+
+    mutable uint32_t _refcnt;
+    mutable iptr<helper::weak_storage> _weak;
+};
+
 inline void     refcnt_inc (const Refcnt* o) { o->retain(); }
 inline void     refcnt_dec (const Refcnt* o) { o->release(); }
 inline uint32_t refcnt_get (const Refcnt* o) { return o->refcnt(); }
@@ -117,5 +124,82 @@ template <typename T1, typename T2> inline iptr<T1> dynamic_pointer_cast (const 
 template <typename T1, typename T2> inline std::shared_ptr<T1> static_pointer_cast  (const std::shared_ptr<T2>& shptr) { return std::static_pointer_cast<T1>(shptr); }
 template <typename T1, typename T2> inline std::shared_ptr<T1> const_pointer_cast   (const std::shared_ptr<T2>& shptr) { return std::const_pointer_cast<T1>(shptr); }
 template <typename T1, typename T2> inline std::shared_ptr<T1> dynamic_pointer_cast (const std::shared_ptr<T2>& shptr) { return std::dynamic_pointer_cast<T1>(shptr); }
+
+namespace helper {
+    struct weak_storage : public Refcnt {
+        weak_storage(Refcnt* object) : object(object) {}
+        Refcnt* object;
+    };
+}
+
+template <typename T>
+struct weak_iptr {
+private:
+    template<class U> using _Constructible = typename std::enable_if<std::is_convertible<U*, T*>::value>::type;
+
+public:
+    template <class U> friend class weak_iptr;
+    typedef T element_type;
+
+    weak_iptr() : storage(nullptr), object(nullptr) {}
+    weak_iptr(const weak_iptr&) = default;
+    weak_iptr& operator=(const weak_iptr& o) = default;
+
+    weak_iptr(weak_iptr&&) = default;
+    weak_iptr& operator=(weak_iptr&& o) = default;
+
+    template <typename U, typename=_Constructible<U>>
+    weak_iptr(const iptr<U>& src) : storage(src ? src->get_weak() : nullptr), object(src ? src.get() : nullptr) {}
+
+    template <typename U, typename=_Constructible<U>>
+    weak_iptr(const weak_iptr<U>& src) : storage(src.storage), object(src.object) {}
+
+    template <class U>
+    weak_iptr& operator=(const weak_iptr<U>& o) {
+        storage = o.storage;
+        object = o.object;
+        return *this;
+    }
+
+    template <class U>
+    weak_iptr& operator=(const iptr<U>& src) {
+        storage = src ? src->get_weak() : nullptr;
+        object  = src ? src.get() : nullptr;
+        return *this;
+    }
+
+    template <class U>
+    weak_iptr& operator=(weak_iptr<U>&& o) {
+        storage = std::move(o.storage);
+        object = std::move(o.object);
+        return *this;
+    }
+
+    iptr<T> lock() const {
+        return expired() ? nullptr : object;
+    }
+
+    bool expired() const {
+        return ! operator bool();
+    }
+
+    explicit operator bool() const {
+        return storage && storage->object;
+    }
+
+    size_t use_count() const {
+        return *this ? storage->object->refcnt() : 0;
+    }
+
+    size_t weak_count() const {
+        if (!storage) return 0;
+        if (storage->object) return storage.use_count() - 1; // object itself refers to weak storage, ignore this reference in count
+        return storage.use_count();
+    }
+
+private:
+    iptr<helper::weak_storage> storage;
+    T* object; // it is cache, it never invalidates itself, use storage->object to check validity
+};
 
 }

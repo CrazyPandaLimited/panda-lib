@@ -24,7 +24,8 @@ SOURCES += \
     t/string_char16.cc \
     t/string_char32.cc \
     t/traits.cc \
-    t/bench.cc
+    t/bench.cc \
+    src/panda/refcnt.cc
 
 HEADERS += \
     src/panda/lib/endian.h \

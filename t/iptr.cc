@@ -2,6 +2,7 @@
 #include <panda/refcnt.h>
 
 using panda::iptr;
+using panda::weak_iptr;
 using test::Tracer;
 using panda::Refcnt;
 
@@ -15,6 +16,8 @@ class TestChild : public Test {
 
 using TestSP      = iptr<Test>;
 using TestChildSP = iptr<TestChild>;
+using TestWP      = weak_iptr<Test>;
+using TestChildWP = weak_iptr<TestChild>;
 
 TEST_CASE("ctor", "[iptr]") {
     Tracer::reset();
@@ -346,4 +349,172 @@ TEST_CASE("dereference", "[iptr]") {
     REQUIRE((Test*)p == obj);
     REQUIRE(p);
     REQUIRE((bool)p == true);
+}
+
+TEST_CASE("weak", "[iptr]") {
+    Tracer::reset();
+
+    SECTION("ctor") {
+        SECTION("empty") {
+            TestWP empty;
+            CHECK_FALSE(empty);
+        }
+        SECTION("from iptr") {
+            SECTION("base") {
+                TestSP obj = new Test(123);
+                CHECK(obj->refcnt() == 1);
+                TestWP weak = obj;
+                CHECK(obj->refcnt() == 1);
+            }
+            SECTION("derived") {
+                TestChildSP obj = new TestChild(123);
+                TestWP weak = obj;
+                CHECK(obj->refcnt() == 1);
+            }
+        }
+        SECTION("from bad") {
+            SECTION("bad iptr") {
+                TestSP nothing;
+                TestWP weak(nothing);
+                CHECK_FALSE(weak);
+            }
+
+            SECTION("bad weak_iptr") {
+                TestWP nothing;
+                TestWP weak(nothing);
+                CHECK_FALSE(weak);
+            }
+        }
+
+        SECTION("from weak") {
+            TestSP base = new Test(123);
+            TestChildSP der = new TestChild(123);
+            TestWP wbase = base;
+            TestChildWP wder = der;
+
+            SECTION("base") {
+                TestWP weak = wbase;
+                CHECK(weak.lock() == base);
+                CHECK(base->refcnt() == 1);
+            }
+            SECTION("derived") {
+                TestWP weak = wder;
+                CHECK(weak.lock() == der);
+                CHECK(der->refcnt() == 1);
+            }
+
+            SECTION("move") {
+                TestWP moved(std::move(wbase));
+                CHECK(moved.weak_count() == 1);
+                CHECK(moved.use_count() == 1);
+            }
+        }
+    }
+
+    SECTION("assign") {
+        TestWP empty;
+        TestSP base = new Test(123);
+        TestChildSP der = new TestChild(123);
+        TestWP wbase = base;
+        TestChildWP wder = der;
+
+        TestWP wbase2;
+        TestChildWP wder2;
+
+        SECTION("empty") {
+            TestWP e2;
+            e2 = empty;
+            CHECK_FALSE(e2);
+        }
+
+        SECTION("base") {
+            wbase2 = base;
+            CHECK(wbase2.lock() == base);
+            CHECK(wbase2.weak_count() == 2);
+            wbase2 = der;
+            CHECK(wbase2.lock() == der);
+            CHECK(wbase2.weak_count() == 2);
+            wbase2 = wbase;
+            CHECK(wbase2.lock() == base);
+            CHECK(wbase2.weak_count() == 2);
+            wbase2 = wder;
+            CHECK(wbase2.lock() == der);
+            CHECK(wbase2.weak_count() == 2);
+        }
+        SECTION("derived") {
+            wder2 = der;
+            CHECK(wder2.lock() == der);
+            wder2 = wder;
+            CHECK(wder2.lock() == der);
+            CHECK(der->refcnt() == 1);
+        }
+
+        SECTION("move") {
+            wbase2 = std::move(wbase);
+            CHECK(wbase2.lock() == base);
+            CHECK(wbase2.weak_count() == 1);
+            wbase2 = std::move(wder);
+            CHECK(wbase2.lock() == der);
+            CHECK(wbase2.weak_count() == 1);
+        }
+
+        SECTION("from bad") {
+            SECTION("bad iptr") {
+                TestSP nothing;
+                wbase2 = nothing;
+            }
+
+            SECTION("bad weak_iptr") {
+                TestWP nothing;
+                wbase2 = nothing;
+            }
+            CHECK_FALSE(wbase2);
+            CHECK_FALSE(wbase2.lock());
+        }
+    }
+
+    SECTION("lock") {
+        TestSP obj;
+        TestWP weak;
+        CHECK_FALSE(weak.lock());
+
+        SECTION("base") {
+            obj  = new Test(123);
+        }
+        SECTION("derived") {
+            obj = new TestChild(123);
+        }
+        weak = obj;
+
+        if (TestSP tmp = weak.lock()) {
+            CHECK(obj->refcnt() == 2);
+            CHECK(obj == tmp);
+        }
+        CHECK(obj->refcnt() == 1);
+        obj.reset();
+        CHECK(Tracer::dtor_calls == 1);
+        CHECK(weak.expired());
+        CHECK_FALSE(weak.lock());
+    }
+
+    SECTION("use_count") {
+        TestWP weak;
+        CHECK(weak.use_count() == 0);
+        CHECK(weak.weak_count() == 0);
+
+        TestSP obj = new Test;
+        weak = obj;
+        CHECK(weak.use_count() == 1);
+        CHECK(weak.weak_count() == 1);
+
+        TestWP w2 = weak;
+        CHECK(weak.use_count() == 1);
+        CHECK(weak.weak_count() == 2);
+
+        obj.reset();
+        CHECK(weak.use_count() == 0);
+        CHECK(weak.weak_count() == 2);
+    }
+
+    CHECK(Tracer::dtor_calls == Tracer::ctor_total());
 }
