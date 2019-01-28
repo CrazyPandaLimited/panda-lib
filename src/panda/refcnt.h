@@ -194,9 +194,12 @@ private:
     T* object; // it is cache, it never invalidates itself, use storage->object to check validity
 };
 
-template <class T> struct weak;
-template <class T> struct weak<iptr<T>> : weak_iptr<T> {
-    using weak_iptr<T>::weak_iptr;
+template <class T> struct _weak_t;
+template <class T> struct _weak_t<iptr<T>> {
+    using type = weak_iptr<T>;;
 };
+
+template <typename T>
+using weak = typename _weak_t<T>::type;
 
 }
