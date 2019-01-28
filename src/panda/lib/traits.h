@@ -1,10 +1,9 @@
 #pragma once
-
 #include <utility>
 
-namespace panda {
-namespace lib {
-namespace traits {
+namespace panda { namespace lib { namespace traits {
+
+template <class FROM, class TO> using convertible_t = typename std::enable_if<std::is_convertible<FROM, TO>::value>::type;
 
 /// bool_or returns its first argument converted to bool if it is possible, or default value (second arg) if type is not convertible to bool
 template <typename T>
@@ -16,7 +15,6 @@ template <typename T, typename = typename std::enable_if<!std::is_constructible<
 inline bool bool_or(T&&, bool default_val) {
     return default_val;
 }
-
 
 template<typename T, bool Trivial = std::is_class<T>::value>
 struct is_comparable {
@@ -49,6 +47,4 @@ public:
     static constexpr bool value = std::is_same<decltype(test<T>(0)),yes>::value;
 };
 
-}
-}
-}
+}}}

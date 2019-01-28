@@ -1,24 +1,22 @@
 #pragma once
+#include "cast.h"
+#include "lib/traits.h"
 #include <memory>
 #include <stdint.h>
 #include <stddef.h>
-#include <panda/cast.h>
 #include <assert.h>
 
 namespace panda {
 
 template <typename T>
-class iptr {
-    template<class U> using _Constructible = typename std::enable_if<std::is_convertible<U*, T*>::value>::type;
-
-public:
+struct iptr {
     template <class U> friend class iptr;
     typedef T element_type;
 
     iptr ()                   : ptr(NULL)    {}
     iptr (T* pointer)         : ptr(pointer) { if (ptr) refcnt_inc(ptr); }
     iptr (const iptr& oth)    : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
-    template<class U, typename=_Constructible<U>>
+    template<class U, typename=lib::traits::convertible_t<U*, T*>>
     iptr (const iptr<U>& oth) : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
 
     iptr (iptr&& oth) {
@@ -26,7 +24,7 @@ public:
         oth.ptr = NULL;
     }
 
-    template<class U, typename=_Constructible<U>>
+    template<class U, typename=lib::traits::convertible_t<U*, T*>>
     iptr (iptr<U>&& oth) {
         ptr = oth.ptr;
         oth.ptr = NULL;
@@ -42,7 +40,7 @@ public:
     }
 
     iptr& operator= (const iptr& oth)    { return operator=(oth.ptr); }
-    template<class U, typename=_Constructible<U>>
+    template<class U, typename=lib::traits::convertible_t<U*, T*>>
     iptr& operator= (const iptr<U>& oth) { return operator=(oth.ptr); }
 
     iptr& operator= (iptr&& oth) {
@@ -50,7 +48,7 @@ public:
         return *this;
     }
 
-    template<class U, typename=_Constructible<U>>
+    template<class U, typename=lib::traits::convertible_t<U*, T*>>
     iptr& operator= (iptr<U>&& oth) {
         if (ptr) refcnt_dec(ptr);
         ptr = oth.ptr;
@@ -90,12 +88,9 @@ iptr<T> make_iptr(Args&&... args) {
     return iptr<T>(new T(std::forward<Args>(args)...));
 }
 
-namespace helper {
-    struct weak_storage;
-}
+struct weak_storage;
 
-class Refcnt {
-public:
+struct Refcnt {
     void retain  () const { ++_refcnt; }
     void release () const {
         if (_refcnt > 1) --_refcnt;
@@ -103,19 +98,27 @@ public:
     }
     uint32_t refcnt () const { return _refcnt; }
 
-    iptr<helper::weak_storage> get_weak();
 protected:
     Refcnt () : _refcnt(0) {}
     virtual ~Refcnt ();
-private:
 
+private:
     mutable uint32_t _refcnt;
-    mutable iptr<helper::weak_storage> _weak;
+    mutable iptr<weak_storage> _weak;
+
+    friend iptr<weak_storage> refcnt_weak(const Refcnt*);
+    iptr<weak_storage> get_weak() const;
 };
 
-inline void     refcnt_inc (const Refcnt* o) { o->retain(); }
-inline void     refcnt_dec (const Refcnt* o) { o->release(); }
-inline uint32_t refcnt_get (const Refcnt* o) { return o->refcnt(); }
+struct weak_storage : public Refcnt {
+    weak_storage() : valid(true) {}
+    bool valid;
+};
+
+inline void               refcnt_inc (const Refcnt* o) { o->retain(); }
+inline void               refcnt_dec (const Refcnt* o) { o->release(); }
+inline uint32_t           refcnt_get (const Refcnt* o) { return o->refcnt(); }
+inline iptr<weak_storage> refcnt_weak(const Refcnt* o) { return o->get_weak(); }
 
 template <typename T1, typename T2> inline iptr<T1> static_pointer_cast  (const iptr<T2>& ptr) { return iptr<T1>(static_cast<T1*>(ptr.get())); }
 template <typename T1, typename T2> inline iptr<T1> const_pointer_cast   (const iptr<T2>& ptr) { return iptr<T1>(const_cast<T1*>(ptr.get())); }
@@ -125,19 +128,8 @@ template <typename T1, typename T2> inline std::shared_ptr<T1> static_pointer_ca
 template <typename T1, typename T2> inline std::shared_ptr<T1> const_pointer_cast   (const std::shared_ptr<T2>& shptr) { return std::const_pointer_cast<T1>(shptr); }
 template <typename T1, typename T2> inline std::shared_ptr<T1> dynamic_pointer_cast (const std::shared_ptr<T2>& shptr) { return std::dynamic_pointer_cast<T1>(shptr); }
 
-namespace helper {
-    struct weak_storage : public Refcnt {
-        weak_storage(Refcnt* object) : object(object) {}
-        Refcnt* object;
-    };
-}
-
 template <typename T>
 struct weak_iptr {
-private:
-    template<class U> using _Constructible = typename std::enable_if<std::is_convertible<U*, T*>::value>::type;
-
-public:
     template <class U> friend class weak_iptr;
     typedef T element_type;
 
@@ -148,10 +140,10 @@ public:
     weak_iptr(weak_iptr&&) = default;
     weak_iptr& operator=(weak_iptr&& o) = default;
 
-    template <typename U, typename=_Constructible<U>>
-    weak_iptr(const iptr<U>& src) : storage(src ? src->get_weak() : nullptr), object(src ? src.get() : nullptr) {}
+    template <typename U, typename=lib::traits::convertible_t<U*, T*>>
+    weak_iptr(const iptr<U>& src) : storage(src ? refcnt_weak(src.get()) : nullptr), object(src ? src.get() : nullptr) {}
 
-    template <typename U, typename=_Constructible<U>>
+    template <typename U, typename=lib::traits::convertible_t<U*, T*>>
     weak_iptr(const weak_iptr<U>& src) : storage(src.storage), object(src.object) {}
 
     template <class U>
@@ -163,7 +155,7 @@ public:
 
     template <class U>
     weak_iptr& operator=(const iptr<U>& src) {
-        storage = src ? src->get_weak() : nullptr;
+        storage = src ? refcnt_weak(src.get()) : nullptr;
         object  = src ? src.get() : nullptr;
         return *this;
     }
@@ -180,26 +172,31 @@ public:
     }
 
     bool expired() const {
-        return ! operator bool();
+        return !operator bool();
     }
 
     explicit operator bool() const {
-        return storage && storage->object;
+        return storage && storage->valid;
     }
 
     size_t use_count() const {
-        return *this ? storage->object->refcnt() : 0;
+        return *this ? refcnt_get(object) : 0;
     }
 
     size_t weak_count() const {
         if (!storage) return 0;
-        if (storage->object) return storage.use_count() - 1; // object itself refers to weak storage, ignore this reference in count
+        if (storage->valid) return storage.use_count() - 1; // object itself refers to weak storage, ignore this reference in count
         return storage.use_count();
     }
 
 private:
-    iptr<helper::weak_storage> storage;
+    iptr<weak_storage> storage;
     T* object; // it is cache, it never invalidates itself, use storage->object to check validity
+};
+
+template <class T> struct weak;
+template <class T> struct weak<iptr<T>> : weak_iptr<T> {
+    using weak_iptr<T>::weak_iptr;
 };
 
 }

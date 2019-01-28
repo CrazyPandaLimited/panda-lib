@@ -516,5 +516,19 @@ TEST_CASE("weak", "[iptr]") {
         CHECK(weak.weak_count() == 2);
     }
 
+    SECTION("weak generalization") {
+        TestSP obj = new Test;
+        panda::weak<TestSP> weak = obj;
+        CHECK(weak.use_count() == 1);
+        CHECK(weak.weak_count() == 1);
+
+        // check that weak<iptr<T>> is interchangeable with weak_iptr<T>
+        weak = panda::weak<TestSP>(TestWP());
+        CHECK(weak.weak_count() == 0);
+
+        weak = TestWP();
+        CHECK(weak.weak_count() == 0);
+    }
+
     CHECK(Tracer::dtor_calls == Tracer::ctor_total());
 }
