@@ -13,70 +13,77 @@ struct iptr {
     template <class U> friend class iptr;
     typedef T element_type;
 
-    iptr ()                   : ptr(NULL)    {}
-    iptr (T* pointer)         : ptr(pointer) { if (ptr) refcnt_inc(ptr); }
-    iptr (const iptr& oth)    : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
-    template<class U, typename=lib::traits::convertible_t<U*, T*>>
-    iptr (const iptr<U>& oth) : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
+    iptr()                : ptr(NULL)    {}
+    iptr(T* pointer)      : ptr(pointer) { if (ptr) refcnt_inc(ptr); }
+    iptr(const iptr& oth) : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
 
-    iptr (iptr&& oth) {
+    template<class U, typename=lib::traits::convertible_t<U*, T*>>
+    iptr(const iptr<U>& oth) : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
+
+    iptr(iptr&& oth) {
         ptr = oth.ptr;
         oth.ptr = NULL;
     }
 
     template<class U, typename=lib::traits::convertible_t<U*, T*>>
-    iptr (iptr<U>&& oth) {
+    iptr(iptr<U>&& oth) {
         ptr = oth.ptr;
         oth.ptr = NULL;
     }
 
-    ~iptr () { if (ptr) refcnt_dec(ptr); }
+    ~iptr() { if (ptr) refcnt_dec(ptr); }
 
-    iptr& operator= (T* pointer) {
+    iptr& operator=(T* pointer) {
         if (ptr) refcnt_dec(ptr);
         ptr = pointer;
         if (pointer) refcnt_inc(pointer);
         return *this;
     }
 
-    iptr& operator= (const iptr& oth)    { return operator=(oth.ptr); }
-    template<class U, typename=lib::traits::convertible_t<U*, T*>>
-    iptr& operator= (const iptr<U>& oth) { return operator=(oth.ptr); }
+    iptr& operator=(const iptr& oth) { return operator=(oth.ptr); }
 
-    iptr& operator= (iptr&& oth) {
+    template<class U, typename=lib::traits::convertible_t<U*, T*>>
+    iptr& operator=(const iptr<U>& oth) { return operator=(oth.ptr); }
+
+    iptr& operator=(iptr&& oth) {
         std::swap(ptr, oth.ptr);
         return *this;
     }
 
     template<class U, typename=lib::traits::convertible_t<U*, T*>>
-    iptr& operator= (iptr<U>&& oth) {
+    iptr& operator=(iptr<U>&& oth) {
         if (ptr) refcnt_dec(ptr);
         ptr = oth.ptr;
         oth.ptr = NULL;
         return *this;
     }
 
-    void reset () {
+    void reset() {
         if (ptr) refcnt_dec(ptr);
         ptr = NULL;
     }
 
-    void reset (T* p) { operator=(p); }
+    void reset(T* p) { operator=(p); }
 
-    T* operator-> () const { return ptr; }
-    T& operator*  () const { return *ptr; }
-    operator T*   () const { return ptr; }
+    T* operator->() const noexcept { return ptr; }
+    T& operator* () const noexcept { return *ptr; }
+    operator T*  () const noexcept { return ptr; }
+
     explicit
-    operator bool () const { return ptr; }
+    operator bool() const noexcept { return ptr; }
 
-    T* get () const { return ptr; }
+    T* get() const noexcept { return ptr; }
 
-    uint32_t use_count () const { return refcnt_get(ptr); }
+    uint32_t use_count() const noexcept { return refcnt_get(ptr); }
 
-    T* detach () {
+    T* detach () noexcept {
         auto ret = ptr;
         ptr = nullptr;
         return ret;
+    }
+
+    void swap(iptr& oth) noexcept {
+        std::swap(ptr, oth.ptr);
     }
 
 private:
@@ -88,6 +95,9 @@ iptr<T> make_iptr(Args&&... args) {
     return iptr<T>(new T(std::forward<Args>(args)...));
 }
 
+template <class T>
+void swap(iptr<T>& a, iptr<T>& b) noexcept { a.swap(b); }
+
 struct weak_storage;
 
 struct Refcnt {
@@ -96,7 +106,7 @@ struct Refcnt {
         if (_refcnt > 1) --_refcnt;
         else delete this;
     }
-    uint32_t refcnt () const { return _refcnt; }
+    uint32_t refcnt () const noexcept { return _refcnt; }
 
 protected:
     Refcnt () : _refcnt(0) {}
@@ -189,10 +199,23 @@ struct weak_iptr {
         return storage.use_count();
     }
 
+    void reset() noexcept {
+        storage.reset();
+        object = nullptr;
+    }
+
+    void swap(weak_iptr& oth) noexcept {
+        storage.swap(oth.storage);
+        std::swap(object, oth.object);
+    }
+
 private:
     iptr<weak_storage> storage;
     T* object; // it is cache, it never invalidates itself, use storage->object to check validity
 };
+
+template <class T>
+void swap(weak_iptr<T>& a, weak_iptr<T>& b) noexcept { a.swap(b); }
 
 template <class T> struct _weak_t;
 template <class T> struct _weak_t<iptr<T>> {
