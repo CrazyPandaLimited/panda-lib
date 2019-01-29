@@ -532,3 +532,27 @@ TEST_CASE("weak", "[iptr]") {
 
     CHECK(Tracer::dtor_calls == Tracer::ctor_total());
 }
+
+
+class A : public Refcnt {
+};
+
+class AA : public A {
+};
+
+class B : public Refcnt {
+};
+
+static int foo(iptr<A>) {
+    return 10;
+}
+
+static int foo(iptr<B>) {
+    return 20;
+}
+
+TEST_CASE("iptr compiles", "[iptr]") {
+    REQUIRE(foo(iptr<A>(nullptr)) == 10);
+    REQUIRE(foo(iptr<B>(nullptr)) == 20);
+    REQUIRE(foo(iptr<AA>(nullptr)) == 10);
+}
