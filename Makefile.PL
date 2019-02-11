@@ -3,12 +3,11 @@ use Config;
 use XS::Install;
 
 my %params = (
-    NAME          => 'CPP::panda::lib',
-    ABSTRACT_FROM => 'lib/CPP/panda/lib.pod',
-    CPLUS         => 11,
-    SRC           => ['src'],
-    INC           => '-Isrc',
-    BIN_SHARE     => {
+    NAME      => 'CPP::panda::lib',
+    CPLUS     => 11,
+    SRC       => ['src'],
+    INC       => '-Isrc',
+    BIN_SHARE => {
         CPLUS    => 11,
         INCLUDE  => {'src' => '/'},
     },
