@@ -120,15 +120,26 @@ private:
     iptr<weak_storage> get_weak() const;
 };
 
+struct Refcntd : Refcnt {
+    void release () const {
+        if (refcnt() <= 1) const_cast<Refcntd*>(this)->on_delete();
+        Refcnt::release();
+    }
+
+protected:
+    virtual void on_delete () {}
+};
+
 struct weak_storage : public Refcnt {
     weak_storage() : valid(true) {}
     bool valid;
 };
 
-inline void               refcnt_inc (const Refcnt* o) { o->retain(); }
-inline void               refcnt_dec (const Refcnt* o) { o->release(); }
-inline uint32_t           refcnt_get (const Refcnt* o) { return o->refcnt(); }
-inline iptr<weak_storage> refcnt_weak(const Refcnt* o) { return o->get_weak(); }
+inline void               refcnt_inc (const Refcnt*  o) { o->retain(); }
+inline void               refcnt_dec (const Refcntd* o) { o->release(); }
+inline void               refcnt_dec (const Refcnt*  o) { o->release(); }
+inline uint32_t           refcnt_get (const Refcnt*  o) { return o->refcnt(); }
+inline iptr<weak_storage> refcnt_weak(const Refcnt*  o) { return o->get_weak(); }
 
 template <typename T1, typename T2> inline iptr<T1> static_pointer_cast  (const iptr<T2>& ptr) { return iptr<T1>(static_cast<T1*>(ptr.get())); }
 template <typename T1, typename T2> inline iptr<T1> const_pointer_cast   (const iptr<T2>& ptr) { return iptr<T1>(const_cast<T1*>(ptr.get())); }
