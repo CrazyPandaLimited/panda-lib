@@ -127,7 +127,7 @@ struct Refcntd : Refcnt {
     }
 
 protected:
-    virtual void on_delete () {}
+    virtual void on_delete () noexcept {}
 };
 
 struct weak_storage : public Refcnt {

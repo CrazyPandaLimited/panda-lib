@@ -20,7 +20,7 @@ struct TestChild : Test {
 struct TestDel : Tracer, Refcntd {
     using Tracer::Tracer;
 
-    void on_delete () override { on_delete_calls++; }
+    void on_delete () noexcept override { on_delete_calls++; }
 };
 
 struct TestRes : Tracer, Refcntd {
@@ -29,7 +29,7 @@ struct TestRes : Tracer, Refcntd {
 
     TestRes () : resurected() {}
 
-    void on_delete () override {
+    void on_delete () noexcept override {
         on_delete_calls++;
         if (resurected) return;
         retain();
