@@ -1103,10 +1103,10 @@ public:
     }
 
     template <typename V>
-    std::from_chars_result to_number (V& value, int base = 10) { return std::from_chars(_str, _str + _length, value, base); }
+    std::from_chars_result to_number (V& value, int base = 10) const { return std::from_chars(_str, _str + _length, value, base); }
 
     template <typename V>
-    std::from_chars_result to_number (V& value, size_type pos, size_type count = npos, int base = 10) {
+    std::from_chars_result to_number (V& value, size_type pos, size_type count = npos, int base = 10) const {
         if (pos > _length) throw std::out_of_range("basic_string::to_number");
         if (count > _length - pos) count = _length - pos;
         return std::from_chars(_str + pos, _str + pos + count, value, base);
