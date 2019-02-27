@@ -2,7 +2,6 @@
 
 #include <string>
 #include <sstream>
-#include <iostream>
 #include <vector>
 #include <panda/function.h>
 #include <panda/string_view.h>

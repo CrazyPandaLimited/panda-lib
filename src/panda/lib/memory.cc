@@ -1,6 +1,5 @@
 #include <panda/lib/memory.h>
 #include <string.h>
-#include <iostream>
 
 namespace panda { namespace lib {
 

@@ -1,8 +1,7 @@
 #pragma once
-#include <iostream>
+#include <assert.h>
 #include <panda/refcnt.h>
 #include <panda/lib/traits.h>
-#include <assert.h>
 
 namespace panda {
 

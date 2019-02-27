@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
+#include <iosfwd>
 #include <limits>
 #include <utility>   // swap
-#include <iostream>
 #include <stdexcept>
 
 namespace std {
@@ -348,8 +348,8 @@ template <class C, class T> inline bool operator>= (const C* lhs, basic_string_v
 template <class C, class T> inline bool operator>= (basic_string_view <C,T> lhs, const C* rhs)                { return lhs.compare(rhs) >= 0; }
 
 template <class C, class T>
-inline std::ostream& operator<< (std::ostream& os, basic_string_view<C,T> v) {
-    return os.write((const char*)v.data(), v.length() * sizeof(C));
+inline std::basic_ostream<C,T>& operator<< (std::basic_ostream<C,T>& os, basic_string_view<C,T> v) {
+    return os.write(v.data(), v.length());
 }
 
 }

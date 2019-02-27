@@ -2,11 +2,11 @@
 #include <string>
 #include <limits>
 #include <memory>
+#include <iosfwd>
 #include <cstdint>
 #include <utility>   // swap
 #include <assert.h>
 #include <iterator>
-#include <iostream>
 #include <stdexcept>
 #include <initializer_list>
 #include <panda/lib/hash.h>
@@ -1638,8 +1638,8 @@ inline basic_string<C,T,A> operator+ (basic_string<C,T,A>&& lhs, C rhs) {
 }
 
 template <class C, class T, class A>
-inline std::ostream& operator<< (std::ostream& os, const basic_string<C,T,A>& str) {
-    return os.write((const char*)str.data(), str.length() * sizeof(C));
+inline std::basic_ostream<C,T>& operator<< (std::basic_ostream<C,T>& os, const basic_string<C,T,A>& str) {
+    return os.write(str.data(), str.length());
 }
 
 }

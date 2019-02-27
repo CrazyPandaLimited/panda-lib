@@ -1,11 +1,12 @@
 #pragma once
-#include <cassert>
-#include <algorithm>
-#include <cstddef>
-#include <initializer_list>
-#include <iterator>
-#include <type_traits>
+#include <iosfwd>
 #include <vector>
+#include <cassert>
+#include <cstddef>
+#include <iterator>
+#include <algorithm>
+#include <type_traits>
+#include <initializer_list>
 
 namespace panda { namespace lib {
 
@@ -249,7 +250,8 @@ private:
     T tail;
 };
 
-template <typename T> std::ostream& operator<< (std::ostream& out, const IntrusiveChain<T>& chain) {
+template <typename C, typename CT, typename T>
+std::basic_ostream<C,CT>& operator<< (std::basic_ostream<C,CT>& out, const IntrusiveChain<T>& chain) {
     for (auto node : chain) {
         out << "node: ";
         if (node) {
