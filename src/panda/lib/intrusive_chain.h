@@ -169,7 +169,7 @@ template <typename T> struct IntrusiveChain {
         return true;
     }
 
-    const_iterator insert (const T& pos, const T& node) {
+    iterator insert (const T& pos, const T& node) {
         if (pos) {
             auto prev = intrusive_chain_prev(pos);
             if (prev) {
@@ -182,24 +182,26 @@ template <typename T> struct IntrusiveChain {
         }
         else push_back(node);
 
-        return const_iterator(tail, node);
+        return iterator(tail, node);
     }
 
-    const_iterator insert (const const_iterator& pos, const T& node) { return insert(pos.current, node); }
+    iterator insert (const const_iterator& pos, const T& node) { return insert(pos.current, node); }
 
-    const_iterator erase (const T& pos) {
+    iterator erase (const T& pos) {
         if (!pos) return end();
 
         auto prev = intrusive_chain_prev(pos);
+        auto next = intrusive_chain_next(pos);
+
         if (!prev) {
+            if (!next && pos != head) return end(); // element is not in container
             pop_front();
-            return cbegin();
+            return begin();
         }
 
-        auto next = intrusive_chain_next(pos);
         if (!next) {
             pop_back();
-            return cend();
+            return end();
         }
 
         intrusive_chain_next(prev, next);
@@ -207,10 +209,10 @@ template <typename T> struct IntrusiveChain {
         intrusive_chain_next(pos, T());
         intrusive_chain_prev(pos, T());
 
-        return const_iterator(tail, next);
+        return iterator(tail, next);
     }
 
-    const_iterator erase (const const_iterator& pos) { return erase(pos.current); }
+    iterator erase (const const_iterator& pos) { return erase(pos.current); }
 
     void clear () {
         for (auto node = head; node;) {

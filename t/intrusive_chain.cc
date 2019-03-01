@@ -219,6 +219,11 @@ struct Test {
                 check_content(list, v[0], v[5]);
                 check_removed(v[4]);
             }
+            SECTION("element not in the list") {
+                auto it = list.erase(v[4]);
+                check_content(list, v[0], v[1], v[2], v[3]);
+                CHECK(it == list.end());
+            }
         }
 
         SECTION("clear") {
