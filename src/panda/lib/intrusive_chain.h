@@ -18,7 +18,7 @@ template <typename T> struct IntrusiveChainNode {
 
     IntrusiveChainNode () : next(), prev() {}
 
-private:
+protected:
     T next;
     T prev;
 };
