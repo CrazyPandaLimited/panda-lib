@@ -20,10 +20,10 @@ void Log::set_level(logger::Level val) {
 
 std::ostream&logger::operator <<(std::ostream& stream, const logger::escaped& str) {
    for (auto c : str.src) {
-       if (isprint(c)) {
+       if (c > 31) {
            stream << c;
        } else {
-           stream << "\\" << std::setfill('0') << std::setw(3) << uint32_t(uint8_t(c));
+           stream << "\\" << std::setfill('0') << std::setw(2) << uint32_t(uint8_t(c));
        }
    }
    return stream;
