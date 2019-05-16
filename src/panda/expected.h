@@ -14,4 +14,9 @@ namespace panda {
     using unexpect_t = tl::unexpect_t;
 
     using tl::unexpect;
+
+    template <class E>
+    unexpected<typename std::decay<E>::type> make_unexpected(E &&e) {
+      return unexpected<typename std::decay<E>::type>(std::forward<E>(e));
+    }
 }
