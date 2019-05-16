@@ -13,5 +13,5 @@ namespace panda {
 
     using unexpect_t = tl::unexpect_t;
 
-    inline constexpr unexpect_t unexpect{};
+    using tl::unexpect;
 }
