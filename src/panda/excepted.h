@@ -1,142 +1,135 @@
 #pragma once
+#include "expected.h"
+#include <utility>
 
 namespace panda {
 
-template <class E>
-struct unexpected {
-  static_assert(!std::is_same<E, void>::value, "E must not be void");
+namespace {
+    template <class E>
+    inline typename std::enable_if<!std::is_base_of<std::exception, E>::value, void>::type exthrow (E&& e) {
+        throw bad_expected_access<typename std::decay<E>::type>(std::forward<E>(e));
+    }
 
-  unexpected () = delete;
-  constexpr explicit unexpected (const E& e) : _val(e)            {}
-  constexpr explicit unexpected (E&& e)      : _val(std::move(e)) {}
-
-  constexpr const E&  value () const &  { return _val; }
-  constexpr const E&& value () const && { return std::move(_val); }
-
-  E&  value () &  { return _val; }
-  E&& value () && { return std::move(_val); }
-
-private:
-    E _val;
-};
-
-template <class E>
-inline unexpected<typename std::decay<E>::type> make_unexpected (E &&e) {
-  return unexpected<typename std::decay<E>::type>(std::forward<E>(e));
+    template <class E>
+    inline typename std::enable_if<std::is_base_of<std::exception, E>::value, void>::type exthrow (E&& e) {
+        throw std::forward<typename std::decay<E>::type>(e);
+    }
 }
 
-template <class E>
-struct bad_expected_access : std::exception {
-  explicit bad_expected_access (E e) : _val(std::move(e)) {}
-
-  virtual const char* what () const noexcept override { return "Bad expected access"; }
-
-  const E&  error () const &  { return _val; }
-  const E&& error () const && { return std::move(_val); }
-
-  E&  error () &  { return _val; }
-  E&& error () && { return std::move(_val); }
-
-private:
-  E _val;
-};
-
-/// A tag to tell expected to construct the unexpected value
-struct unexpect_t { unexpect_t() = default; };
-static constexpr unexpect_t unexpect {};
-
-
 template <class T, class E>
-struct expected {
+struct excepted {
     using value_type = T;
     using error_type = E;
     using unexpected_type = unexpected<E>;
 
     template <typename = typename std::enable_if<std::is_default_constructible<T>::value>::type>
-    expected () {
+    excepted () {
         _has_val = true;
         ::new (&_val) T();
     }
 
-    expected (const expected& ex) {
+    excepted (const excepted& ex) {
         if (ex._has_val) construct_val(ex._val);
-        else             construct_err(ex._err);
+        else {
+            construct_err(ex._err);
+            ex._checked = true;
+        }
     }
 
-    expected (expected&& ex) {
+    excepted (excepted&& ex) {
         if (ex._has_val) construct_val(std::move(ex._val));
-        else             construct_err(std::move(ex._err));
+        else {
+            construct_err(std::move(ex._err));
+            ex._checked = true;
+        }
     }
 
     template <class T2, class E2>
-    explicit expected (const expected<T2,E2>& ex) {
+    explicit excepted (const excepted<T2,E2>& ex) {
         if (ex._has_val) construct_val(ex._val);
-        else             construct_err(ex._err);
+        else {
+            construct_err(ex._err);
+            ex._checked = true;
+        }
     }
 
     template <class T2, class E2>
-    explicit expected (expected<T2,E2>&& ex) {
+    explicit excepted (excepted<T2,E2>&& ex) {
         if (ex._has_val) construct_val(std::move(ex._val));
-        else             construct_err(std::move(ex._err));
+        else {
+            construct_err(std::move(ex._err));
+            ex._checked = true;
+        }
     }
 
     template <class T2>
-    expected (T2&& v) {
+    excepted (T2&& v) {
         construct_val(std::forward<T2>(v));
     }
 
     template <class E2>
-    expected (const unexpected<E2>& uex) {
+    excepted (const unexpected<E2>& uex) {
         construct_err(uex.value());
     }
 
     template <class E2>
-    expected (unexpected<E2>&& uex) {
+    excepted (unexpected<E2>&& uex) {
         construct_err(std::move(uex.value()));
     }
 
-    ~expected () {
-        if (_has_val) _val.~T();
-        else          _err.~E();
+    ~excepted () noexcept(false) {
+        if      (_has_val) _val.~T();
+        else if (_checked) _err.~E();
+        else {
+            auto tmp = std::move(_err);
+            _err.~E();
+            exthrow(std::move(tmp));
+        }
     }
 
-    expected& operator= (const expected& ex) {
+    excepted& operator= (const excepted& ex) {
         if (ex._has_val) set_val(ex._val);
-        else             set_err(ex._err);
+        else {
+            set_err(ex._err);
+            ex._checked = true;
+        }
         return *this;
     }
 
-    expected& operator= (expected&& ex) {
+    excepted& operator= (excepted&& ex) {
         if (ex._has_val) set_val(std::move(ex._val));
-        else             set_err(std::move(ex._err));
+        else {
+            set_err(std::move(ex._err));
+            ex._checked = true;
+        }
         return *this;
     }
 
     template <class T2>
-    expected& operator= (T2&& v) {
+    excepted& operator= (T2&& v) {
         set_val(std::forward<T2>(v));
     }
 
     template <class E2>
-    expected& operator= (const unexpected<E2>& uex) {
+    excepted& operator= (const unexpected<E2>& uex) {
         set_err(uex.value());
     }
 
     template <class E2>
-    expected& operator= (unexpected<E2>&& uex) {
+    excepted& operator= (unexpected<E2>&& uex) {
         set_err(std::move(uex.value()));
     }
 
-    constexpr bool     has_value     () const noexcept { return _has_val; }
-    constexpr explicit operator bool () const noexcept { return _has_val; }
+    constexpr bool     has_value     () const noexcept { _checked = true; return _has_val; }
+    constexpr explicit operator bool () const noexcept { _checked = true; return _has_val; }
 
-    const T&  value () const &  { if (!_has_val) throw bad_expected_access<E>(_err); return _val; }
-          T&  value ()       &  { if (!_has_val) throw bad_expected_access<E>(_err); return _val; }
-    const T&& value () const && { if (!_has_val) throw bad_expected_access<E>(_err); return std::move(_val); }
-          T&& value ()       && { if (!_has_val) throw bad_expected_access<E>(_err); return std::move(_val); }
+    const T&  value () const &  { if (!_has_val) exthrow(_err); return _val; }
+          T&  value ()       &  { if (!_has_val) exthrow(_err); return _val; }
+    const T&& value () const && { if (!_has_val) exthrow(_err); return std::move(_val); }
+          T&& value ()       && { if (!_has_val) exthrow(_err); return std::move(_val); }
 
-    template <class T2> constexpr T value_or (T2&& v) const & { return bool(*this) ? this->_val : static_cast<T>(std::forward<T2>(v)); }
-    template <class T2> constexpr T value_or (T2&& v)      && { return bool(*this) ? std::move(this->_val) : static_cast<T>(std::forward<T2>(v)); }
+    template <class T2> constexpr T value_or (T2&& v) const & { _checked = true; return bool(*this) ? this->_val : static_cast<T>(std::forward<T2>(v)); }
+    template <class T2> constexpr T value_or (T2&& v)      && { _checked = true; return bool(*this) ? std::move(this->_val) : static_cast<T>(std::forward<T2>(v)); }
 
     const E&  error () const &  { return _err; }
           E&  error ()       &  { return _err; }
@@ -169,54 +162,62 @@ struct expected {
 
     template <class F>
     auto and_then (F&& f) const & -> decltype(f(std::declval<T>())) {
+        _checked = true;
         if (!_has_val) return unexpected_type(_err);
         return f(_val);
     }
 
     template <class F>
     auto and_then (F&& f) const && -> decltype(f(std::declval<T>())) {
+        _checked = true;
         if (!_has_val) return unexpected_type(std::move(_err));
         return f(std::move(_val));
     }
 
     template <class F>
     auto or_else (F&& f) const & -> decltype(f(std::declval<E>())) {
+        _checked = true;
         if (_has_val) return *this;
         return f(_err);
     }
 
     template <class F>
     auto or_else (F&& f) const && -> decltype(f(std::declval<E>())) {
+        _checked = true;
         if (_has_val) return std::move(*this);
         return f(std::move(_err));
     }
 
     template <class F>
-    auto map (F&& f) const & -> expected<decltype(f(std::declval<T>())), E> {
+    auto map (F&& f) const & -> excepted<decltype(f(std::declval<T>())), E> {
+        _checked = true;
         if (!_has_val) return unexpected_type(_err);
         return f(_val);
     }
 
     template <class F>
-    auto map (F&& f) const && -> expected<decltype(f(std::declval<T>())), E> {
+    auto map (F&& f) const && -> excepted<decltype(f(std::declval<T>())), E> {
+        _checked = true;
         if (!_has_val) return unexpected_type(std::move(_err));
         return f(std::move(_val));
     }
 
     template <class F>
-    auto map_error (F&& f) const & -> expected<T, decltype(f(std::declval<E>()))> {
+    auto map_error (F&& f) const & -> excepted<T, decltype(f(std::declval<E>()))> {
+        _checked = true;
         if (_has_val) return _val;
         return make_unexpected(f(_err));
     }
 
     template <class F>
-    auto map_error (F&& f) const && -> expected<T, decltype(f(std::declval<E>()))> {
+    auto map_error (F&& f) const && -> excepted<T, decltype(f(std::declval<E>()))> {
+        _checked = true;
         if (_has_val) return std::move(_val);
         return make_unexpected(f(std::move(_err)));
     }
 
     template <class T2 = T>
-    void swap (expected& ex) {
+    void swap (excepted& ex) {
         if (_has_val) {
             if (ex._has_val) std::swap(_val, ex._val);
             else {
@@ -228,6 +229,7 @@ struct expected {
                 _val.~T();
                 _has_val = false;
                 new (&_err) E(std::move(tmp));
+                _checked = ex._checked;
             }
         }
         else {
@@ -236,8 +238,10 @@ struct expected {
         }
     }
 
+    void nevermind () const { _checked = true; }
+
 private:
-    template <class T2, class E2> friend class expected;
+    template <class T2, class E2> friend class excepted;
 
     template <class T2>
     void construct_val (T2&& v) {
@@ -248,6 +252,7 @@ private:
     template <class E2>
     void construct_err (E2&& e) {
         _has_val = false;
+        _checked = false;
         ::new (&_err) E(std::forward<E2>(e));
     }
 
@@ -263,6 +268,7 @@ private:
 
     template <class E2>
     void set_err (E2&& e) {
+        _checked = false;
         if (_has_val) {
             _val.~T();
             _has_val = false;
@@ -276,77 +282,102 @@ private:
         E _err;
     };
     bool _has_val;
+    mutable bool _checked;
 };
 
 
 template <class E>
-struct expected<void, E> {
+struct excepted<void, E> {
     using value_type = void;
     using error_type = E;
     using unexpected_type = unexpected<E>;
 
-    expected () { _has_val = true; }
+    excepted () { _has_val = true; }
 
-    expected (const expected& ex) {
+    excepted (const excepted& ex) {
         if (ex._has_val) _has_val = true;
-        else             construct_err(ex._err);
+        else {
+            construct_err(ex._err);
+            ex._checked = true;
+        }
     }
 
-    expected (expected&& ex) {
+    excepted (excepted&& ex) {
         if (ex._has_val) _has_val = true;
-        else             construct_err(std::move(ex._err));
-    }
-
-    template <class E2>
-    explicit expected (const expected<void,E2>& ex) {
-        if (ex._has_val) _has_val = true;
-        else             construct_err(ex._err);
-    }
-
-    template <class E2>
-    explicit expected (expected<void,E2>&& ex) {
-        if (ex._has_val) _has_val = true;
-        else             construct_err(std::move(ex._err));
+        else {
+            construct_err(std::move(ex._err));
+            ex._checked = true;
+        }
     }
 
     template <class E2>
-    expected (const unexpected<E2>& uex) {
+    explicit excepted (const excepted<void,E2>& ex) {
+        if (ex._has_val) _has_val = true;
+        else {
+            construct_err(ex._err);
+            ex._checked = true;
+        }
+    }
+
+    template <class E2>
+    explicit excepted (excepted<void,E2>&& ex) {
+        if (ex._has_val) _has_val = true;
+        else {
+            construct_err(std::move(ex._err));
+            ex._checked = true;
+        }
+    }
+
+    template <class E2>
+    excepted (const unexpected<E2>& uex) {
         construct_err(uex.value());
     }
 
     template <class E2>
-    expected (unexpected<E2>&& uex) {
+    excepted (unexpected<E2>&& uex) {
         construct_err(std::move(uex.value()));
     }
 
-    ~expected () {
-        if (!_has_val) _err.~E();
+    ~excepted () noexcept(false) {
+        if      (_has_val) return;
+        else if (_checked) _err.~E();
+        else {
+            auto tmp = std::move(_err);
+            _err.~E();
+            exthrow(std::move(tmp));
+        }
     }
 
-    expected& operator= (const expected& ex) {
+    excepted& operator= (const excepted& ex) {
         if (ex._has_val) set_val();
-        else             set_err(ex._err);
+        else {
+            set_err(ex._err);
+            ex._checked = true;
+        }
         return *this;
     }
 
-    expected& operator= (expected&& ex) {
+    excepted& operator= (excepted&& ex) {
         if (ex._has_val) set_val();
-        else             set_err(std::move(ex._err));
+        else {
+            set_err(std::move(ex._err));
+            ex._checked = true;
+        }
         return *this;
     }
 
     template <class E2>
-    expected& operator= (const unexpected<E2>& uex) {
+    excepted& operator= (const unexpected<E2>& uex) {
         set_err(uex.value());
     }
 
     template <class E2>
-    expected& operator= (unexpected<E2>&& uex) {
+    excepted& operator= (unexpected<E2>&& uex) {
         set_err(std::move(uex.value()));
     }
 
-    constexpr bool     has_value     () const noexcept { return _has_val; }
-    constexpr explicit operator bool () const noexcept { return _has_val; }
+    constexpr bool     has_value     () const noexcept { _checked = true; return _has_val; }
+    constexpr explicit operator bool () const noexcept { _checked = true; return _has_val; }
 
     const E&  error () const &  { return _err; }
           E&  error ()       &  { return _err; }
@@ -355,59 +386,68 @@ struct expected<void, E> {
 
     template <class F>
     auto and_then (F&& f) const & -> decltype(f()) {
+        _checked = true;
         if (!_has_val) return unexpected_type(_err);
         return f();
     }
 
     template <class F>
     auto and_then (F&& f) const && -> decltype(f()) {
+        _checked = true;
         if (!_has_val) return unexpected_type(std::move(_err));
         return f();
     }
 
     template <class F>
     auto or_else (F&& f) const & -> decltype(f(std::declval<E>())) {
+        _checked = true;
         if (_has_val) return *this;
         return f(_err);
     }
 
     template <class F>
     auto or_else (F&& f) const && -> decltype(f(std::declval<E>())) {
+        _checked = true;
         if (_has_val) return std::move(*this);
         return f(std::move(_err));
     }
 
     template <class F>
-    auto map (F&& f) const & -> expected<decltype(f()), E> {
+    auto map (F&& f) const & -> excepted<decltype(f()), E> {
+        _checked = true;
         if (!_has_val) return unexpected_type(_err);
         return f();
     }
 
     template <class F>
-    auto map (F&& f) const && -> expected<decltype(f()), E> {
+    auto map (F&& f) const && -> excepted<decltype(f()), E> {
+        _checked = true;
         if (!_has_val) return unexpected_type(std::move(_err));
         return f();
     }
 
     template <class F>
-    auto map_error (F&& f) const & -> expected<void, decltype(f(std::declval<E>()))> {
+    auto map_error (F&& f) const & -> excepted<void, decltype(f(std::declval<E>()))> {
+        _checked = true;
         if (_has_val) return {};
         return make_unexpected(f(_err));
     }
 
     template <class F>
-    auto map_error (F&& f) const && -> expected<void, decltype(f(std::declval<E>()))> {
+    auto map_error (F&& f) const && -> excepted<void, decltype(f(std::declval<E>()))> {
+        _checked = true;
         if (_has_val) return {};
         return make_unexpected(f(std::move(_err)));
     }
 
     template <class E2 = E>
-    void swap (expected& ex) {
+    void swap (excepted& ex) {
         if (_has_val) {
             if (!ex._has_val) {
                 new (&_err) E(std::move(ex._err));
                 ex._err.~E();
                 std::swap(_has_val, ex._has_val);
+                _checked = ex._checked;
             }
         }
         else {
@@ -416,12 +456,15 @@ struct expected<void, E> {
         }
     }
 
+    void nevermind () const { _checked = true; }
+
 private:
-    template <class T2, class E2> friend class expected;
+    template <class T2, class E2> friend class excepted;
 
     template <class E2>
     void construct_err (E2&& e) {
         _has_val = false;
+        _checked = false;
         ::new (&_err) E(std::forward<E2>(e));
     }
 
@@ -433,6 +476,7 @@ private:
 
     template <class E2>
     void set_err (E2&& e) {
+        _checked = false;
         if (_has_val) {
             _has_val = false;
             ::new (&_err) E(std::forward<E2>(e));
@@ -444,47 +488,47 @@ private:
         E _err;
     };
     bool _has_val;
+    mutable bool _checked;
 };
 
 template <class T, class E, class T2, class E2>
-bool operator== (const expected<T, E>& lhs, const expected<T2, E2>& rhs) {
+bool operator== (const excepted<T, E>& lhs, const excepted<T2, E2>& rhs) {
     if (lhs.has_value() != rhs.has_value()) return false;
     return lhs.has_value() ? *lhs == *rhs : lhs.error() == rhs.error();
 }
 
 template <class E, class E2>
-bool operator== (const expected<void, E>& lhs, const expected<void, E2>& rhs) {
+bool operator== (const excepted<void, E>& lhs, const excepted<void, E2>& rhs) {
     if (lhs.has_value() != rhs.has_value()) return false;
     return lhs.has_value() ? true : lhs.error() == rhs.error();
 }
 
 template <class T, class E, class T2, class E2>
-bool operator!= (const expected<T, E>& lhs, const expected<T2, E2>& rhs) { return !operator==(lhs, rhs); }
+bool operator!= (const excepted<T, E>& lhs, const excepted<T2, E2>& rhs) { return !operator==(lhs, rhs); }
 
 template <class T, class E, class T2>
 typename std::enable_if<!std::is_void<T>::value, bool>::type
-operator== (const expected<T, E>& x, const T2& v) { return x.has_value() ? *x == v : false; }
+operator== (const excepted<T, E>& x, const T2& v) { return x.has_value() ? *x == v : false; }
 
 template <class T, class E, class T2>
-bool operator== (const T2& v, const expected<T, E>& x) { return x == v; }
+bool operator== (const T2& v, const excepted<T, E>& x) { return x == v; }
 
 template <class T, class E, class T2>
-bool operator!= (const expected<T, E>& x, const T2& v) { return !(x == v); }
+bool operator!= (const excepted<T, E>& x, const T2& v) { return !(x == v); }
 
 template <class T, class E, class T2>
-bool operator!= (const T2& v, const expected<T, E>& x) { return !(x == v); }
+bool operator!= (const T2& v, const excepted<T, E>& x) { return !(x == v); }
 
 template <class T, class E>
-bool operator== (const expected<T, E>& x, const unexpected<E>& e) { return x.has_value() ? false : x.error() == e.value(); }
+bool operator== (const excepted<T, E>& x, const unexpected<E>& e) { return x.has_value() ? false : x.error() == e.value(); }
 template <class T, class E>
-bool operator== (const unexpected<E>& e, const expected<T, E>& x) { return x == e; }
+bool operator== (const unexpected<E>& e, const excepted<T, E>& x) { return x == e; }
 template <class T, class E>
-bool operator!= (const expected<T, E>& x, const unexpected<E>& e) { return !(x == e); }
+bool operator!= (const excepted<T, E>& x, const unexpected<E>& e) { return !(x == e); }
 template <class T, class E>
-bool operator!= (const unexpected<E>& e, const expected<T, E>& x) { return !(x == e); }
+bool operator!= (const unexpected<E>& e, const excepted<T, E>& x) { return !(x == e); }
 
 template <class T, class E>
-void swap (expected<T,E>& lhs, expected<T,E>& rhs) { lhs.swap(rhs); }
-
+void swap (excepted<T,E>& lhs, excepted<T,E>& rhs) { lhs.swap(rhs); }
 
 }

@@ -1,5 +1,6 @@
-1.1.5    16.05.2019
-           - add panda::expected (P0323R7), currently mapped from tl::expected
+1.1.5    xx.xx.xxxx
+           - add panda::excepted (expected with strict error checking and exception propagation)
+           - add panda::expected (P0323R7)
            - add string_view compare operators with const C*
            - removed panda::shared_ptr, panda::Refcounted (use panda::Refcnt instead)
            - iptr now uses refcnt_inc/dec/get proxies
