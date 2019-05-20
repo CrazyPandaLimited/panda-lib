@@ -5,11 +5,24 @@
 
 namespace panda {
 
+namespace {
+    template <typename T> struct optional_type {
+        using type = optional<T>;
+        static type default_value() { return type{}; }
+    };
+
+    template <>
+    struct optional_type<void> {
+        static void default_value(){}
+        using type = void;
+    };
+}
+
 template <typename Ret, typename... Args>
 class CallbackDispatcher {
 public:
     struct Event;
-    using OptionalRet    = typename optional_tools<Ret>::type;
+    using OptionalRet    = typename optional_type<Ret>::type;
     using Callback       = function<OptionalRet(Event&, Args...)>;
     using SimpleCallback = function<void(Args...)>;
 
@@ -85,7 +98,7 @@ public:
     template <typename... RealArgs >
     auto operator() (RealArgs&&... args) -> decltype(std::declval<Wrapper>()(std::declval<Event&>(), args...)) {
         auto iter = listeners.begin();
-        if (iter == listeners.end()) return optional_tools<Ret>::default_value();
+        if (iter == listeners.end()) return optional_type<Ret>::default_value();
 
         Event e{*this, iter};
         return (*iter)(e, std::forward<RealArgs>(args)...);
@@ -132,7 +145,7 @@ private:
         if (e.state != listeners.end()) {
             return (*e.state)(e, std::forward<RealArgs>(args)...);
         } else {
-            return optional_tools<Ret>::default_value();
+            return optional_type<Ret>::default_value();
         }
     }
 
