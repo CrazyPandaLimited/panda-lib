@@ -6,3 +6,6 @@
 ^t/lib/MyTest\.cc$
 ^.gdb_history$
 ^lib\.cc$
+^CMakeCache.txt
+^CMakeFiles
+^cmake_install.cmake
