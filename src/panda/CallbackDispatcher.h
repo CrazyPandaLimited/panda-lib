@@ -63,6 +63,8 @@ public:
         CallbackDispatcher& dispatcher;
         typename CallbackList::iterator state;
 
+        Event (const Event& oth) = delete;
+
         template <typename... RealArgs>
         OptionalRet next (RealArgs&&... args) {
             return dispatcher.next(*this, std::forward<RealArgs>(args)...);
