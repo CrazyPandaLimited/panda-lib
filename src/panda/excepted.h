@@ -6,13 +6,13 @@ namespace panda {
 
 namespace {
     template <class E>
-    inline typename std::enable_if<!std::is_base_of<std::exception, E>::value, void>::type exthrow (E&& e) {
+    inline typename std::enable_if<!std::is_base_of<std::exception, typename std::decay<E>::type>::value, void>::type exthrow (E&& e) {
         throw bad_expected_access<typename std::decay<E>::type>(std::forward<E>(e));
     }
 
     template <class E>
-    inline typename std::enable_if<std::is_base_of<std::exception, E>::value, void>::type exthrow (E&& e) {
-        throw std::forward<typename std::decay<E>::type>(e);
+    inline typename std::enable_if<std::is_base_of<std::exception, typename std::decay<E>::type>::value, void>::type exthrow (E&& e) {
+        throw std::forward<E>(e);
     }
 }
 
@@ -123,10 +123,10 @@ struct excepted {
     constexpr bool     has_value     () const noexcept { _checked = true; return _has_val; }
     constexpr explicit operator bool () const noexcept { _checked = true; return _has_val; }
 
-    const T&  value () const &  { if (!_has_val) exthrow(_err); return _val; }
-          T&  value ()       &  { if (!_has_val) exthrow(_err); return _val; }
-    const T&& value () const && { if (!_has_val) exthrow(_err); return std::move(_val); }
-          T&& value ()       && { if (!_has_val) exthrow(_err); return std::move(_val); }
+    const T&  value () const &  { if (!has_value()) exthrow(_err); return _val; }
+          T&  value ()       &  { if (!has_value()) exthrow(_err); return _val; }
+    const T&& value () const && { if (!has_value()) exthrow(_err); return std::move(_val); }
+          T&& value ()       && { if (!has_value()) exthrow(_err); return std::move(_val); }
 
     template <class T2> constexpr T value_or (T2&& v) const & { _checked = true; return bool(*this) ? this->_val : static_cast<T>(std::forward<T2>(v)); }
     template <class T2> constexpr T value_or (T2&& v)      && { _checked = true; return bool(*this) ? std::move(this->_val) : static_cast<T>(std::forward<T2>(v)); }
