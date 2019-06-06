@@ -4,12 +4,11 @@ use XS::Install;
 
 my %params = (
     NAME      => 'CPP::panda::lib',
-    CPLUS     => 11,
+    CPLUS     => 14,
     SRC       => ['src'],
     INC       => '-Isrc',
     BIN_SHARE => {
-        CPLUS    => 11,
-        INCLUDE  => {'src' => '/'},
+        INCLUDE => {'src' => '/'},
     },
     BIN_DEPS         => ['Test::Catch'],
     CCFLAGS          => '-Wall -Wextra',
