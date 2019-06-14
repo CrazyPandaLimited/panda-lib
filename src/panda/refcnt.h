@@ -13,68 +13,71 @@ struct iptr {
     template <class U> friend class iptr;
     typedef T element_type;
 
-    iptr()                : ptr(NULL)    {}
-    iptr(T* pointer)      : ptr(pointer) { if (ptr) refcnt_inc(ptr); }
-    iptr(const iptr& oth) : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
+    iptr ()                : ptr(NULL)    {}
+    iptr (T* pointer)      : ptr(pointer) { if (ptr) refcnt_inc(ptr); }
+    iptr (const iptr& oth) : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
 
     template<class U, typename=lib::traits::convertible_t<U*, T*>>
-    iptr(const iptr<U>& oth) : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
+    iptr (const iptr<U>& oth) : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
 
-    iptr(iptr&& oth) {
+    iptr (iptr&& oth) {
         ptr = oth.ptr;
         oth.ptr = NULL;
     }
 
     template<class U, typename=lib::traits::convertible_t<U*, T*>>
-    iptr(iptr<U>&& oth) {
+    iptr (iptr<U>&& oth) {
         ptr = oth.ptr;
         oth.ptr = NULL;
     }
 
-    ~iptr() { if (ptr) refcnt_dec(ptr); }
+    ~iptr () { if (ptr) refcnt_dec(ptr); }
 
-    iptr& operator=(T* pointer) {
+    iptr& operator= (T* pointer) {
+        if (pointer) refcnt_inc(pointer);
         if (ptr) refcnt_dec(ptr);
         ptr = pointer;
-        if (pointer) refcnt_inc(pointer);
         return *this;
     }
 
-    iptr& operator=(const iptr& oth) { return operator=(oth.ptr); }
+    iptr& operator= (const iptr& oth) { return operator=(oth.ptr); }
 
     template<class U, typename=lib::traits::convertible_t<U*, T*>>
-    iptr& operator=(const iptr<U>& oth) { return operator=(oth.ptr); }
+    iptr& operator= (const iptr<U>& oth) { return operator=(oth.ptr); }
 
-    iptr& operator=(iptr&& oth) {
+    iptr& operator= (iptr&& oth) {
         std::swap(ptr, oth.ptr);
         return *this;
     }
 
     template<class U, typename=lib::traits::convertible_t<U*, T*>>
-    iptr& operator=(iptr<U>&& oth) {
-        if (ptr) refcnt_dec(ptr);
+    iptr& operator= (iptr<U>&& oth) {
+        if (ptr) {
+            if (ptr == oth.ptr) return *this;
+            refcnt_dec(ptr);
+        }
         ptr = oth.ptr;
         oth.ptr = NULL;
         return *this;
     }
 
-    void reset() {
+    void reset () {
         if (ptr) refcnt_dec(ptr);
         ptr = NULL;
     }
 
-    void reset(T* p) { operator=(p); }
+    void reset (T* p) { operator=(p); }
 
-    T* operator->() const noexcept { return ptr; }
-    T& operator* () const noexcept { return *ptr; }
-    operator T*  () const noexcept { return ptr; }
+    T* operator-> () const noexcept { return ptr; }
+    T& operator*  () const noexcept { return *ptr; }
+    operator T*   () const noexcept { return ptr; }
 
     explicit
-    operator bool() const noexcept { return ptr; }
+    operator bool () const noexcept { return ptr; }
 
-    T* get() const noexcept { return ptr; }
+    T* get () const noexcept { return ptr; }
 
-    uint32_t use_count() const noexcept { return refcnt_get(ptr); }
+    uint32_t use_count () const noexcept { return refcnt_get(ptr); }
 
     T* detach () noexcept {
         auto ret = ptr;
@@ -82,7 +85,7 @@ struct iptr {
         return ret;
     }
 
-    void swap(iptr& oth) noexcept {
+    void swap (iptr& oth) noexcept {
         std::swap(ptr, oth.ptr);
     }
 
@@ -91,12 +94,12 @@ private:
 };
 
 template <typename T, typename... Args>
-iptr<T> make_iptr(Args&&... args) {
+iptr<T> make_iptr (Args&&... args) {
     return iptr<T>(new T(std::forward<Args>(args)...));
 }
 
 template <class T>
-void swap(iptr<T>& a, iptr<T>& b) noexcept { a.swap(b); }
+void swap (iptr<T>& a, iptr<T>& b) noexcept { a.swap(b); }
 
 struct weak_storage;
 
@@ -113,11 +116,12 @@ protected:
     virtual ~Refcnt ();
 
 private:
+    friend iptr<weak_storage> refcnt_weak (const Refcnt*);
+
     mutable uint32_t _refcnt;
     mutable iptr<weak_storage> _weak;
 
-    friend iptr<weak_storage> refcnt_weak(const Refcnt*);
-    iptr<weak_storage> get_weak() const;
+    iptr<weak_storage> get_weak () const;
 };
 
 struct Refcntd : Refcnt {
@@ -131,15 +135,15 @@ protected:
 };
 
 struct weak_storage : public Refcnt {
-    weak_storage() : valid(true) {}
+    weak_storage () : valid(true) {}
     bool valid;
 };
 
-inline void               refcnt_inc (const Refcnt*  o) { o->retain(); }
-inline void               refcnt_dec (const Refcntd* o) { o->release(); }
-inline void               refcnt_dec (const Refcnt*  o) { o->release(); }
-inline uint32_t           refcnt_get (const Refcnt*  o) { return o->refcnt(); }
-inline iptr<weak_storage> refcnt_weak(const Refcnt*  o) { return o->get_weak(); }
+inline void               refcnt_inc  (const Refcnt*  o) { o->retain(); }
+inline void               refcnt_dec  (const Refcntd* o) { o->release(); }
+inline void               refcnt_dec  (const Refcnt*  o) { o->release(); }
+inline uint32_t           refcnt_get  (const Refcnt*  o) { return o->refcnt(); }
+inline iptr<weak_storage> refcnt_weak (const Refcnt*  o) { return o->get_weak(); }
 
 template <typename T1, typename T2> inline iptr<T1> static_pointer_cast  (const iptr<T2>& ptr) { return iptr<T1>(static_cast<T1*>(ptr.get())); }
 template <typename T1, typename T2> inline iptr<T1> const_pointer_cast   (const iptr<T2>& ptr) { return iptr<T1>(const_cast<T1*>(ptr.get())); }
