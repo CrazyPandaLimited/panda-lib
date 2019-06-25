@@ -1,4 +1,4 @@
-^(inc|blib|Makefile(\.old)?|(MY)?META\.(yml|json)|pm_to_blib|MANIFEST(\.bak)?|dll\.(base|exp))$
+^(inc|blib|Makefile(\.(old|test))?|(MY)?META\.(yml|json)|pm_to_blib|MANIFEST(\.bak)?|dll\.(base|exp))$
 ^[^/]+\.(bs|tar\.gz)$
 ^.+\.(o|lo|a|la|so)$
 ^const-c\.inc$
