@@ -1,7 +1,7 @@
 package CPP::panda::lib;
 use XS::Loader;
 
-our $VERSION = '1.1.5';
+our $VERSION = '1.2.0';
 
 XS::Loader::load();
 

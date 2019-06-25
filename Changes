@@ -1,4 +1,4 @@
-1.1.5    xx.xx.xxxx
+1.2.0    25.06.2019
            - add panda::excepted (expected with strict error checking and exception propagation)
            - add panda::expected (P0323R7)
            - add string_view compare operators with const C*
