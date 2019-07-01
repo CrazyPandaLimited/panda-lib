@@ -11,9 +11,29 @@ namespace detail {
 }
 
 template <class CLASS, class T>
-inline T* get_global_ptr (const char* name, T* val) {
+inline T* get_global_ptr (T* val, const char* name = NULL) {
     return reinterpret_cast<T*>(detail::__get_global_ptr(typeid(CLASS), name, reinterpret_cast<void*>(val)));
 }
+
+template <class CLASS, class TYPE, int N>
+struct StaticGlobal {
+    template <class...Args>
+    StaticGlobal (Args&&...args) : val(std::forward<Args>(args)...) {}
+
+    TYPE& get () {
+        if (!ptr) ptr = get_global_ptr<StaticGlobal>(&val);
+        return *ptr;
+    }
+
+    const TYPE& get () const {
+        if (!ptr) ptr = get_global_ptr<StaticGlobal>(&val);
+        return *ptr;
+    }
+
+private:
+    TYPE          val;
+    mutable TYPE* ptr;
+};
 
 class MemoryPool {
 public:
