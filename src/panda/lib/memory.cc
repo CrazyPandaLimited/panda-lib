@@ -1,12 +1,30 @@
-#include <panda/lib/memory.h>
+#include "memory.h"
+#include "../string.h"
+#include <map>
+#include <mutex>
 #include <string.h>
 
 namespace panda { namespace lib {
+
+static std::map<string, void*> global_ptrs;
+static std::mutex              global_ptrs_mutex;
 
 static const int START_SIZE = 16;
 
 ObjectAllocator* ObjectAllocator::_inst = new ObjectAllocator();
 thread_local ObjectAllocator* ObjectAllocator::_tls_inst = new ObjectAllocator();
+
+void* detail::__get_global_ptr (const std::type_info& ti, const char* name, void* val) {
+    string key(ti.name());
+    if (name) key += name;
+
+    std::lock_guard<std::mutex> guard(global_ptrs_mutex);
+    auto it = global_ptrs.find(key);
+    if (it != global_ptrs.end()) return it->second;
+
+    global_ptrs.emplace(key, val);
+    return val;
+}
 
 void MemoryPool::grow () {
     size_t pools_cnt = pools.size();

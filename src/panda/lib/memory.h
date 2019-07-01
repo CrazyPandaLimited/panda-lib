@@ -6,6 +6,15 @@
 
 namespace panda { namespace lib __attribute__ ((visibility ("default"))) {
 
+namespace detail {
+    void* __get_global_ptr (const std::type_info& ti, const char* name, void* val);
+}
+
+template <class CLASS, class T>
+inline T* get_global_ptr (const char* name, T* val) {
+    return reinterpret_cast<T*>(detail::__get_global_ptr(typeid(CLASS), name, reinterpret_cast<void*>(val)));
+}
+
 class MemoryPool {
 public:
     MemoryPool (size_t blocksize) : first_free(NULL) {
