@@ -7,7 +7,7 @@
 
 namespace panda { namespace log {
 
-#ifdef WIN323
+#ifdef WIN32
 #  define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 #else
 #  define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
@@ -15,51 +15,51 @@ namespace panda { namespace log {
 
 #define _panda_log_code_point_ panda::log::CodePoint{__FILENAME__, __LINE__}
 
-#define panda_should_log(LEVEL) panda::log::should_log(LEVEL, _panda_log_code_point_)
+#define panda_should_log(level) panda::log::should_log(level, _panda_log_code_point_)
 
-#define panda_elog(LEVEL, CODE) do {                                        \
-    if (panda::log::should_log(LEVEL, _panda_log_code_point_)) {            \
+#define panda_elog(level, code) do {                                        \
+    if (panda::log::should_log(level, _panda_log_code_point_)) {            \
         std::ostream& log = panda::log::details::_get_os();                 \
-        CODE;                                                               \
-        panda::log::details::_do_log(log, _panda_log_code_point_, LEVEL);   \
+        code;                                                               \
+        panda::log::details::_do_log(log, _panda_log_code_point_, level);   \
     }                                                                       \
 } while (0);
 
-#define panda_log(LEVEL, MSG) panda_elog(LEVEL, { log << MSG; })
+#define panda_log(level, msg) panda_elog(level, { log << msg; })
 
-#define panda_log_verbose_debug(MSG)   panda_log(panda::log::VERBOSE_DEBUG, MSG)
-#define panda_log_debug(MSG)           panda_log(panda::log::DEBUG, MSG)
-#define panda_log_info(MSG)            panda_log(panda::log::INFO, MSG)
-#define panda_log_notice(MSG)          panda_log(panda::log::NOTICE, MSG)
-#define panda_log_warn(MSG)            panda_log(panda::log::WARNING, MSG)
-#define panda_log_error(MSG)           panda_log(panda::log::ERROR, MSG)
-#define panda_log_critical(MSG)        panda_log(panda::log::CRITICAL, MSG)
-#define panda_log_alert(MSG)           panda_log(panda::log::ALERT, MSG)
-#define panda_log_emergency(MSG)       panda_log(panda::log::EMERGENCY, MSG)
-#define panda_elog_verbose_debug(CODE) panda_elog(panda::log::VERBOSE_DEBUG, CODE)
-#define panda_elog_debug(CODE)         panda_elog(panda::log::DEBUG, CODE)
-#define panda_elog_info(CODE)          panda_elog(panda::log::INFO, CODE)
-#define panda_elog_notice(CODE)        panda_elog(panda::log::NOTICE, CODE)
-#define panda_elog_warn(CODE)          panda_elog(panda::log::WARNING, CODE)
-#define panda_elog_error(CODE)         panda_elog(panda::log::ERROR, CODE)
-#define panda_elog_critical(CODE)      panda_elog(panda::log::CRITICAL, CODE)
-#define panda_elog_alert(CODE)         panda_elog(panda::log::ALERT, CODE)
-#define panda_elog_emergency(CODE)     panda_elog(panda::log::EMERGENCY, CODE)
+#define panda_log_verbose_debug(msg)   panda_log(panda::log::VerboseDebug, msg)
+#define panda_log_debug(msg)           panda_log(panda::log::Debug, msg)
+#define panda_log_info(msg)            panda_log(panda::log::Info, msg)
+#define panda_log_notice(msg)          panda_log(panda::log::Notice, msg)
+#define panda_log_warn(msg)            panda_log(panda::log::Warning, msg)
+#define panda_log_error(msg)           panda_log(panda::log::Error, msg)
+#define panda_log_critical(msg)        panda_log(panda::log::Critical, msg)
+#define panda_log_alert(msg)           panda_log(panda::log::Alert, msg)
+#define panda_log_emergency(msg)       panda_log(panda::log::Emergency, msg)
+#define panda_elog_verbose_debug(code) panda_elog(panda::log::VerboseDebug, code)
+#define panda_elog_debug(code)         panda_elog(panda::log::Debug, code)
+#define panda_elog_info(code)          panda_elog(panda::log::Info, code)
+#define panda_elog_notice(code)        panda_elog(panda::log::Notice, code)
+#define panda_elog_warn(code)          panda_elog(panda::log::Warning, code)
+#define panda_elog_error(code)         panda_elog(panda::log::Error, code)
+#define panda_elog_critical(code)      panda_elog(panda::log::Critical, code)
+#define panda_elog_alert(code)         panda_elog(panda::log::Alert, code)
+#define panda_elog_emergency(code)     panda_elog(panda::log::Emergency, code)
 
-#define panda_debug_v(VAR) panda_log(panda::log::DEBUG, #VAR << " = " << (VAR))
+#define panda_debug_v(var) panda_log(panda::log::Debug, #var << " = " << (var))
 
-#define PANDA_ASSERT(VAR, MSG) if(!(auto assert_value = VAR)) { panda_log_emergency("assert failed: " << #VAR << " is " << assert_value << MSG) }
+#define PANDA_ASSERT(var, msg) if(!(auto assert_value = var)) { panda_log_emergency("assert failed: " << #var << " is " << assert_value << msg) }
 
 enum Level {
-    VERBOSE_DEBUG = 0,
-    DEBUG,
-    INFO,
-    NOTICE,
-    WARNING,
-    ERROR,
-    CRITICAL,
-    ALERT,
-    EMERGENCY
+    VerboseDebug = 0,
+    Debug,
+    Info,
+    Notice,
+    Warning,
+    Error,
+    Critical,
+    Alert,
+    Emergency
 };
 
 struct CodePoint {

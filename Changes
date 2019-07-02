@@ -1,5 +1,6 @@
 1.2.1    xx.xx.xxxx
            - add get_global_ptr with helper
+           - change log level names to camel case (fuck the fucking macros)
 1.2.0    25.06.2019
            - add panda::excepted (expected with strict error checking and exception propagation)
            - add panda::expected (P0323R7)

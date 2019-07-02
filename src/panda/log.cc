@@ -7,7 +7,7 @@
 namespace panda { namespace log {
 
 namespace details {
-    Level                    min_level = DEBUG;
+    Level                    min_level = Debug;
     std::unique_ptr<ILogger> ilogger;
 
     static thread_local std::ostringstream os;
