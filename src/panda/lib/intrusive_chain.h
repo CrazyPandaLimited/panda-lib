@@ -2,7 +2,7 @@
 #include <iosfwd>
 #include <vector>
 #include <cassert>
-#include <cstddef>
+#include <stdint.h>
 #include <iterator>
 #include <algorithm>
 #include <type_traits>
@@ -86,7 +86,7 @@ private:
 
 template <typename T> struct IntrusiveChain {
     using value_type             = T;
-    using size_type              = std::size_t;
+    using size_type              = size_t;
     using difference_type        = std::ptrdiff_t;
     using reference              = T&;
     using const_reference        = const T&;
@@ -97,7 +97,7 @@ template <typename T> struct IntrusiveChain {
     using reverse_iterator       = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-    IntrusiveChain () : head(), tail() {}
+    IntrusiveChain () : head(), tail(), _size() {}
 
     IntrusiveChain (std::initializer_list<T> il) : IntrusiveChain() {
         for (const T& node : il) push_back(node);
@@ -117,12 +117,13 @@ template <typename T> struct IntrusiveChain {
         if (this != &other) {
             std::swap(head, other.head);
             std::swap(tail, other.tail);
+            std::swap(_size, other._size);
         } 
         return *this;
     }
 
     void push_back (const T& node) {
-        if (empty()) {
+        if (!_size++) {
             head = tail = node;
         } else {
             intrusive_chain_next(tail, node);
@@ -133,7 +134,7 @@ template <typename T> struct IntrusiveChain {
     }
 
     void push_front (const T& node) {
-        if (empty()) {
+        if (!_size++) {
             head = tail = node;
         } else {
             intrusive_chain_prev(head, node);
@@ -147,12 +148,14 @@ template <typename T> struct IntrusiveChain {
     bool pop_back () {
         if (head == tail) {
             head = tail = T();
+            _size = 0;
             return false;
         }
         auto removed = tail;
         tail = intrusive_chain_prev(tail);
         intrusive_chain_next(tail, T());
         intrusive_chain_prev(removed, T());
+        --_size;
         return true;
     }
 
@@ -160,12 +163,14 @@ template <typename T> struct IntrusiveChain {
     bool pop_front () {
         if (head == tail) {
             head = tail = T();
+            _size = 0;
             return false;
         }
         auto removed = head;
         head = intrusive_chain_next(head);
         intrusive_chain_prev(head, T());
         intrusive_chain_next(removed, T());
+        --_size;
         return true;
     }
 
@@ -173,6 +178,7 @@ template <typename T> struct IntrusiveChain {
         if (pos) {
             auto prev = intrusive_chain_prev(pos);
             if (prev) {
+                ++_size;
                 intrusive_chain_prev(node, prev);
                 intrusive_chain_next(node, pos);
                 intrusive_chain_next(prev, node);
@@ -208,6 +214,7 @@ template <typename T> struct IntrusiveChain {
         intrusive_chain_prev(next, prev);
         intrusive_chain_next(pos, T());
         intrusive_chain_prev(pos, T());
+        --_size;
 
         return iterator(tail, next);
     }
@@ -222,6 +229,7 @@ template <typename T> struct IntrusiveChain {
             node = next;
         }
         head = tail = T();
+        _size = 0;
     }
 
     reference front () { return head; }
@@ -241,15 +249,12 @@ template <typename T> struct IntrusiveChain {
 
     bool empty () const { return !head; }
 
-    size_type size () const {
-        size_type ret = 0;
-        for (auto node = head; node; node = intrusive_chain_next(node)) ++ret;
-        return ret;
-    }
+    size_t size () const { return _size; }
 
 private:
-    T head;
-    T tail;
+    T      head;
+    T      tail;
+    size_t _size;
 };
 
 template <typename C, typename CT, typename T>

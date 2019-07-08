@@ -240,18 +240,22 @@ struct Test {
             IC list;
             CHECK(list.front() == T());
             CHECK(list.back() == T());
+            CHECK(list.size() == 0);
 
             list.push_back(v[0]);
             CHECK(list.front() == v[0]);
             CHECK(list.back() == v[0]);
+            CHECK(list.size() == 1);
 
             list.push_back(v[1]);
             CHECK(list.front() == v[0]);
             CHECK(list.back() == v[1]);
+            CHECK(list.size() == 2);
 
             list.push_back(v[2]);
             CHECK(list.front() == v[0]);
             CHECK(list.back() == v[2]);
+            CHECK(list.size() == 3);
         }
 
     }
