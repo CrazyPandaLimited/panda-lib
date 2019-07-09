@@ -73,6 +73,7 @@ std::ostream& operator<< (std::ostream&, const CodePoint&);
 struct ILogger {
     virtual bool should_log (Level, const CodePoint&) { return true; }
     virtual void log        (Level, const CodePoint&, const std::string&) = 0;
+    virtual ~ILogger() {}
 };
 
 namespace details {
