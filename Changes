@@ -1,5 +1,7 @@
 1.2.1    xx.xx.xxxx
-           - add get_global_ptr with helper
+           - add get_global_[tls_]ptr
+           - add PANDA_GLOBAL/TLS_MEMBER[_PTR] macros helpers for creating static members
+             (global or tls) which has the same address across any shared library.
            - change log level names to camel case (fuck the fucking macros)
            - fix intrusive_chain size(): now O(1)
 1.2.0    25.06.2019

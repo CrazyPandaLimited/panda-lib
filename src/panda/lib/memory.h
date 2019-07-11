@@ -4,10 +4,11 @@
 #include <stdexcept>
 #include <assert.h>
 
-namespace panda { namespace lib __attribute__ ((visibility ("default"))) {
+namespace panda { namespace lib {
 
 namespace detail {
-    void* __get_global_ptr (const std::type_info& ti, const char* name, void* val);
+    void* __get_global_ptr     (const std::type_info& ti, const char* name, void* val);
+    void* __get_global_tls_ptr (const std::type_info& ti, const char* name, void* val);
 }
 
 template <class CLASS, class T>
@@ -15,28 +16,69 @@ inline T* get_global_ptr (T* val, const char* name = NULL) {
     return reinterpret_cast<T*>(detail::__get_global_ptr(typeid(CLASS), name, reinterpret_cast<void*>(val)));
 }
 
-template <class CLASS, class TYPE, int N>
-struct StaticGlobal {
-    template <class...Args>
-    StaticGlobal (Args&&...args) : val(std::forward<Args>(args)...) {}
+template <class CLASS, class T>
+inline T* get_global_tls_ptr (T* val, const char* name = NULL) {
+    return reinterpret_cast<T*>(detail::__get_global_tls_ptr(typeid(CLASS), name, reinterpret_cast<void*>(val)));
+}
 
-    TYPE& get () {
-        if (!ptr) ptr = get_global_ptr<StaticGlobal>(&val);
-        return *ptr;
+#define PANDA_GLOBAL_MEMBER_PTR(CLASS, TYPE, accessor, defval)                  \
+    static TYPE accessor () {                                                   \
+        static TYPE ptr;                                                        \
+        if (!ptr) ptr = panda::lib::get_global_ptr<CLASS>(defval, #accessor);   \
+        return ptr;                                                             \
     }
 
-    const TYPE& get () const {
-        if (!ptr) ptr = get_global_ptr<StaticGlobal>(&val);
-        return *ptr;
+#define PANDA_GLOBAL_MEMBER(CLASS, TYPE, accessor, defval)              \
+    static TYPE& accessor () {                                          \
+        static TYPE* ptr;                                               \
+        if (!ptr) {                                                     \
+            static TYPE val = defval;                                   \
+            ptr = panda::lib::get_global_ptr<CLASS>(&val, #accessor);   \
+        }                                                               \
+        return *ptr;                                                    \
     }
 
-private:
-    TYPE          val;
-    mutable TYPE* ptr;
-};
+#define PANDA_GLOBAL_MEMBER_AS_PTR(CLASS, TYPE, accessor, defval)       \
+    static TYPE* accessor () {                                          \
+        static TYPE* ptr;                                               \
+        if (!ptr) {                                                     \
+            static TYPE val = defval;                                   \
+            ptr = panda::lib::get_global_ptr<CLASS>(&val, #accessor);   \
+        }                                                               \
+        return ptr;                                                     \
+    }
 
-class MemoryPool {
-public:
+#define PANDA_TLS_MEMBER_PTR(CLASS, TYPE, accessor, defval)                                 \
+    static TYPE accessor () {                                                               \
+        static thread_local TYPE _ptr;                                                      \
+        TYPE ptr = _ptr;                                                                    \
+        if (!ptr) ptr = _ptr = panda::lib::get_global_tls_ptr<CLASS>(defval, #accessor);    \
+        return ptr;                                                                         \
+    }
+
+#define PANDA_TLS_MEMBER(CLASS, TYPE, accessor, defval)                             \
+    static TYPE& accessor () {                                                      \
+        static thread_local TYPE* _ptr;                                             \
+        TYPE* ptr = _ptr;                                                           \
+        if (!ptr) {                                                                 \
+            static thread_local TYPE val = defval;                                  \
+            ptr = _ptr = panda::lib::get_global_tls_ptr<CLASS>(&val, #accessor);    \
+        }                                                                           \
+        return *ptr;                                                                \
+    }
+
+#define PANDA_TLS_MEMBER_AS_PTR(CLASS, TYPE, accessor, defval)                      \
+    static TYPE* accessor () {                                                      \
+        static thread_local TYPE* _ptr;                                             \
+        TYPE* ptr = _ptr;                                                           \
+        if (!ptr) {                                                                 \
+            static thread_local TYPE val = defval;                                  \
+            ptr = _ptr = panda::lib::get_global_tls_ptr<CLASS>(&val, #accessor);    \
+        }                                                                           \
+        return ptr;                                                                 \
+    }
+
+struct MemoryPool {
     MemoryPool (size_t blocksize) : first_free(NULL) {
         this->blocksize = round_up(blocksize);
     }
@@ -49,9 +91,9 @@ public:
     }
 
     void deallocate (void* elem) {
-#ifdef TEST_FULL
+        #ifdef TEST_FULL
         if(!is_mine(elem)) abort(); // protection for debugging, normally you MUST NEVER pass a pointer that wasn't created via current mempool
-#endif
+        #endif
         *((void**)elem) = first_free;
         first_free = elem;
     }
@@ -71,7 +113,7 @@ private:
     void grow    ();
     bool is_mine (void* elem);
 
-    inline static size_t round_up(size_t size) {
+    inline static size_t round_up (size_t size) {
         assert(size > 0);
         const size_t factor = sizeof(void*);
         if ((size & (factor-1)) == 0) return size;
@@ -79,49 +121,32 @@ private:
         size &= ~((size_t)(factor-1));
         return size;
     }
-
 };
 
-// !!!! It cannot be used !!!!
-// StaticMemoryPool::instance and StaticMemoryPool::tls_instance are different in different .so
-// Let it stay commented till probles is not solved
-// !!!!!!!!! DO NOT return &_tls_inst from tls_instance() !!!!!!!!!!!! On some compilers, performance drop down up to 4x may occur.
-//template <int BLOCKSIZE>
-//class StaticMemoryPool {
-//public:
-//    static MemoryPool* instance () { return &_inst; }
+template <int BLOCKSIZE>
+struct StaticMemoryPool {
+    PANDA_GLOBAL_MEMBER_PTR(StaticMemoryPool, MemoryPool*, global_instance, new MemoryPool(BLOCKSIZE));
+    PANDA_TLS_MEMBER_PTR   (StaticMemoryPool, MemoryPool*, instance,        new MemoryPool(BLOCKSIZE));
+
+    static void* allocate   ()        { return instance()->allocate(); }
+    static void  deallocate (void* p) { instance()->deallocate(p); }
+};
+
+template <> struct StaticMemoryPool<7> : StaticMemoryPool<8> {};
+template <> struct StaticMemoryPool<6> : StaticMemoryPool<8> {};
+template <> struct StaticMemoryPool<5> : StaticMemoryPool<8> {};
+template <> struct StaticMemoryPool<4> : StaticMemoryPool<8> {};
+template <> struct StaticMemoryPool<3> : StaticMemoryPool<8> {};
+template <> struct StaticMemoryPool<2> : StaticMemoryPool<8> {};
+template <> struct StaticMemoryPool<1> : StaticMemoryPool<8> {};
 
 
-//    static MemoryPool*  tls_instance () {
-//        static thread_local MemoryPool*  ptr;
-//        if (!ptr) {
-//            static thread_local MemoryPool inst(BLOCKSIZE);
-//            ptr = &inst;
-//        }
-//        return ptr;
-//    }
+struct DynamicMemoryPool {
+    static DynamicMemoryPool* global_instance () { return _global_instance; }
 
-//private:
-//    static MemoryPool _inst;
-//};
+    PANDA_TLS_MEMBER_PTR(DynamicMemoryPool, DynamicMemoryPool*, instance, new DynamicMemoryPool());
 
-//template <int T>
-//MemoryPool StaticMemoryPool<T>::_inst(T);
-
-//template <> struct StaticMemoryPool<7> : StaticMemoryPool<8> {};
-//template <> struct StaticMemoryPool<6> : StaticMemoryPool<8> {};
-//template <> struct StaticMemoryPool<5> : StaticMemoryPool<8> {};
-//template <> struct StaticMemoryPool<4> : StaticMemoryPool<8> {};
-//template <> struct StaticMemoryPool<3> : StaticMemoryPool<8> {};
-//template <> struct StaticMemoryPool<2> : StaticMemoryPool<8> {};
-//template <> struct StaticMemoryPool<1> : StaticMemoryPool<8> {};
-
-class ObjectAllocator {
-public:
-    static ObjectAllocator* instance     () { return _inst; }
-    static ObjectAllocator* tls_instance () { return _tls_inst; }
-
-    ObjectAllocator ();
+    DynamicMemoryPool ();
 
     void* allocate (size_t size) {
         if (size == 0) return NULL;
@@ -153,37 +178,40 @@ public:
         pool->deallocate(ptr);
     }
 
-    ~ObjectAllocator ();
+    ~DynamicMemoryPool ();
 
 private:
     static constexpr const int POOLS_CNT = 256;
-    static ObjectAllocator* _inst;
-    static thread_local ObjectAllocator* _tls_inst;
+    static DynamicMemoryPool* _global_instance;
     MemoryPool* small_pools[POOLS_CNT];
     MemoryPool* medium_pools[POOLS_CNT];
     MemoryPool* big_pools[POOLS_CNT];
 
 };
 
-template <class TARGET, bool TLS_ALLOC = true>
+template <class TARGET, bool THREAD_SAFE = true>
 struct AllocatedObject {
     static void* operator new (size_t size) {
-        return ObjectAllocator::tls_instance()->allocate(size);
+        if (size == sizeof(TARGET)) return StaticMemoryPool<sizeof(TARGET)>::allocate();
+        else                        return DynamicMemoryPool::instance()->allocate(size);
     }
 
     static void operator delete (void* p, size_t size) {
-        ObjectAllocator::tls_instance()->deallocate(p, size);
+        if (size == sizeof(TARGET)) StaticMemoryPool<sizeof(TARGET)>::deallocate(p);
+        else                        DynamicMemoryPool::instance()->deallocate(p, size);
     }
 };
 
 template <class TARGET>
 struct AllocatedObject<TARGET, false> {
     static void* operator new (size_t size) {
-        return ObjectAllocator::instance()->allocate(size);
+        if (size == sizeof(TARGET)) return StaticMemoryPool<sizeof(TARGET)>::global_instance()->allocate();
+        else                        return DynamicMemoryPool::global_instance()->allocate(size);
     }
 
     static void operator delete (void* p, size_t size) {
-        ObjectAllocator::instance()->deallocate(p, size);
+        if (size == sizeof(TARGET)) StaticMemoryPool<sizeof(TARGET)>::global_instance()->deallocate(p);
+        else                        DynamicMemoryPool::global_instance()->deallocate(p, size);
     }
 };
 

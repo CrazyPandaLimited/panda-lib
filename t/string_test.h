@@ -90,7 +90,7 @@ struct test_string {
     }
 
     static ExternalShared* shared_buf_alloc () {
-        return (ExternalShared*)panda::lib::ObjectAllocator::instance()->allocate(sizeof(ExternalShared));
+        return (ExternalShared*)panda::lib::DynamicMemoryPool::instance()->allocate(sizeof(ExternalShared));
     }
 
     template <class U = String> static U create_external      (StdString exp, size_t cap) { return U(extstr(exp), exp.size(), cap, &Allocator::ext_free); }

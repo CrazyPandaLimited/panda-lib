@@ -9,10 +9,11 @@ namespace panda { namespace lib {
 static std::map<string, void*> global_ptrs;
 static std::mutex              global_ptrs_mutex;
 
+static thread_local std::map<string, void*> global_tls_ptrs;
+
 static const int START_SIZE = 16;
 
-ObjectAllocator* ObjectAllocator::_inst = new ObjectAllocator();
-thread_local ObjectAllocator* ObjectAllocator::_tls_inst = new ObjectAllocator();
+DynamicMemoryPool* DynamicMemoryPool::_global_instance = new DynamicMemoryPool();
 
 void* detail::__get_global_ptr (const std::type_info& ti, const char* name, void* val) {
     string key(ti.name());
@@ -23,6 +24,17 @@ void* detail::__get_global_ptr (const std::type_info& ti, const char* name, void
     if (it != global_ptrs.end()) return it->second;
 
     global_ptrs.emplace(key, val);
+    return val;
+}
+
+void* detail::__get_global_tls_ptr (const std::type_info& ti, const char* name, void* val) {
+    string key(ti.name());
+    if (name) key += name;
+
+    auto it = global_tls_ptrs.find(key);
+    if (it != global_tls_ptrs.end()) return it->second;
+
+    global_tls_ptrs.emplace(key, val);
     return val;
 }
 
@@ -67,14 +79,14 @@ MemoryPool::~MemoryPool () {
     }
 }
 
-ObjectAllocator::ObjectAllocator () {
+DynamicMemoryPool::DynamicMemoryPool () {
     memset(small_pools,  0, POOLS_CNT*sizeof(MemoryPool*));
     memset(medium_pools, 0, POOLS_CNT*sizeof(MemoryPool*));
     memset(big_pools,    0, POOLS_CNT*sizeof(MemoryPool*));
     small_pools[0] = small_pools[1] = new MemoryPool(8); // min bytes = 8, make 4-byte and 8-byte requests shared
 }
 
-ObjectAllocator::~ObjectAllocator () {
+DynamicMemoryPool::~DynamicMemoryPool () {
     for (int i = 0; i < POOLS_CNT; ++i) {
         if (i) delete small_pools[i];
         delete medium_pools[i];
