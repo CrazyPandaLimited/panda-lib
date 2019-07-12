@@ -4,6 +4,8 @@
              (global or tls) which has the same address across any shared library.
            - change log level names to camel case (fuck the fucking macros)
            - fix intrusive_chain size(): now O(1)
+           - CallbackDispatcher: extended callback is now accepted only in add_event_listener
+             to resolve ambiguity with template lambdas when dispatcher.add([](auto...) { });
 1.2.0    25.06.2019
            - add panda::excepted (expected with strict error checking and exception propagation)
            - add panda::expected (P0323R7)

@@ -36,8 +36,8 @@ TEST_CASE("simplest callback dispatcher" , "[callbackdispatcher]") {
     function<panda::optional<int> (Dispatcher::Event&, int)> cb = [](Event& e, int a) -> int {
         return 1 + e.next(a).value_or(0);
     };
-    d.add(cb);
-    d.add([](Event& e, int a) -> int {
+    d.add_event_listener(cb);
+    d.add_event_listener([](Event& e, int a) -> int {
         return a + e.next(a).value_or(0);
     });
     REQUIRE(d(2).value_or(0) == 3);
@@ -45,13 +45,13 @@ TEST_CASE("simplest callback dispatcher" , "[callbackdispatcher]") {
 
 TEST_CASE("remove callback dispatcher" , "[callbackdispatcher]") {
     Dispatcher d;
-    d.add([](Event& e, int a) -> int {
+    d.add_event_listener([](Event& e, int a) -> int {
         return 1 + e.next(a).value_or(0);
     });
     Dispatcher::Callback c = [](Event& e, int a) -> int {
         return a + e.next(a).value_or(0);
     };
-    d.add(c);
+    d.add_event_listener(c);
     REQUIRE(d(2).value_or(0) == 3);
     d.remove(c);
     REQUIRE(d(2).value_or(0) == 1);
@@ -59,10 +59,10 @@ TEST_CASE("remove callback dispatcher" , "[callbackdispatcher]") {
 
 TEST_CASE("remove_all in process" , "[callbackdispatcher]") {
     Dispatcher d;
-    d.add([](Event&, int) -> int {
+    d.add_event_listener([](Event&, int) -> int {
         return 2;
     });
-    d.add([&](Event& e, int a) -> int {
+    d.add_event_listener([&](Event& e, int a) -> int {
         d.remove_all();
         return 1 + e.next(a).value_or(0);
     });
@@ -74,7 +74,7 @@ TEST_CASE("callback dispatcher copy ellision" , "[callbackdispatcher]") {
     Tracer::refresh();
     {
         Dispatcher::Callback cb = Tracer(14);
-        d.add(cb);
+        d.add_event_listener(cb);
         REQUIRE(d(2).value_or(0) == 16);
         d.remove(cb);
         REQUIRE(d(2).value_or(0) == 0);
@@ -185,7 +185,7 @@ TEST_CASE("remove callback comparable full functor" , "[callbackdispatcher]") {
     S src;
     called = false;
     Dispatcher::Callback s = src;
-    d.add(s);
+    d.add_event_listener(s);
 
     CHECK(d(2).value_or(42) == 12);
     CHECK(called);
@@ -232,7 +232,7 @@ TEST_CASE("remove callback self lambda" , "[callbackdispatcher]") {
     };
 
     Dispatcher::Callback s = l;
-    d.add(s);
+    d.add_event_listener(s);
     CHECK(d(2).value_or(42) == 12);
     CHECK(called);
     called = false;
@@ -242,7 +242,7 @@ TEST_CASE("remove callback self lambda" , "[callbackdispatcher]") {
 
 TEST_CASE("dispatcher to function conversion" , "[callbackdispatcher]") {
     Dispatcher d;
-    d.add([](Dispatcher::Event&, int a){return a*2;});
+    d.add_event_listener([](Dispatcher::Event&, int a){return a*2;});
     function<panda::optional<int>(int)> f = d;
     REQUIRE(f(10).value_or(0) == 20);
 
@@ -264,7 +264,7 @@ TEST_CASE("front order", "[callbackdispatcher]") {
     std::vector<int> res;
     d.add([&]{ res.push_back(1); });
     d.add([&]{ res.push_back(2); });
-    d.add([&](Dispatcher::Event& e){ res.push_back(3); e.next(); });
+    d.add_event_listener([&](Dispatcher::Event& e){ res.push_back(3); e.next(); });
     d();
     REQUIRE(res == std::vector<int>({3,2,1}));
 }
@@ -273,7 +273,7 @@ TEST_CASE("back order", "[callbackdispatcher]") {
     using Dispatcher = CallbackDispatcher<void()>;
     Dispatcher d;
     std::vector<int> res;
-    d.add([&](Dispatcher::Event& e){ res.push_back(1); e.next(); }, true);
+    d.add_event_listener([&](Dispatcher::Event& e){ res.push_back(1); e.next(); }, true);
     d.add([&]{ res.push_back(2); }, true);
     d.add_back([&]{ res.push_back(3); });
     d();

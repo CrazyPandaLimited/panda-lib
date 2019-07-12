@@ -71,13 +71,13 @@ public:
         }
     };
 
-    void add (const Callback& callback, bool back = false) {
+    void add_event_listener (const Callback& callback, bool back = false) {
         if (!callback) return;
         if (back) listeners.push_back(Wrapper(callback));
         else      listeners.push_front(Wrapper(callback));
     }
 
-    void add (Callback&& callback, bool back = false) {
+    void add_event_listener (Callback&& callback, bool back = false) {
         if (!callback) return;
         if (back) listeners.push_back(Wrapper(std::forward<Callback>(callback)));
         else      listeners.push_front(Wrapper(std::forward<Callback>(callback)));
