@@ -1,4 +1,4 @@
-1.2.1    xx.xx.xxxx
+1.2.1    12.07.2019
            - add get_global_[tls_]ptr
            - add PANDA_GLOBAL/TLS_MEMBER[_PTR] macros helpers for creating static members
              (global or tls) which has the same address across any shared library.
