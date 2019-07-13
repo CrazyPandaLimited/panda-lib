@@ -10,7 +10,7 @@ namespace panda {
 
 template <typename T>
 struct iptr {
-    template <class U> friend class iptr;
+    template <class U> friend struct iptr;
     typedef T element_type;
 
     iptr ()                : ptr(NULL)    {}
@@ -155,7 +155,7 @@ template <typename T1, typename T2> inline std::shared_ptr<T1> dynamic_pointer_c
 
 template <typename T>
 struct weak_iptr {
-    template <class U> friend class weak_iptr;
+    template <class U> friend struct weak_iptr;
     typedef T element_type;
 
     weak_iptr() : storage(nullptr), object(nullptr) {}
