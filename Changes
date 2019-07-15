@@ -1,3 +1,5 @@
+1.2.3    xx.xx.xxxx
+           - move fake std::string_view to panda::string_view + related changes
 1.2.2    15.07.2019
            - fix compiler warnings
 1.2.1    12.07.2019

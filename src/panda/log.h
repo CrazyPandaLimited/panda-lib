@@ -63,8 +63,8 @@ enum Level {
 };
 
 struct CodePoint {
-    std::string_view file;
-    uint32_t         line;
+    string_view file;
+    uint32_t    line;
 
     std::string to_string () const;
 };
@@ -100,7 +100,7 @@ void set_logger (const Func& f) { set_logger(new details::CallbackLogger<Func>(f
 inline bool should_log (Level level, const CodePoint& cp) { return level >= details::min_level && details::ilogger && details::ilogger->should_log(level, cp); }
 
 struct escaped {
-    std::string_view src;
+    string_view src;
 };
 std::ostream& operator<< (std::ostream&, const escaped&);
 
