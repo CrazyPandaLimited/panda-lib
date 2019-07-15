@@ -323,3 +323,32 @@ TEST_CASE("function from nullable object", "[function]") {
     f = s;
     REQUIRE(f);
 }
+
+TEST_CASE("lambda self reference gcc bug", "[function]") {
+    struct SomeStruct {
+        void method(int val) {
+            function<void(int)> ff = [this](panda::Ifunction<void, int>&, auto... args) mutable {
+                bar(args...);
+            };
+            ff(val);
+        }
+
+        void bar(int val) {
+            a = val;
+        }
+        int a = 10;
+    };
+    SomeStruct s;
+    s.method(20);
+    REQUIRE(s.a == 20);
+}
+
+TEST_CASE("lambda self reference auto...", "[function]") {
+    int a = 10;
+    function<int(int)> f = [&](auto...) {
+        return (a = 20) + 1;
+    };
+    int b = f(42);
+    REQUIRE(a == 20);
+    REQUIRE(b == 21);
+}
