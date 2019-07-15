@@ -266,7 +266,7 @@ std::basic_ostream<C,CT>& operator<< (std::basic_ostream<C,CT>& out, const Intru
         } else {
             out << "null";
         }
-        out << std::endl;
+        out << '\n';
     }
     return out;
 }
