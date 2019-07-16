@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <memory>
+#include <ostream>
 #include <string.h>
 #include <type_traits>
 #include <panda/string_view.h>
