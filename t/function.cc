@@ -328,7 +328,7 @@ TEST_CASE("lambda self reference gcc bug", "[function]") {
     struct SomeStruct {
         void method(int val) {
             function<void(int)> ff = [this](panda::Ifunction<void, int>&, auto... args) mutable {
-                bar(args...);
+                this->bar(args...);
             };
             ff(val);
         }
