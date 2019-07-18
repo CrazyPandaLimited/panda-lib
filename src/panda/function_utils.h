@@ -178,48 +178,26 @@ auto tmp_abstract_function(Ret (*f)(Args...)) -> abstract_function<Ret (*)(Args.
     return abstract_function<Ret (*)(Args...), Ret, true, Args...>(f);
 }
 
-template <typename Ret, typename... Args,
-          typename Functor, bool IsComp = lib::traits::is_comparable<typename std::remove_reference<Functor>::type>::value,
-          typename DeFunctor = typename std::remove_reference<Functor>::type,
-// I don'to why, but has_call_operator does not work sometimes, but manual decltype(f(args..)) works
-//          typename Check = typename std::enable_if<lib::traits::has_call_operator<Functor, Args...>::value>::type,
-          typename Check = decltype(std::declval<Functor>()(std::declval<Args>()...)),
-          typename = typename std::enable_if<!lib::traits::has_call_operator<Functor, Ifunction<Ret, Args...>&, Args...>::value>::type,
-          typename = typename std::enable_if<!std::is_same<Functor, Ret(&)(Args...)>::value>::type,
-          typename = typename std::enable_if<!is_panda_function_t<DeFunctor>::value>::type>
-iptr<abstract_function<DeFunctor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f, Check(*)() = 0) {
-    if (!lib::traits::bool_or(f, true)) return nullptr;
-    return new abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
-}
-
-template <typename Ret, typename... Args,
-          typename Functor, bool IsComp = lib::traits::is_comparable<typename std::remove_reference<Functor>::type>::value,
-          typename DeFunctor = typename std::remove_reference<Functor>::type,
-//          typename Check = typename std::enable_if<lib::traits::has_call_operator<Functor, Args...>::value>::type,
-          typename Check = decltype(std::declval<Functor>()(std::declval<Args>()...)),
-          typename = typename std::enable_if<!lib::traits::has_call_operator<Functor, Ifunction<Ret, Args...>&, Args...>::value>::type,
-          typename = typename std::enable_if<!std::is_same<Functor, Ret(&)(Args...)>::value>::type>
-abstract_function<DeFunctor, Ret, IsComp, Args...> tmp_abstract_function(Functor&& f, Check(*)() = 0) {
-    assert(lib::traits::bool_or(f, true));
-    return abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
-}
-
-template <typename Ret, typename... Args,
-          typename Functor, bool IsComp = lib::traits::is_comparable<typename std::remove_reference<Functor>::type>::value,
-          typename DeFunctor = typename std::remove_reference<Functor>::type,
-//          typename = typename std::enable_if<lib::traits::has_call_operator<Functor, Ifunction<Ret, Args...>&, Args...>::value>::type>
-          typename Check = decltype(std::declval<Functor>()(std::declval<Ifunction<Ret, Args...>&>(), std::declval<Args>()...))>
+template <typename Ret, typename... Args, typename Functor,
+          bool IsComp = lib::traits::is_comparable<std::remove_reference_t<Functor>>::value,
+          typename DeFunctor = std::remove_reference_t<Functor>,
+          typename = std::enable_if_t<lib::traits::has_call_operator<Functor, Ifunction<Ret, Args...>&, Args...>::value ||
+                                      lib::traits::has_call_operator<Functor, Args...>::value>,
+          typename = std::enable_if_t<!std::is_same<Functor, Ret(&)(Args...)>::value>,
+          typename = std::enable_if_t<!is_panda_function_t<DeFunctor>::value>>
 iptr<abstract_function<DeFunctor, Ret, IsComp, Args...>> make_abstract_function(Functor&& f) {
     if (!lib::traits::bool_or(f, true)) return nullptr;
     return new abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
 }
 
-template <typename Ret, typename... Args,
-          typename Functor, bool IsComp = lib::traits::is_comparable<typename std::remove_reference<Functor>::type>::value,
-          typename DeFunctor = typename std::remove_reference<Functor>::type,
-//          typename = typename std::enable_if<lib::traits::has_call_operator<Functor, Ifunction<Ret, Args...>&, Args...>::value>::type>
-          typename Check = decltype(std::declval<Functor>()(std::declval<Ifunction<Ret, Args...>&>(), std::declval<Args>()...))>
-abstract_function<DeFunctor, Ret, IsComp, Args...> tmp_abstract_function(Functor&& f) {
+template <typename Ret, typename... Args, typename Functor,
+          bool IsComp = lib::traits::is_comparable<typename std::remove_reference<Functor>::type>::value,
+          typename DeFunctor = std::remove_reference_t<Functor>,
+          typename = std::enable_if_t<lib::traits::has_call_operator<Functor, Ifunction<Ret, Args...>&, Args...>::value ||
+                                      lib::traits::has_call_operator<Functor, Args...>::value>,
+          typename = std::enable_if_t<!std::is_same<Functor, Ret(&)(Args...)>::value>,
+          typename = std::enable_if_t<!is_panda_function_t<DeFunctor>::value>>
+abstract_function<DeFunctor, Ret, IsComp, Args...> tmp_abstract_function (Functor&& f) {
     assert(lib::traits::bool_or(f, true));
     return abstract_function<DeFunctor, Ret, IsComp, Args...>(std::forward<Functor>(f));
 }

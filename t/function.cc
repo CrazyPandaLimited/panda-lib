@@ -345,10 +345,23 @@ TEST_CASE("lambda self reference gcc bug", "[function]") {
 
 TEST_CASE("lambda self reference auto...", "[function]") {
     int a = 10;
-    function<int(int)> f = [&](auto...) {
+    function<int(int)> f = [&](auto...args) -> int {
+        static_assert(sizeof...(args) == 1, "auto... resolved as without SELF");
         return (a = 20) + 1;
     };
     int b = f(42);
     REQUIRE(a == 20);
     REQUIRE(b == 21);
+
+    function<int(int)> f2 = [&](auto&&...args) -> int {
+        static_assert(sizeof...(args) == 1, "auto... resolved as without SELF");
+        return 111;
+    };
+    CHECK(f2(123) == 111);
+
+    function<int(int)> f3 = [&](auto&&...args) {
+        REQUIRE(sizeof...(args) == 1);
+        return 111;
+    };
+    CHECK(f3(123) == 111);
 }

@@ -293,3 +293,28 @@ TEST_CASE("dispatcher const ref arg move" , "[callbackdispatcher]") {
     S s;
     s.call();
 }
+
+TEST_CASE("dispatcher lambda self reference auto...", "[callbackdispatcher]") {
+    CallbackDispatcher<void(int)> d1;
+    CallbackDispatcher<int(int)>  d2;
+
+    auto l1 = [](auto...args) -> void { static_assert(sizeof...(args) == 1, "auto... resolved as without SELF"); };
+    auto l2 = [](auto&&...args) -> void { static_assert(sizeof...(args) == 1, "auto... resolved as without SELF"); };
+    auto l3 = [](auto&&...args) { REQUIRE(sizeof...(args) == 1); };
+
+    d1.add(l1);
+    d1.add(l2);
+    d1.add(l3);
+    d2.add(l1);
+    d2.add(l2);
+    d2.add(l3);
+
+    auto l1a = [](auto&, auto...args) -> int { static_assert(sizeof...(args) == 1, "auto... resolved as without SELF"); return 1; };
+    auto l2a = [](auto&&...args) -> int { static_assert(sizeof...(args) == 2, "auto... resolved as without SELF"); return 2; };
+    auto l3a = [](auto&&...args) { REQUIRE(sizeof...(args) == 2); return 3; };
+
+    d2.add_event_listener(l1a);
+    d2.add_event_listener(l2a);
+    d2.add_event_listener(l3a);
+}
+
