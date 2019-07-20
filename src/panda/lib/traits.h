@@ -1,6 +1,10 @@
 #pragma once
 #include <utility>
 
+/*
+ * DEPRECATED!!!!!! Please add new features to <panda/traits.h>
+ */
+
 namespace panda { namespace lib { namespace traits {
 
 template <class FROM, class TO> using convertible_t = typename std::enable_if<std::is_convertible<FROM, TO>::value>::type;
