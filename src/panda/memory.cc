@@ -1,10 +1,10 @@
 #include "memory.h"
-#include "../string.h"
+#include "string.h"
 #include <map>
 #include <mutex>
 #include <string.h>
 
-namespace panda { namespace lib {
+namespace panda {
 
 static std::map<string, void*> global_ptrs;
 static std::mutex              global_ptrs_mutex;
@@ -94,4 +94,4 @@ DynamicMemoryPool::~DynamicMemoryPool () {
     }
 }
 
-}}
+}

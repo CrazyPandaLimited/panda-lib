@@ -1,6 +1,6 @@
 #pragma once
-#include <panda/lib/hash.h>
-#include <panda/basic_string_view.h>
+#include "hash.h"
+#include "basic_string_view.h"
 
 //#if __cpp_lib_string_view >= 201603L
 //#   define PANDA_LIB_USE_PANDA_LIB_STRING_VIEW 1
@@ -28,28 +28,28 @@ namespace std {
     template<>
     struct hash<panda::string_view> {
         size_t operator() (panda::string_view v) const {
-            return panda::lib::hashXX<size_t>((const char*)v.data(), v.length());
+            return panda::hash::hashXX<size_t>((const char*)v.data(), v.length());
         }
     };
 
     template<>
     struct hash<panda::u16string_view> {
         size_t operator() (panda::u16string_view v) const {
-            return panda::lib::hashXX<size_t>((const char*)v.data(), v.length() * sizeof(char16_t));
+            return panda::hash::hashXX<size_t>((const char*)v.data(), v.length() * sizeof(char16_t));
         }
     };
 
     template<>
     struct hash<panda::u32string_view> {
         size_t operator() (panda::u32string_view v) const {
-            return panda::lib::hashXX<size_t>((const char*)v.data(), v.length() * sizeof(char32_t));
+            return panda::hash::hashXX<size_t>((const char*)v.data(), v.length() * sizeof(char32_t));
         }
     };
 
     template<>
     struct hash<panda::wstring_view> {
         size_t operator() (panda::wstring_view v) const {
-            return panda::lib::hashXX<size_t>((const char*)v.data(), v.length() * sizeof(wchar_t));
+            return panda::hash::hashXX<size_t>((const char*)v.data(), v.length() * sizeof(wchar_t));
         }
     };
 }

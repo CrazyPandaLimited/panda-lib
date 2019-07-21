@@ -1,7 +1,7 @@
 #pragma once
-#include <panda/refcnt.h>
+#include "refcnt.h"
 
-namespace panda { namespace lib {
+namespace panda {
 /**
  * owning_list where iterators share owning of nodes with list.
  * Removing of any iterator never invalidates value under it.
@@ -26,7 +26,6 @@ namespace panda { namespace lib {
  */
 template <typename T>
 struct owning_list {
-public:
     struct node_t : Refcnt {
         node_t(const T& value) : value(value), valid(true), next(nullptr), prev(nullptr) {}
 
@@ -165,10 +164,7 @@ public:
         return _size == 0;
     }
 
-
-
 private:
-
     size_t _size;
     node_sp first;
     node_sp last;
@@ -190,4 +186,4 @@ void owning_list<T>::remove_node(owning_list::node_t* node) {
     _size--;
 }
 
-}}
+}

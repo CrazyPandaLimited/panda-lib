@@ -1,4 +1,7 @@
 #pragma once
+#include "hash.h"
+#include "from_chars.h"
+#include "string_view.h"
 #include <string>
 #include <limits>
 #include <memory>
@@ -9,9 +12,6 @@
 #include <iterator>
 #include <stdexcept>
 #include <initializer_list>
-#include <panda/lib/hash.h>
-#include <panda/string_view.h>
-#include <panda/lib/from_chars.h>
 
 namespace panda {
 
@@ -1103,20 +1103,20 @@ public:
     }
 
     template <typename V>
-    std::from_chars_result to_number (V& value, int base = 10) const { return std::from_chars(_str, _str + _length, value, base); }
+    from_chars_result to_number (V& value, int base = 10) const { return from_chars(_str, _str + _length, value, base); }
 
     template <typename V>
-    std::from_chars_result to_number (V& value, size_type pos, size_type count = npos, int base = 10) const {
+    from_chars_result to_number (V& value, size_type pos, size_type count = npos, int base = 10) const {
         if (pos > _length) throw std::out_of_range("basic_string::to_number");
         if (count > _length - pos) count = _length - pos;
-        return std::from_chars(_str + pos, _str + pos + count, value, base);
+        return from_chars(_str + pos, _str + pos + count, value, base);
     }
 
     template <typename V>
     static basic_string from_number (V value, int base = 10) {
-        auto maxsz = panda::to_chars_maxsize<V>(base);
+        auto maxsz = to_chars_maxsize<V>(base);
         basic_string ret(maxsz);
-        auto res = std::to_chars(ret._str, ret._str + maxsz, value, base);
+        auto res = to_chars(ret._str, ret._str + maxsz, value, base);
         assert(!res.ec);
         ret.length(res.ptr - ret.data());
         return ret;
@@ -1642,27 +1642,25 @@ inline std::basic_ostream<C,T>& operator<< (std::basic_ostream<C,T>& os, const b
     return os.write(str.data(), str.length());
 }
 
+template <class C, class T, class A>
+inline void swap (basic_string<C,T,A>& lhs, basic_string<C,T,A>& rhs) {
+    lhs.swap(rhs);
+}
+
 }
 
 namespace std {
-    template <class C, class T, class A>
-    inline void swap (panda::basic_string<C,T,A>& lhs, panda::basic_string<C,T,A>& rhs) {
-        lhs.swap(rhs);
-    }
-
-    //template<>
     template<class C, class T, class A>
     struct hash<panda::basic_string<C,T,A>> {
         size_t operator() (const panda::basic_string<C,T,A>& s) const {
-            return panda::lib::hashXX<size_t>((const char*)s.data(), s.length() * sizeof(C));
+            return panda::hash::hashXX<size_t>((const char*)s.data(), s.length() * sizeof(C));
         }
     };
 
-    //template<>
     template<class C, class T, class A>
     struct hash<const panda::basic_string<C,T,A>> {
         size_t operator() (const panda::basic_string<C,T,A>& s) const {
-            return panda::lib::hashXX<size_t>((const char*)s.data(), s.length() * sizeof(C));
+            return panda::hash::hashXX<size_t>((const char*)s.data(), s.length() * sizeof(C));
         }
     };
 }

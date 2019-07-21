@@ -5,7 +5,7 @@
 #  include <stdlib.h>
 #endif
 
-namespace panda { namespace lib {
+namespace panda {
 
 namespace detail {
     union check_endianess { unsigned x; unsigned char c; };
@@ -81,4 +81,4 @@ inline uint64_t h2le (uint64_t x) { return h2le64(x); }
 inline uint64_t be2h (uint64_t x) { return be2h64(x); }
 inline uint64_t le2h (uint64_t x) { return le2h64(x); }
 
-}}
+}

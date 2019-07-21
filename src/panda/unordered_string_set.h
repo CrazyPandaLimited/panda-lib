@@ -1,9 +1,9 @@
 #pragma once
+#include "string.h"
+#include "string_view.h"
 #include <memory>
 #include <functional>
 #include <unordered_set>
-#include <panda/string.h>
-#include <panda/string_view.h>
 
 /*
  * panda::unordered_string_set and panda::unordered_string_multiset are wrappers around STL's versions in case if keys are panda::string.

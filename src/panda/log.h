@@ -4,7 +4,7 @@
 #include <ostream>
 #include <string.h>
 #include <type_traits>
-#include <panda/string_view.h>
+#include "string_view.h"
 
 namespace panda { namespace log {
 

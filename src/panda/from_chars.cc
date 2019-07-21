@@ -1,13 +1,9 @@
-#include <panda/lib/from_chars.h>
-#if __cplusplus <= 201402L
+#include "from_chars.h"
 #include <cctype> // isspace
 #include <cstring> // memcpy
 #include <stdexcept>
 
-namespace std {
-
-using std::from_chars_result;
-using std::to_chars_result;
+namespace panda {
 
 static unsigned _index[256];
 static char     _rindex[36];
@@ -171,5 +167,3 @@ to_chars_result to_chars (char* first, char* last, unsigned long      value, int
 to_chars_result to_chars (char* first, char* last, unsigned long long value, int base) { return _to_chars<unsigned long long>(first, last, value, base); }
 
 }
-
-#endif

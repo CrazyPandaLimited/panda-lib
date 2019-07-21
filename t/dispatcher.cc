@@ -1,7 +1,6 @@
 #include "test.h"
-#include <panda/CallbackDispatcher.h>
 #include <panda/function_utils.h>
-#include <panda/lib/from_chars.h>
+#include <panda/CallbackDispatcher.h>
 
 using panda::CallbackDispatcher;
 using test::Tracer;
@@ -140,7 +139,7 @@ TEST_CASE("remove callback comparable functor" , "[callbackdispatcher]") {
         }
     };
 
-    static_assert(panda::lib::traits::has_call_operator<S, int>::value,
+    static_assert(panda::has_call_operator<S, int>::value,
                   "S shuld be callable, it can be wrong implementation of panda::has_call_operator or a compiler error");
 
     S src;
@@ -179,7 +178,7 @@ TEST_CASE("remove callback comparable full functor" , "[callbackdispatcher]") {
         }
     };
 
-    static_assert(panda::lib::traits::has_call_operator<S,Dispatcher::Event&, int>::value,
+    static_assert(panda::has_call_operator<S,Dispatcher::Event&, int>::value,
                   "S shuld be callable, it can be wrong implementation of panda::has_call_operator or a compiler error");
 
     S src;

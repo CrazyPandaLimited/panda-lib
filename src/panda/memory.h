@@ -1,10 +1,10 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include <stdexcept>
 #include <assert.h>
+#include <stdexcept>
 
-namespace panda { namespace lib {
+namespace panda {
 
 namespace detail {
     void* __get_global_ptr     (const std::type_info& ti, const char* name, void* val);
@@ -21,61 +21,61 @@ inline T* get_global_tls_ptr (T* val, const char* name = NULL) {
     return reinterpret_cast<T*>(detail::__get_global_tls_ptr(typeid(CLASS), name, reinterpret_cast<void*>(val)));
 }
 
-#define PANDA_GLOBAL_MEMBER_PTR(CLASS, TYPE, accessor, defval)                  \
-    static TYPE accessor () {                                                   \
-        static TYPE ptr;                                                        \
-        if (!ptr) ptr = panda::lib::get_global_ptr<CLASS>(defval, #accessor);   \
-        return ptr;                                                             \
+#define PANDA_GLOBAL_MEMBER_PTR(CLASS, TYPE, accessor, defval)              \
+    static TYPE accessor () {                                               \
+        static TYPE ptr;                                                    \
+        if (!ptr) ptr = panda::get_global_ptr<CLASS>(defval, #accessor);    \
+        return ptr;                                                         \
     }
 
-#define PANDA_GLOBAL_MEMBER(CLASS, TYPE, accessor, defval)              \
-    static TYPE& accessor () {                                          \
-        static TYPE* ptr;                                               \
-        if (!ptr) {                                                     \
-            static TYPE val = defval;                                   \
-            ptr = panda::lib::get_global_ptr<CLASS>(&val, #accessor);   \
-        }                                                               \
-        return *ptr;                                                    \
+#define PANDA_GLOBAL_MEMBER(CLASS, TYPE, accessor, defval)          \
+    static TYPE& accessor () {                                      \
+        static TYPE* ptr;                                           \
+        if (!ptr) {                                                 \
+            static TYPE val = defval;                               \
+            ptr = panda::get_global_ptr<CLASS>(&val, #accessor);    \
+        }                                                           \
+        return *ptr;                                                \
     }
 
-#define PANDA_GLOBAL_MEMBER_AS_PTR(CLASS, TYPE, accessor, defval)       \
-    static TYPE* accessor () {                                          \
-        static TYPE* ptr;                                               \
-        if (!ptr) {                                                     \
-            static TYPE val = defval;                                   \
-            ptr = panda::lib::get_global_ptr<CLASS>(&val, #accessor);   \
-        }                                                               \
-        return ptr;                                                     \
+#define PANDA_GLOBAL_MEMBER_AS_PTR(CLASS, TYPE, accessor, defval)   \
+    static TYPE* accessor () {                                      \
+        static TYPE* ptr;                                           \
+        if (!ptr) {                                                 \
+            static TYPE val = defval;                               \
+            ptr = panda::get_global_ptr<CLASS>(&val, #accessor);    \
+        }                                                           \
+        return ptr;                                                 \
     }
 
-#define PANDA_TLS_MEMBER_PTR(CLASS, TYPE, accessor, defval)                                 \
-    static TYPE accessor () {                                                               \
-        static thread_local TYPE _ptr;                                                      \
-        TYPE ptr = _ptr;                                                                    \
-        if (!ptr) ptr = _ptr = panda::lib::get_global_tls_ptr<CLASS>(defval, #accessor);    \
-        return ptr;                                                                         \
-    }
-
-#define PANDA_TLS_MEMBER(CLASS, TYPE, accessor, defval)                             \
-    static TYPE& accessor () {                                                      \
-        static thread_local TYPE* _ptr;                                             \
-        TYPE* ptr = _ptr;                                                           \
-        if (!ptr) {                                                                 \
-            static thread_local TYPE val = defval;                                  \
-            ptr = _ptr = panda::lib::get_global_tls_ptr<CLASS>(&val, #accessor);    \
-        }                                                                           \
-        return *ptr;                                                                \
-    }
-
-#define PANDA_TLS_MEMBER_AS_PTR(CLASS, TYPE, accessor, defval)                      \
-    static TYPE* accessor () {                                                      \
-        static thread_local TYPE* _ptr;                                             \
-        TYPE* ptr = _ptr;                                                           \
-        if (!ptr) {                                                                 \
-            static thread_local TYPE val = defval;                                  \
-            ptr = _ptr = panda::lib::get_global_tls_ptr<CLASS>(&val, #accessor);    \
-        }                                                                           \
+#define PANDA_TLS_MEMBER_PTR(CLASS, TYPE, accessor, defval)                         \
+    static TYPE accessor () {                                                       \
+        static thread_local TYPE _ptr;                                              \
+        TYPE ptr = _ptr;                                                            \
+        if (!ptr) ptr = _ptr = panda::get_global_tls_ptr<CLASS>(defval, #accessor); \
         return ptr;                                                                 \
+    }
+
+#define PANDA_TLS_MEMBER(CLASS, TYPE, accessor, defval)                     \
+    static TYPE& accessor () {                                              \
+        static thread_local TYPE* _ptr;                                     \
+        TYPE* ptr = _ptr;                                                   \
+        if (!ptr) {                                                         \
+            static thread_local TYPE val = defval;                          \
+            ptr = _ptr = panda::get_global_tls_ptr<CLASS>(&val, #accessor); \
+        }                                                                   \
+        return *ptr;                                                        \
+    }
+
+#define PANDA_TLS_MEMBER_AS_PTR(CLASS, TYPE, accessor, defval)              \
+    static TYPE* accessor () {                                              \
+        static thread_local TYPE* _ptr;                                     \
+        TYPE* ptr = _ptr;                                                   \
+        if (!ptr) {                                                         \
+            static thread_local TYPE val = defval;                          \
+            ptr = _ptr = panda::get_global_tls_ptr<CLASS>(&val, #accessor); \
+        }                                                                   \
+        return ptr;                                                         \
     }
 
 struct MemoryPool {
@@ -215,4 +215,4 @@ struct AllocatedObject<TARGET, false> {
     }
 };
 
-}}
+}

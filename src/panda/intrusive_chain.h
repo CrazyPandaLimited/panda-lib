@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <initializer_list>
 
-namespace panda { namespace lib {
+namespace panda {
 
 template <typename T> struct IntrusiveChainNode {
     template <class S> friend S    intrusive_chain_next (const S&);
@@ -271,4 +271,4 @@ std::basic_ostream<C,CT>& operator<< (std::basic_ostream<C,CT>& out, const Intru
     return out;
 }
 
-}}
+}

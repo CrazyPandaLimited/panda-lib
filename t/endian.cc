@@ -1,7 +1,7 @@
 #include "test.h"
-#include <panda/lib/endian.h>
+#include <panda/endian.h>
 
-using namespace panda::lib;
+using namespace panda;
 
 TEST_CASE("endian", "[endian]") {
     auto r1 = h2be16(999);

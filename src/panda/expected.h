@@ -1,4 +1,6 @@
 #pragma once
+#include <utility>
+#include <exception>
 
 namespace panda {
 
