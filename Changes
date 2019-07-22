@@ -1,4 +1,4 @@
-1.2.3    xx.xx.xxxx
+1.2.3    22.07.2019
            - move fake std::string_view to panda::string_view + related changes
            - fix endian.h for C++17 clang (fuck macros)
            - fix intrusive_chain compilation for clang17
