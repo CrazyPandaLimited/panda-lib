@@ -2690,7 +2690,7 @@ struct test_string {
         }
         SECTION("sso") {
             SECTION("self") {
-                auto exp = mstr("ab");
+                auto exp = mstr("a", MAX_SSO_CHARS-1);
                 String s(exp.c_str());
                 REQUIRE(s.c_str()[exp.length()] == 0);
                 REQUIRE_STR(s, exp, MAX_SSO_CHARS);
@@ -2700,9 +2700,9 @@ struct test_string {
                 auto exp = mstr("a", 50);
                 String src(exp.c_str());
                 get_allocs();
-                String s = src.substr(0, 2);
-                REQUIRE(s.c_str()[2] == 0);
-                REQUIRE_STR(s, mstr("aa"), MAX_SSO_CHARS);
+                String s = src.substr(0, MAX_SSO_CHARS-1);
+                CHECK(s.c_str()[MAX_SSO_CHARS-1] == 0);
+                REQUIRE_STR(s, mstr("a", MAX_SSO_CHARS-1), MAX_SSO_CHARS);
                 CHECK_ALLOCS();
             }
         }
