@@ -2120,10 +2120,10 @@ struct test_string {
                 REQUIRE_ALLOCS();
             }
             SECTION("has both space") {
-                s.offset(8, 5);
+                s.offset(4, 3);
                 REQUIRE(s.capacity() >= 7);
-                s.insert(s.length(), cstr(" world"));
-                REQUIRE_STR(s, mstr("aaaaa world"), cnt-8);
+                s.insert(s.length(), cstr(" XX"));
+                REQUIRE_STR(s, mstr("aaa XX"), cnt-4);
                 REQUIRE_ALLOCS();
             }
             SECTION("has summary space") {
@@ -2155,10 +2155,10 @@ struct test_string {
                 REQUIRE_ALLOCS();
             }
             SECTION("has both space") {
-                s.offset(8, 5);
-                REQUIRE(s.capacity() >= 7);
-                s.insert(0, cstr("world "));
-                REQUIRE_STR(s, mstr("world aaaaa"), cnt-2);
+                s.offset(3, 4);
+                REQUIRE(s.capacity() >= 8);
+                s.insert(0, cstr("X "));
+                REQUIRE_STR(s, mstr("X aaaa"), cnt-1);
                 REQUIRE_ALLOCS();
             }
             SECTION("has summary space") {
@@ -2190,16 +2190,16 @@ struct test_string {
                 REQUIRE_ALLOCS();
             }
             SECTION("has both space, head is shorter") {
-                s.offset(8, 5);
+                s.offset(4, 3);
                 REQUIRE(s.capacity() >= 7);
-                s.insert(2, cstr(" world ")); // head is moved (7 bytes left)
-                REQUIRE_STR(s, mstr("aa world aaa"), cnt-1);
+                s.insert(1, cstr(" X ")); // head is moved (3 bytes left)
+                REQUIRE_STR(s, mstr("a X aa"), cnt-1);
                 REQUIRE_ALLOCS();
             }
             SECTION("has both space, tail is shorter") {
-                s.offset(8, 5);
-                s.insert(3, cstr(" world ")); // tail is moved (7 bytes right)
-                REQUIRE_STR(s, mstr("aaa world aa"), cnt-8);
+                s.offset(4, 3);
+                s.insert(2, cstr(" X ")); // tail is moved (3 bytes right)
+                REQUIRE_STR(s, mstr("aa X a"), cnt-4);
                 REQUIRE_ALLOCS();
             }
             SECTION("has summary space") {
@@ -2356,17 +2356,18 @@ struct test_string {
         }
     }
 
+    // all tests should keep in mind that cnt could be 11 bytes on 32bit
     static void test_replace_impl (int cnt, bool is_external) {
         auto exp = mstr("a", cnt);
         String s = is_external ? create_external<>(exp) : String(exp.c_str());
         get_allocs();
 
         SECTION("shrink") {
-            s.replace(5, 10, cstr("hello"));
-            REQUIRE_STR(s, mstr("a",5)+mstr("hello")+mstr("a",cnt-15), cnt);
+            s.replace(3, 4, cstr("hi"));
+            REQUIRE_STR(s, mstr("a",3)+mstr("hi")+mstr("a",cnt-7), cnt);
             REQUIRE_ALLOCS();
-            s.replace(0, 5, EMPTY);
-            REQUIRE_STR(s, mstr("hello")+mstr("a",cnt-15), cnt-5);
+            s.replace(0, 4, EMPTY);
+            REQUIRE_STR(s, mstr("i")+mstr("a",cnt-7), cnt-4);
             REQUIRE_ALLOCS();
         }
 
@@ -2378,34 +2379,34 @@ struct test_string {
                 REQUIRE_ALLOCS();
             };
             SECTION("has head space") {
-                s.offset(cnt - 10);
-                s.replace(2, 2, cstr("world "));
-                REQUIRE_STR(s, mstr("aaworld aaaaaa"), 14);
+                s.offset(4);
+                s.replace(2, 2, cstr(" XX "));
+                REQUIRE_STR(s, mstr("aa XX ")+mstr("a",cnt-8), cnt-2);
                 REQUIRE_ALLOCS();
             };
             SECTION("has both space, head is shorter") {
-                s.offset(8, 5);
+                s.offset(3, 4);
                 REQUIRE(s.capacity() >= 7);
-                s.replace(1,2, cstr(" world ")); // head is moved (5 bytes to left)
-                REQUIRE_STR(s, mstr("a world aa"), cnt-3);
+                s.replace(1,2, cstr(" XX ")); // head is moved
+                REQUIRE_STR(s, mstr("a XX a"), cnt-1);
                 REQUIRE_ALLOCS();
             };
             SECTION("has both space, tail is shorter") {
-                s.offset(8, 5);
-                s.replace(2,2, cstr(" world ")); // tail is moved (5 bytes to right)
-                REQUIRE_STR(s, mstr("aa world a"), cnt-8);
+                s.offset(3, 4);
+                s.replace(2,1, cstr(" XX ")); // tail is moved
+                REQUIRE_STR(s, mstr("aa XX a"), cnt-3);
                 REQUIRE_ALLOCS();
             };
             SECTION("has summary space") {
-                s.offset(4, cnt-8); // 4 free from head and tail
-                s.replace(4,6, cstr("hello world")); // 5 inserted
-                REQUIRE_STR(s, mstr("aaaahello world")+mstr("a",cnt-18), cnt); // moved to the beginning
+                s.offset(3, cnt-6); // 3 free from head and tail
+                s.replace(2,2, cstr("XXXXXXX")); // 5 inserted
+                REQUIRE_STR(s, mstr("aaXXXXXXX")+mstr("a",cnt-10), cnt); // moved to the beginning
                 REQUIRE_ALLOCS();
             };
             SECTION("has no space") {
                 s.offset(2, cnt-4); // 2 free from head and tail
-                s.replace(4,6, cstr("hello world")); // 5 insterted
-                REQUIRE_STR(s, mstr("aaaahello world")+mstr("a",cnt-14), cnt+1); // moved to the beginning
+                s.replace(3,2, cstr("XXXXXXX")); // 5 insterted
+                REQUIRE_STR(s, mstr("aaaXXXXXXX")+mstr("a",cnt-9), cnt+1); // moved to the beginning
                 auto stat = get_allocs();
                 REQUIRE(stat.allocated_cnt == 1);
                 REQUIRE(stat.allocated == (int)BUF_CHARS+cnt+1);
