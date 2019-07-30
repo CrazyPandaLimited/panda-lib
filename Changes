@@ -1,6 +1,7 @@
 1.2.6    xx.xx.xxxx
            - fix compilation warnings for some compilers
            - fix panda::string tests for 32bit systems 
+           - fix panda::string tests for clang4-6
 1.2.5    25.07.2019
            - require newer XS::Install
 1.2.4    24.07.2019

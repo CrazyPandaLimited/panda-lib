@@ -23,8 +23,6 @@ struct test_string {
     static const T      LITERAL[38];
     static const size_t LITERAL_LEN   = sizeof(LITERAL)/sizeof(T)-1;
     static const T      EMPTY[1];
-    static StdString    defexp;
-    static size_t       defsz;
 
     static size_t slen (const T* src) {
         size_t cnt = 0;
@@ -104,6 +102,9 @@ struct test_string {
     static void   assign_external_cbuf (String& s, StdString exp)             { assign_external_cbuf(s, exp, exp.size()); }
 
     static void test_ctor () {
+        auto defexp = mstr("this string is definitely longer than max sso chars");
+        auto defsz  = BUF_CHARS + defexp.size();
+
         SECTION("empty") {
             {
                 String s;
@@ -2794,7 +2795,5 @@ struct test_string {
 
 template <class T> const T                            test_string<T>::LITERAL[38] = {'h','e','l','l','o',' ','w','o','r','l','d',',',' ','t','h','i','s',' ','i','s',' ','a',' ','l','i','t','e','r','a','l',' ','s','t','r','i','n','g',0};
 template <class T> const T                            test_string<T>::EMPTY[1]    = {0};
-template <class T> typename test_string<T>::StdString test_string<T>::defexp      = test_string<T>::mstr("this string is definitely longer than max sso chars");
-template <class T> size_t                             test_string<T>::defsz       = test_string<T>::BUF_CHARS + test_string<T>::defexp.size();
 
 }
