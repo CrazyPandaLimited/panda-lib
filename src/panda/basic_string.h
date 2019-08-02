@@ -176,16 +176,15 @@ public:
 
     constexpr basic_string () : _str_literal(&TERMINAL), _length(0), _state(State::LITERAL) {}
 
-  // GCC < 6 has a bug determining return value type for literals, and they can not be detected
-  #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 6
-    basic_string (const CharT* str) : basic_string(str, traits_type::length(str)) {}
-  #else
     template <size_type SIZE> // implicit constructor for literals, literals are expected to be null-terminated
     constexpr basic_string (const CharT (&str)[SIZE]) : _str_literal(str), _length(SIZE-1), _state(State::LITERAL) {}
 
     template<class _CharT, typename = typename std::enable_if<std::is_same<_CharT, CharT>::value>::type>
-    explicit basic_string (const _CharT* const& str) : basic_string(str, traits_type::length(str)) {}
-  #endif
+    // GCC < 6 has a bug determining return value type for literals, so this ctor must be implicitly available
+    #if !defined(__GNUC__) || defined(__clang__) || __GNUC__ >= 6
+    explicit
+    #endif
+    basic_string (const _CharT* const& str) : basic_string(str, traits_type::length(str)) {}
 
     explicit
     basic_string (size_type capacity) : _length(0) {
