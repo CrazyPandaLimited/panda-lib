@@ -39,16 +39,11 @@ public:
 
     constexpr basic_string_view (const CharT* s, size_t count) : _str(s), _length(count) {}
 
-  // GCC < 6 has a bug determining return value type for literals, and they can not be detected
-  #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 6
-    basic_string_view (const CharT* s) : _str(s), _length(traits_type::length(s)) {}
-  #else
     template<class _CharT, typename = typename std::enable_if<std::is_same<_CharT, CharT>::value>::type>
     constexpr basic_string_view (const _CharT* const& s) : _str(s), _length(traits_type::length(s)) {}
 
     template <size_t SIZE>
     constexpr basic_string_view (const CharT (&s)[SIZE]) : _str(s), _length(SIZE-1) {}
-  #endif
 
     basic_string_view& operator= (const basic_string_view& view) = default;
 
