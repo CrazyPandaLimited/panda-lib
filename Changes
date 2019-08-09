@@ -1,3 +1,5 @@
+1.2.10    xx.xx.xxx
+           - fix panda::expected and panda::excepted constructors
 1.2.9    02.08.2019
            - remove useless fix for string_view
 1.2.8    02.08.2019

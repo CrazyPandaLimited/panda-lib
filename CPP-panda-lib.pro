@@ -25,7 +25,8 @@ SOURCES += \
     t/string_char32.cc \
     t/traits.cc \
     t/bench.cc \
-    src/panda/refcnt.cc
+    src/panda/refcnt.cc \
+    t/excepted.cc
 
 HEADERS += \
     src/panda/lib/endian.h \
@@ -58,4 +59,5 @@ HEADERS += \
 
 DISTFILES += \
     Makefile.PL \
-    t/xs.xs
+    t/xs.xs \
+    t/excepted.t
