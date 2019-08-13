@@ -93,6 +93,26 @@ private:
     T* ptr;
 };
 
+template <class T1, class T2> inline bool operator== (const iptr<T1>& x, const iptr<T2>& y) { return x.get() == y.get(); }
+template <class T1, class T2> inline bool operator!= (const iptr<T1>& x, const iptr<T2>& y) { return x.get() != y.get(); }
+template <class T1, class T2> inline bool operator<  (const iptr<T1>& x, const iptr<T2>& y) { return x.get() < y.get(); }
+template <class T1, class T2> inline bool operator<= (const iptr<T1>& x, const iptr<T2>& y) { return x.get() <= y.get(); }
+template <class T1, class T2> inline bool operator>  (const iptr<T1>& x, const iptr<T2>& y) { return x.get() > y.get(); }
+template <class T1, class T2> inline bool operator>= (const iptr<T1>& x, const iptr<T2>& y) { return x.get() >= y.get(); }
+
+template <class T> inline bool operator== (const iptr<T>& x, nullptr_t) noexcept { return !x.get(); }
+template <class T> inline bool operator== (nullptr_t, const iptr<T>& x) noexcept { return !x.get(); }
+template <class T> inline bool operator!= (const iptr<T>& x, nullptr_t) noexcept { return x.get(); }
+template <class T> inline bool operator!= (nullptr_t, const iptr<T>& x) noexcept { return x.get(); }
+template <class T> inline bool operator<  (const iptr<T>& x, nullptr_t) noexcept { return x.get() < nullptr; }
+template <class T> inline bool operator<  (nullptr_t, const iptr<T>& x) noexcept { return nullptr < x.get(); }
+template <class T> inline bool operator<= (const iptr<T>& x, nullptr_t) noexcept { return x.get() <= nullptr; }
+template <class T> inline bool operator<= (nullptr_t, const iptr<T>& x) noexcept { return nullptr <= x.get(); }
+template <class T> inline bool operator>  (const iptr<T>& x, nullptr_t) noexcept { return x.get() > nullptr; }
+template <class T> inline bool operator>  (nullptr_t, const iptr<T>& x) noexcept { return nullptr > x.get(); }
+template <class T> inline bool operator>= (const iptr<T>& x, nullptr_t) noexcept { return x.get() >= nullptr; }
+template <class T> inline bool operator>= (nullptr_t, const iptr<T>& x) noexcept { return nullptr >= x.get(); }
+
 template <typename T, typename... Args>
 iptr<T> make_iptr (Args&&... args) {
     return iptr<T>(new T(std::forward<Args>(args)...));
