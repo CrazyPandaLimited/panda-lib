@@ -8,6 +8,8 @@
 
 namespace panda {
 
+using std::nullptr_t;
+
 template <typename T>
 struct iptr {
     template <class U> friend struct iptr;
@@ -254,7 +256,7 @@ void swap(weak_iptr<T>& a, weak_iptr<T>& b) noexcept { a.swap(b); }
 
 template <class T> struct _weak_t;
 template <class T> struct _weak_t<iptr<T>> {
-    using type = weak_iptr<T>;;
+    using type = weak_iptr<T>;
 };
 
 template <typename T>
