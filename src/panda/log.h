@@ -75,6 +75,13 @@ struct Module {
 
     Module(const string& name, Level level = Level::Debug);
     Module(const string& name, Module* parent, Level level = Level::Debug);
+
+    Module(const Module&) = delete;
+    Module(Module&&) = delete;
+    Module & operator =(const Module&) = delete;
+
+    void set_level(Level level);
+
     std::map<string, Module*> children;
 };
 

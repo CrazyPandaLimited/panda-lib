@@ -31,9 +31,9 @@ void set_level (Level val, const string& module) {
         if (iter == modules.end()) {
             throw std::invalid_argument("unknown module");
         }
-        iter->second->level = val;
+        iter->second->set_level(val);
     } else {
-        panda_log_module->level = val;
+        panda_log_module->set_level(val);
     }
 
 }
@@ -88,6 +88,13 @@ Module::Module(const string& name, Module* parent, Level level)
         throw std::logic_error(msg.c_str());
     }
     parent->children[name] = this;
+}
+
+void Module::set_level(Level level) {
+    this->level = level;
+    for (auto& p : children) {
+        p.second->set_level(level);
+    }
 }
 
 }
