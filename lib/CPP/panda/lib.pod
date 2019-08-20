@@ -7,38 +7,38 @@ CPP::panda::lib - Collection of useful functions and classes for C++.
     #include <panda/lib.h>
     #include <panda/lib/hash.h>
     using namespace panda::lib;
-    
+
     char* crypted = crypt_xor(source, slen, key, klen);
     uint32_t val = hash32(str, len);
     uint64_t val = hash64(str, len);
-    
-    
+
+
     #include <panda/string.h>
     using panda::string;
-    
+
     string abc("lala");
     ... // everything that std::string supports
-    
-    
+
+
     #include <panda/lib/memory.h>
     void* mem = StaticMemoryPool<128>::instance()->alloc(); // extremely fast memory allocations
     void* mem = StaticMemoryPool<128>::tls_instance()->alloc(); // TLS version (still very fast)
     void* mem = ObjectAllocator::instance()->alloc(256); // dynamic-size fast allocator
-    
+
     class MyClass : public AllocatedObject<MyClass> {}
     MyClass* obj = new MyClass(); // get fast and thread-safe allocations with less code
 
     class SingleThreadedClass : public AllocatedObject<SingleThreadedClass, false> {} // faster but thread-unsafe
-    
+
     // override behaviour from thread-unsafe to thread-safe
     class MultiThreadedClass : public SingleThreadedClass, public AllocatedObject<MultiThreadedClass> {
         using AllocatedObject<MultiThreadClass>::operator new;
         using AllocatedObject<MultiThreadClass>::operator delete;
     }
-    
+
     MemoryPool mypool(32);
     void* mem = mypool.alloc(); // custom pool with maximum speed, but thread-unsafe
-   
+
 =head1 C FUNCTIONS
 
 =head4 uint64_t panda::lib::hash64 (const char* str, size_t len)
@@ -90,32 +90,32 @@ Most important features are:
 
     Not only when assigning the whole string but also when any form of substr() is applied.
     If any of the COW copies is trying to change, it detaches from the original string, copying the content it needs.
-    
+
 =item External static(literal) string support
- 
+
     Can be created from external static(literal) data without allocating memory and copying it.
     String will be allocated and copied when you first try to change it.
     For example if a function accepts string, you may pass it just a string literal "hello" and nothing is allocated or copied and even the length
     is counted in compile time.
 
 =item External dynamic string support
-    
+
     Can be created from external dynamic(mortal) data without allocating memory and copying it.
     External data will be deallocated via custom destructor when the last string that references to the external data is lost.
     As for any other subtype of panda::string copying/substr/etc of such string does not copy anything
-    
+
 =item SSO support (small string optimization). Up to 23 bytes for 64bit / 11 bytes for 32bit.
 
     It does not mean that all strings <= MAX_SSO_CHARS are in SSO mode. SSO mode is used only when otherwise panda::string would have to allocate
     and copy something. For example if you call "otherstr = mystr.substr(offset, len)", then if mystr is not in SSO, otherstr will not use
     SSO even if len <= MAX_SSO_CHARS, because it prefers to do nothing (COW-mode) instead of copying content to SSO location.
-    
+
 =item Support for getting r/w internal data buffer to manually fill it
 
     The content of other strings which shares the data with current string will not be affected.
-    
+
 =item Reallocate instead of deallocate/allocate when possible, which in many cases is much faster
- 
+
 =item Supports auto convertations between basic_strings with different Allocator template parameter without copying and allocating anything.
 
     For example any basic_string<...> can be assigned to/from string as if they were of the same class.
@@ -127,7 +127,7 @@ Most important features are:
 All these features covers almost all generic use cases, including creating zero-copy cascade parsers which in other case would lead to a lot of pain.
 
 c_str() is not supported, because strings are not null-terminated, and even could not theoretically be
- 
+
 =head3 SYNOPSIS
 
     using panda::string;
@@ -135,7 +135,7 @@ c_str() is not supported, because strings are not null-terminated, and even coul
     string str("abcd"); // "abcd" is not copied, COW mode.
     str.append("ef"); // str is copied on modification.
     cout << str; // prints 'abcdef'
-    
+
     void free_buf (char* buf, size_t size) { delete [] buf; }
     char* mystr = new char[13];
     memcpy(mystr, "hello, world", 13);
@@ -145,18 +145,18 @@ c_str() is not supported, because strings are not null-terminated, and even coul
     str.offset(10); // no move/copy/allocations
     cout << str; // 'ld'
     str.insert(1, ' hello '); // 'l hello d', no allocations! because source buffer (despite of that it is external) has space for that
-    
+
     str2.erase(2); // no move/copy/allocations still! still points to external buffer
     cout << str2; // 'll'
-    
+
     str = str2; // COW mode
     cout << str; // 'll'
     str.append('!'); // detach on modification. no allocations though, because everything < 23 bytes goes to SSO mode
     cout << str << str2; // 'll!ll'
-    
+
     str.clear(); // nothing deallocated
     str2.clear(); // last reference lost, free_buf() called
-    
+
 panda::string can be used in ostream's << operator.
 
 =head3 METHODS
@@ -255,7 +255,7 @@ Normally, you would need to write this code in order to allocate your objects vi
         }
         ...
     };
-    
+
 Size check (if/else) is needed to support inheritance, because in that case, size won't match sizeof(MyClass).
 Mostly, programmers use default operator ::new/::delete in case when sizes don't match, however ObjectAllocator can handle
 dynamic sizes and is much faster than default operators, so even in this case we save time.
@@ -268,7 +268,7 @@ You can pass C<false> as a second param to template if you don't need thread-saf
 =head3 TIP
 
     class MyChild : public MyClass { ... }
-    
+
 In this case we will still using memory pool, however via dynamic ObjectAllocator which is slightly slower.
 To restore original perfomance redefine new/delete operators again passing your child class name. We will also need to resolve
 multiple inheritance conflicts via C<using> operator.
@@ -288,9 +288,9 @@ A base class for refcounting.
 =head4 SYNOPSIS
 
     #include <panda/refcnt.h>
-    
+
     class MyClass : virtual public RefCounted { ... }
-    
+
     MyClass* obj = new MyClass(...);
     obj->retain();
     obj->release();
@@ -325,6 +325,64 @@ is deleted (in case if C<refcnt> reached 0). If C<refcnt> reaches 0 and you C<re
 =head2 template <class T> panda::shared_ptr<T>
 
 API is the same as for std::shared_ptr.
+
+=head2 panda::backtrace_base and template<typename T> backtrace<T>
+
+Make it possible to extract C-stack backtrace from the thrown exception.
+
+=head4 SYNOPSIS
+
+    #include <panda/backtrace.h>
+
+    using namespace panda;
+
+    try {
+        throw backtrace<std::invalid_argument>("Oops!");
+    } catch(const std::invalid_argument& ex) {
+        auto bt = dyn_cast<const backtrace_base*>(&e);
+        std::cout << "backtrace: " << bt->get_trace_string();
+    }
+
+=head3 backtrace_base
+
+The base class (mixin) for recording backrace. The backtrace is
+recorded at the moment of instantiation.
+
+At the moment the backtrace is supported on Linux-platforms only.
+On the other platforms empty backtrace is returned.
+
+The class has build-in compile-time limitation of backtrace depth (C<50>).
+
+=head4 backtrace_base() noexcept
+
+Constructs backtrace object and gathers backtrace, if available.
+
+=head4 backtrace_base(const backtrace_base &other) noexcept
+
+Copy-constructor for the C<backtrace_base> class.
+
+=head4 string get_trace_string() const
+
+Returns human-readeable C backtrace, which tries to mimic GDB output, i.e.
+
+    0x7fcbbc42aea3 in panda::backtrace_base::backtrace_base() from panda/lib/lib.so
+    0x7fcbbbf5b252 in panda::backtrace<std::invalid_argument>::backtrace<char const (&) [6]>(char const (&) [6]) from blib/arch/auto/MyTest/MyTest.so
+
+=head4  const std::vector<void*>& get_trace() const noexcept
+
+Returns raw backtrace object. It can be further decrypted via C<backtrace_symbols>
+from glibc (linux).
+
+=head3 template<typename T> backtrace<T>
+
+Wraps the underlying object (exception) by mixing-in backtrace to it, i.e.
+
+    template <typename T>
+    class backtrace: public T, public backtrace_base
+
+=head4 template<typename ...Args> backtrace(Args&&... args) noexcept
+
+All arguments are forwarded as is to the base object of type C<T>.
 
 =head1 AUTHOR
 
