@@ -1,9 +1,9 @@
 #include "test.h"
-#include <panda/backtrace.h>
+#include <panda/exception.h>
 
 using namespace panda;
 
-void fn00() { throw backtrace<std::invalid_argument>("Oops!"); }
+void fn00() { throw bt<std::invalid_argument>("Oops!"); }
 void fn01() { fn00(); }
 void fn02() { fn01(); }
 void fn03() { fn02(); }
@@ -55,10 +55,10 @@ void fn48() { fn47(); }
 void fn49() { fn48(); }
 void fn50() { fn49(); }
 
-TEST_CASE("exception with trace, catch exact exception", "[backtrace]") {
+TEST_CASE("exception with trace, catch exact exception", "[exception]") {
     try {
         fn50();
-    } catch( const backtrace<std::invalid_argument>& e) {
+    } catch( const bt<std::invalid_argument>& e) {
         REQUIRE(e.get_trace().size() == 50);
         auto trace = e.get_trace_string();
         REQUIRE((bool)trace);
@@ -71,12 +71,12 @@ TEST_CASE("exception with trace, catch exact exception", "[backtrace]") {
     }
 }
 
-TEST_CASE("exception with trace, catch non-final class", "[backtrace]") {
+TEST_CASE("exception with trace, catch non-final class", "[exception]") {
     try {
         fn50();
     } catch( const std::logic_error& e) {
         REQUIRE(e.what() == std::string("Oops!"));
-        auto bt = dyn_cast<const backtrace_base*>(&e);
+        auto bt = dyn_cast<const backtrace*>(&e);
         REQUIRE(bt);
         REQUIRE(bt->get_trace().size() == 50);
         auto trace = bt->get_trace_string();

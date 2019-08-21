@@ -1,6 +1,11 @@
-#include "backtrace.h"
+#include "exception.h"
 
-#if defined(__linux__)
+#if !defined(__unix__)
+namespace panda {
+    backtrace::backtrace noexcept {}
+    string backtrace::get_trace_string () const { return {}; }
+}
+#else
 
 #include <execinfo.h>
 #include <cstring>
@@ -9,24 +14,17 @@
 #include <regex>
 #include <cxxabi.h>
 
-#endif
-
 namespace panda {
 
-backtrace_base::backtrace_base() noexcept {
-#if defined(__linux__)
+backtrace::backtrace () noexcept {
     buffer.resize(max_depth);
     auto depth = ::backtrace(buffer.data(), max_depth);
     buffer.resize(depth);
-#endif
 }
 
+backtrace::backtrace (const backtrace &other) noexcept : buffer(other.buffer) {}
 
-backtrace_base::backtrace_base(const backtrace_base &other) noexcept: buffer(other.buffer) {}
-
-
-#if defined(__linux__)
-static panda::string humanize(const char* symbol) {
+static panda::string humanize (const char* symbol) {
     std::regex re("(.+)\\((.+)\\+0x(.+)\\) \\[(.+)\\]");
     std::cmatch what;
     if (regex_match(symbol, what, re)) {
@@ -47,11 +45,9 @@ static panda::string humanize(const char* symbol) {
     }
     return panda::string("[demangle failed]") + symbol;
 }
-#endif
 
-string backtrace_base::get_trace_string() const {
+string backtrace::get_trace_string () const {
     panda::string result = "";
-#if defined(__linux__)
     using guard_t = std::unique_ptr<char**, std::function<void(char***)>>;
     char** symbols = backtrace_symbols(buffer.data(), buffer.size());
     if (symbols) {
@@ -60,9 +56,20 @@ string backtrace_base::get_trace_string() const {
             result += humanize(symbols[i]) + "\n";
         }
     }
-#endif
     return result;
 }
 
 
+exception::exception () noexcept {}
+
+exception::exception (const exception& oth) noexcept : std::exception(oth), backtrace(oth) {}
+
+exception& exception::operator= (const exception& oth) noexcept {
+    std::exception::operator=(oth);
+    backtrace::operator=(oth);
+    return *this;
 }
+
+}
+
+#endif
