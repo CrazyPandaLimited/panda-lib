@@ -23,13 +23,21 @@ private:
 template <typename T>
 struct bt : T, backtrace {
     template<typename ...Args>
-    bt (Args&&... args) noexcept : T(std::forward<Args...>(args...)), backtrace() {}
+    bt (Args&&... args) noexcept : T(std::forward<Args...>(args...)) {}
 };
 
 struct exception : std::exception, backtrace {
     exception () noexcept;
+    exception (const string& whats) noexcept;
     exception (const exception& oth) noexcept;
     exception& operator= (const exception& oth) noexcept;
+
+    const char* what () const noexcept override;
+
+    virtual string whats () const noexcept;
+
+private:
+    mutable string _whats;
 };
 
 

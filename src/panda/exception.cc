@@ -62,12 +62,23 @@ string backtrace::get_trace_string () const {
 
 exception::exception () noexcept {}
 
-exception::exception (const exception& oth) noexcept : std::exception(oth), backtrace(oth) {}
+exception::exception (const string& whats) noexcept : _whats(whats) {}
+
+exception::exception (const exception& oth) noexcept : backtrace(oth), _whats(oth._whats) {}
 
 exception& exception::operator= (const exception& oth) noexcept {
-    std::exception::operator=(oth);
+    _whats = oth._whats;
     backtrace::operator=(oth);
     return *this;
+}
+
+const char* exception::what () const noexcept {
+    _whats = whats();
+    return _whats.c_str();
+}
+
+string exception::whats () const noexcept {
+    return {};
 }
 
 }
