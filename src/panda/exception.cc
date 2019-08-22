@@ -78,7 +78,7 @@ const char* exception::what () const noexcept {
 }
 
 string exception::whats () const noexcept {
-    return {};
+    return _whats;
 }
 
 }

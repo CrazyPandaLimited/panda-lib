@@ -55,7 +55,9 @@ void fn48() { fn47(); }
 void fn49() { fn48(); }
 void fn50() { fn49(); }
 
+
 TEST_CASE("exception with trace, catch exact exception", "[exception]") {
+    bool was_catch = false;
     try {
         fn50();
     } catch( const bt<std::invalid_argument>& e) {
@@ -68,10 +70,13 @@ TEST_CASE("exception with trace, catch exact exception", "[exception]") {
         REQUIRE_THAT( trace, Catch::Matchers::Contains( "fn00" ) );
         REQUIRE_THAT( trace, Catch::Matchers::Contains( "fn40" ) );
         REQUIRE_THAT( trace, !Catch::Matchers::Contains( "fn50" ) );
+        was_catch = true;
     }
+    REQUIRE(was_catch);
 }
 
 TEST_CASE("exception with trace, catch non-final class", "[exception]") {
+    bool was_catch = false;
     try {
         fn50();
     } catch( const std::logic_error& e) {
@@ -86,6 +91,18 @@ TEST_CASE("exception with trace, catch non-final class", "[exception]") {
         REQUIRE_THAT( trace, Catch::Matchers::Contains( "fn00" ) );
         REQUIRE_THAT( trace, Catch::Matchers::Contains( "fn40" ) );
         REQUIRE_THAT( trace, !Catch::Matchers::Contains( "fn50" ) );
+        was_catch = true;
     }
+    REQUIRE(was_catch);
 }
 
+TEST_CASE("panda::exception with string", "[exception]") {
+    bool was_catch = false;
+    try {
+        throw panda::exception("my-description");
+    } catch( const exception& e) {
+        REQUIRE(e.whats() == "my-description");
+        was_catch = true;
+    }
+    REQUIRE(was_catch);
+}
