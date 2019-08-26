@@ -317,3 +317,20 @@ TEST_CASE("dispatcher lambda self reference auto...", "[callbackdispatcher]") {
     d2.add_event_listener(l3a);
 }
 
+TEST_CASE("killing callback dispatcher" , "[callbackdispatcher]") {
+    Dispatcher* d = new Dispatcher;
+    function<void (int)> cb = [&](int) {
+        delete d;
+    };
+    d->add(cb);
+
+    bool called = false;
+    function<void (int)> check = [&](int) {
+        called = true;
+    };
+    d->add(check, true);
+
+    (*d)(10);
+    REQUIRE_FALSE(called);
+}
+
