@@ -1,9 +1,10 @@
 use strict;
 use warnings;
+use lib 't';
+use MyTest;
+use Test::More;
+use Test::Catch;
 
-BEGIN {
-    return printf("1..0 # available for linux only") unless $^O eq 'linux';
-    require lib; lib->import('t');
-    require MyTest;
-    require Test::Catch; Test::Catch->import('[exception]');
-}
+plan skip_all => 'not available for windows' if $^O eq 'MSWin32';
+
+catch_run('[exception]');

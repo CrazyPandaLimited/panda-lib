@@ -1,28 +1,25 @@
 #include "exception.h"
-
-#if !defined(__unix__)
-namespace panda {
-    backtrace::backtrace () noexcept {}
-    string backtrace::get_trace_string () const { return {}; }
-}
-#else
-
-#include <execinfo.h>
 #include <cstring>
 #include <memory>
 #include <functional>
 #include <regex>
 #include <cxxabi.h>
 
+#if defined(__unix__)
+  #include <execinfo.h>
+#endif
+
 namespace panda {
+
+backtrace::backtrace (const backtrace& other) noexcept : buffer(other.buffer) {}
+	
+#if defined(__unix__)
 
 backtrace::backtrace () noexcept {
     buffer.resize(max_depth);
     auto depth = ::backtrace(buffer.data(), max_depth);
     buffer.resize(depth);
 }
-
-backtrace::backtrace (const backtrace &other) noexcept : buffer(other.buffer) {}
 
 static panda::string humanize (const char* symbol) {
     std::regex re("(.+)\\((.+)\\+0x(.+)\\) \\[(.+)\\]");
@@ -57,7 +54,14 @@ string backtrace::get_trace_string () const {
         }
     }
     return result;
-}
+}    
+
+#else
+  
+backtrace::backtrace () noexcept {}
+string backtrace::get_trace_string () const { return {}; }
+
+#endif
 
 
 exception::exception () noexcept {}
@@ -82,5 +86,3 @@ string exception::whats () const noexcept {
 }
 
 }
-
-#endif
