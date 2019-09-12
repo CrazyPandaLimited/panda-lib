@@ -2,7 +2,7 @@
 
 #if !defined(__unix__)
 namespace panda {
-    backtrace::backtrace noexcept {}
+    backtrace::backtrace () noexcept {}
     string backtrace::get_trace_string () const { return {}; }
 }
 #else
