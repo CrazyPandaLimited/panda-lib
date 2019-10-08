@@ -26,7 +26,8 @@ SOURCES += \
     t/traits.cc \
     t/bench.cc \
     src/panda/refcnt.cc \
-    t/excepted.cc
+    t/excepted.cc \
+    t/error.cc
 
 HEADERS += \
     src/panda/lib/endian.h \
@@ -55,7 +56,8 @@ HEADERS += \
     src/panda/lib/integer_sequence.h \
     t/test.h \
     t/string_test.h \
-    src/panda/lib/traits.h
+    src/panda/lib/traits.h \
+    src/panda/error.h
 
 DISTFILES += \
     Makefile.PL \
