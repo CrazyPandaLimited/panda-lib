@@ -21,7 +21,13 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
 
     ErrorCode(const std::error_code& c, const ErrorCode& next) noexcept : _code(c), _next(new ErrorCode(next)) {}
 
-    ErrorCode& operator=(const ErrorCode&) noexcept = default;
+    ErrorCode& operator=(const ErrorCode& o) noexcept {
+        _code = o._code;
+        _next.reset(o._next ? new ErrorCode(*o._next) : nullptr);
+        return *this;
+    }
+
+    ErrorCode& operator=(ErrorCode&& o) noexcept = default;
 
     template <class ErrorCodeEnum>
     ErrorCode& operator=(ErrorCodeEnum e ) noexcept {
@@ -81,14 +87,14 @@ private:
     std::unique_ptr<ErrorCode> _next;
 };
 
-bool operator==( const ErrorCode& lhs, const std::error_code& rhs ) noexcept { return lhs.code() == rhs; }
-bool operator==( const std::error_code& lhs, const ErrorCode& rhs ) noexcept { return lhs == rhs.code(); }
+inline bool operator==( const ErrorCode& lhs, const std::error_code& rhs ) noexcept { return lhs.code() == rhs; }
+inline bool operator==( const std::error_code& lhs, const ErrorCode& rhs ) noexcept { return lhs == rhs.code(); }
 
-bool operator!=( const ErrorCode& lhs, const std::error_code& rhs ) noexcept { return lhs.code() != rhs; }
-bool operator!=( const std::error_code& lhs, const ErrorCode& rhs ) noexcept { return lhs != rhs.code(); }
+inline bool operator!=( const ErrorCode& lhs, const std::error_code& rhs ) noexcept { return lhs.code() != rhs; }
+inline bool operator!=( const std::error_code& lhs, const ErrorCode& rhs ) noexcept { return lhs != rhs.code(); }
 
-bool operator<( const ErrorCode& lhs, const std::error_code& rhs ) noexcept { return lhs.code() < rhs; }
-bool operator<( const std::error_code& lhs, const ErrorCode& rhs ) noexcept { return lhs < rhs.code(); }
+inline bool operator<( const ErrorCode& lhs, const std::error_code& rhs ) noexcept { return lhs.code() < rhs; }
+inline bool operator<( const std::error_code& lhs, const ErrorCode& rhs ) noexcept { return lhs < rhs.code(); }
 
 template< class CharT, class Traits >
 std::basic_ostream<CharT,Traits>& operator<<( std::basic_ostream<CharT,Traits>& os, const ErrorCode& ec ) {
