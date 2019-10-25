@@ -27,7 +27,9 @@ SOURCES += \
     t/bench.cc \
     src/panda/refcnt.cc \
     t/excepted.cc \
-    t/error.cc
+    t/error.cc \
+    src/panda/error.cc \
+    t/varint.cc
 
 HEADERS += \
     src/panda/lib/endian.h \
@@ -57,9 +59,12 @@ HEADERS += \
     t/test.h \
     t/string_test.h \
     src/panda/lib/traits.h \
-    src/panda/error.h
+    src/panda/error.h \
+    src/panda/varint.h
 
 DISTFILES += \
     Makefile.PL \
     t/xs.xs \
-    t/excepted.t
+    t/excepted.t \
+    t/error.t \
+    t/varint.t

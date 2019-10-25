@@ -46,10 +46,17 @@ TEST_CASE("ErrorCode ctor", "[error]") {
         ErrorCode code(Err2, nested_code);
         CHECK(code);
         REQUIRE(code.next());
-        CHECK_FALSE(code.next()->next());
-        CHECK(code.message() == "MyErr:2, preceded by:\n"
-                                "MyErr:1");
+        CHECK_FALSE(code.next().next());
+        CHECK(code.what() == "MyErr:2, preceded by:\n"
+                             "MyErr:1");
         nested_code.clear();
-        CHECK(*code.next() == Err1); // check it was copy and no sharing
+        CHECK(code.next() == Err1); // check it was copy and no sharing
     }
+}
+
+TEST_CASE("ErrorCode methods", "[error]") {
+    ErrorCode e1(Err1);
+    ErrorCode e2;
+    e2 = e1;
+    REQUIRE(e2 == e1);
 }
