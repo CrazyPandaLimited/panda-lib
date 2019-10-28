@@ -30,6 +30,8 @@ TEST_CASE("ErrorCode ctor", "[error]") {
         ErrorCode code;
         CHECK_FALSE(code);
         CHECK_FALSE(code.next());
+        CHECK_FALSE(code.code());
+        CHECK_FALSE(code.next().code());
     }
     SECTION("val+cat") {
         ErrorCode code(2, my_category);
@@ -59,4 +61,11 @@ TEST_CASE("ErrorCode methods", "[error]") {
     ErrorCode e2;
     e2 = e1;
     REQUIRE(e2 == e1);
+}
+
+TEST_CASE("ErrorCode defctor", "[error]") {
+    ErrorCode orig;
+    ErrorCode wrap(Err1, orig);
+    CHECK(wrap == Err1);
+    CHECK(wrap.next().code().value() == 0);
 }

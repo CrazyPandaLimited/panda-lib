@@ -26,7 +26,7 @@ inline uint32_t varint_decode(const string& str) {
 }
 
 inline string varint_encode_s(int32_t i) {
-    //ZigZag encoding
+    //ZigZag encoding, x86 (both 32,64) only, uses signed bit shift
     return varint_encode((i << 1) ^ (i >> 31));
 }
 
@@ -73,13 +73,13 @@ struct VarIntStack {
 
 private:
     size_t size_of_first() const {
-        size_t pos = 1;
+        size_t pos = 0;
         for (; pos < storage.size(); ++pos) {
             if (!(storage[pos] & 0x80)) {
                 break;
             }
         }
-        return pos;
+        return pos + 1;
     }
 };
 

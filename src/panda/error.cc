@@ -2,17 +2,14 @@
 
 namespace panda { namespace error {
 
-const NestedCategory& NestedCategory::empty = NestedCategory(NestedCategory::empty, NestedCategory::empty);
-const NestedCategory& NestedCategory::system = NestedCategory(std::system_category(), NestedCategory::empty);
-
-const NestedCategory& get_nested_categoty(const std::error_category& self, const NestedCategory& next) {
+const NestedCategory& get_nested_categoty(const std::error_category& self, const NestedCategory* next) {
     static thread_local std::map<std::pair<const std::error_category*, const NestedCategory*>, NestedCategory> cache;
-    auto iter = cache.find({&self, &next});
+    auto iter = cache.find({&self, next});
     if (iter != cache.end()) {
         return iter->second;
     } else {
         return cache.emplace(std::piecewise_construct,
-                             std::forward_as_tuple(&self, &next),
+                             std::forward_as_tuple(&self, next),
                              std::forward_as_tuple(self, next)).first->second;
     }
 }

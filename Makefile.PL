@@ -14,9 +14,10 @@ my %params = (
     LIBS             => ['-lexecinfo', ''],
 );
 
-if ($ENV{TEST_FULL}) {
-    ($params{CCFLAGS}||='') .= ' -fsanitize=undefined';
-    push @{$params{LIBS}||=[]}, '-lubsan'; #sanitizer
+if ($ENV{SANITIZE}) {
+    ($params{CCFLAGS}||='') .= ' -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer';
+    $params{LIBS}[1] .= ' -lubsan -lasan'; #sanitizer
+    $params{LIBS}[0] .= ' -lubsan -lasan'; #sanitizer
 }
 
 write_makefile(%params);

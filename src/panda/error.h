@@ -14,16 +14,9 @@ namespace error {
     class NestedCategory : public std::error_category {
     public:
         const std::error_category& self;
-        const NestedCategory& next;
+        const NestedCategory* next;
 
-        constexpr NestedCategory(const std::error_category& self, const NestedCategory& next) noexcept : self(self), next(next) {}
-
-        static const NestedCategory& empty;
-        static const NestedCategory& system;
-
-        bool has_next() const noexcept {
-            return &next != this;
-        }
+        constexpr NestedCategory(const std::error_category& self, const NestedCategory* next = nullptr) noexcept : self(self), next(next) {}
 
         // delegate all implementation to self
         virtual const char* name() const noexcept { return self.name(); }
@@ -40,16 +33,16 @@ namespace error {
         bool operator<( const std::error_category& rhs ) const noexcept  { return self.operator <(rhs); }
     };
 
-    const NestedCategory& get_nested_categoty(const std::error_category& self, const NestedCategory& next);
+    const NestedCategory& get_nested_categoty(const std::error_category& self, const NestedCategory* next);
 }
 
 struct ErrorCode : AllocatedObject<ErrorCode> {
-    ErrorCode() noexcept : cat(&error::NestedCategory::system) {}
+    ErrorCode() noexcept : ErrorCode(0, std::system_category()) {}
     ErrorCode(const ErrorCode& o) = default;
     ErrorCode(ErrorCode&&) = default;
 
     ErrorCode(int ec, const std::error_category& ecat) noexcept
-        : cat(&error::get_nested_categoty(ecat, error::NestedCategory::empty))
+        : cat(&error::get_nested_categoty(ecat, nullptr))
     {
         codes.push(ec);
     }
@@ -61,7 +54,7 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
 
     ErrorCode(const std::error_code& c, const ErrorCode& next) noexcept
         : codes(next.codes)
-        , cat(&error::get_nested_categoty(c.category(), *next.cat))
+        , cat(&error::get_nested_categoty(c.category(), next.cat))
     {
         codes.push(c.value());
     }
@@ -83,19 +76,18 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
         std::error_code ec(e);
         codes = CodeStack{};
         codes.push(ec.value());
-        cat = &error::get_nested_categoty(ec.category(), error::NestedCategory::empty);
+        cat = &error::get_nested_categoty(ec.category(), nullptr);
         return *this;
     }
 
     void assign( int ec, const std::error_category& ecat ) noexcept {
         codes = CodeStack{};
         codes.push(ec);
-        cat = &error::get_nested_categoty(ecat, error::NestedCategory::empty);
+        cat = &error::get_nested_categoty(ecat, nullptr);
     }
 
     void clear() noexcept {
-        codes = CodeStack{};
-        cat = &error::NestedCategory::empty;
+        *this = {};
     }
 
     int value() const noexcept {
@@ -103,7 +95,7 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
     }
 
     const std::error_category& category() const noexcept {
-        return *cat;
+        return cat->self;
     }
 
     std::error_condition default_error_condition() const noexcept {
@@ -111,11 +103,7 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
     }
 
     std::string message() const {
-        if (codes.empty()) {
-            return "Success";
-        } else {
-            return cat->message(codes.top());
-        }
+        return cat->message(codes.top());
     }
 
     string what() const {
@@ -129,7 +117,7 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
     }
 
     explicit operator bool() const noexcept {
-        return !codes.empty();
+        return bool(code());
     }
 
     std::error_code code() const noexcept {
@@ -140,11 +128,18 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
         if (codes.size() <= 1) return {};
         CodeStack new_stack = codes;
         new_stack.pop();
-        const error::NestedCategory& new_cat = cat->next;
-        return ErrorCode(std::move(new_stack), &new_cat);
+        const error::NestedCategory* new_cat = cat->next;
+        return ErrorCode(std::move(new_stack), new_cat);
     }
 
     ~ErrorCode() = default;
+
+    // any user can add specialization for his own result and get any data
+    template <typename T = void, typename... Args>
+    T private_access(Args...);
+
+    template <typename T = void, typename... Args>
+    T private_access(Args...) const;
 
 private:
     using CodeStack = VarIntStack;

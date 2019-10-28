@@ -42,9 +42,20 @@ TEST_CASE("varint_s cross check", "[varint]") {
         }
     }
     for (int i = -500000; i < 500000; i+=29) {
-        if (varint_decode_s(varint_encode_s(i)) != i) {
+        int res = varint_decode_s(varint_encode_s(i));
+        if (res != i) {
+            INFO(res);
             FAIL(i);
         }
     }
     REQUIRE(true);
+}
+
+TEST_CASE("VarIntStack", "[varint]") {
+    VarIntStack stack;
+    stack.push(300);
+    stack.push(400);
+    CHECK(stack.top() == 400);
+    stack.pop();
+    CHECK(stack.top() == 300);
 }
