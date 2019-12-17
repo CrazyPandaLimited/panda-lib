@@ -262,17 +262,24 @@ public:
         using iterator_category = std::random_access_iterator_tag;
         using const_iterator    = typename basic_string::const_iterator;
 
-        iterator (basic_string& string, size_type pos): _string(string), _pos(pos) {}
+        iterator (basic_string& string, size_type pos): _string(&string), _pos(pos) {}
+
+        iterator () = default;
+        iterator (const iterator&) = default;
+        iterator (iterator&&) = default;
+
+        iterator& operator=(const iterator&) = default;
+        iterator& operator=(iterator&&) = default;
 
         iterator& operator++ ()            { ++_pos; return *this; }
-        iterator  operator++ (int)         { iterator copy{_string, _pos }; ++_pos; return copy; }
+        iterator  operator++ (int)         { iterator copy{*_string, _pos }; ++_pos; return copy; }
         iterator& operator-- ()            { --_pos; return *this; }
-        iterator  operator-- (int)         { iterator copy{_string, _pos }; --_pos; return copy; }
+        iterator  operator-- (int)         { iterator copy{*_string, _pos }; --_pos; return copy; }
         iterator& operator+= (int delta)   { _pos += delta; return *this; }
         iterator& operator-= (int delta)   { _pos -= delta; return *this; }
-        reference operator*  ()            { return reference{_string, _pos}; }
-        reference operator-> ()            { return reference{_string, _pos}; }
-        reference operator[] (size_type i) { return reference{_string, i + _pos}; }
+        reference operator*  ()            { return reference{*_string, _pos}; }
+        reference operator-> ()            { return reference{*_string, _pos}; }
+        reference operator[] (size_type i) { return reference{*_string, i + _pos}; }
 
         difference_type operator- (const iterator& rhs) const { return static_cast<difference_type>(_pos - rhs._pos); }
 
@@ -283,15 +290,15 @@ public:
         bool operator<= (const iterator& rhs) const { return rhs._pos - _pos >= 0; }
         bool operator>= (const iterator& rhs) const { return _pos - rhs._pos >= 0; }
 
-        operator const_iterator () { return _string.data() + _pos; }
+        operator const_iterator () { return _string->data() + _pos; }
 
-        friend inline iterator operator+ (int delta, const iterator& it) { return iterator{it._string, it._pos + delta}; }
-        friend inline iterator operator+ (const iterator& it, int delta) { return iterator{it._string, it._pos + delta}; }
-        friend inline iterator operator- (int delta, const iterator& it) { return iterator{it._string, it._pos - delta}; }
-        friend inline iterator operator- (const iterator& it, int delta) { return iterator{it._string, it._pos - delta}; }
+        friend inline iterator operator+ (int delta, const iterator& it) { return iterator{*it._string, it._pos + delta}; }
+        friend inline iterator operator+ (const iterator& it, int delta) { return iterator{*it._string, it._pos + delta}; }
+        friend inline iterator operator- (int delta, const iterator& it) { return iterator{*it._string, it._pos - delta}; }
+        friend inline iterator operator- (const iterator& it, int delta) { return iterator{*it._string, it._pos - delta}; }
 
     private:
-        basic_string& _string;
+        basic_string* _string;
         size_type _pos;
     };
 
