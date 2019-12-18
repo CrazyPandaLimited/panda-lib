@@ -3,6 +3,7 @@
            - backtracable exceptions
            - ErrorCode - list of std::error_code
            - basic_string small optimization
+           - AllocatedObject bugfix: add default placement new
 1.2.10    14.08.2019
            - fix panda::expected and panda::excepted constructors
            - add comparison operator to iptr
