@@ -2,14 +2,18 @@
 #include <cstring>
 #include <memory>
 #include <functional>
-#include <regex>
-#include <cxxabi.h>
 
 #if defined(__unix__)
   #include <execinfo.h>
 #endif
 
 namespace panda {
+
+static backtrace_producer* producer = nullptr;
+
+void backtrace::install_producer(backtrace_producer& producer_) {
+    producer = &producer_;
+}
 
 backtrace::backtrace (const backtrace& other) noexcept : buffer(other.buffer) {}
 	
@@ -21,40 +25,12 @@ backtrace::backtrace () noexcept {
     buffer.resize(depth);
 }
 
-static panda::string humanize (const char* symbol) {
-    std::regex re("(.+)\\((.+)\\+0x(.+)\\) \\[(.+)\\]");
-    std::cmatch what;
-    if (regex_match(symbol, what, re)) {
-        panda::string dll           (what[1].first, what[1].length());
-        panda::string mangled_name  (what[2].first, what[2].length());
-        panda::string symbol_offset (what[3].first, what[3].length());
-        panda::string address       (what[4].first, what[4].length());
+backtrace::~backtrace() {}
 
-        int status;
-        char* demangled_name = abi::__cxa_demangle(mangled_name.c_str(), nullptr, 0, &status);
-        if (demangled_name) {
-            using guard_t = std::unique_ptr<char*, std::function<void(char**)>>;
-            guard_t guard(&demangled_name, [](char** ptr) { free(*ptr); });
-            // mimic gdb style, i.e.
-            // 0x00007ffff77c832c in Catch::TestInvokerAsFunction::invoke() const () from ../../var/lib/x86_64-linux/auto/Test/Catch/Catch.so
-            return address + " in " + demangled_name + " from " + dll;
-        }
-    }
-    return panda::string("[demangle failed]") + symbol;
+iptr<backtrace_info> backtrace::get_backtrace_info() const noexcept {
+    if (producer) { return (*producer)(buffer); }
+    return iptr<backtrace_info>();
 }
-
-string backtrace::get_trace_string () const {
-    panda::string result = "";
-    using guard_t = std::unique_ptr<char**, std::function<void(char***)>>;
-    char** symbols = backtrace_symbols(buffer.data(), buffer.size());
-    if (symbols) {
-        guard_t guard(&symbols, [](char*** ptr) { free(*ptr); });
-        for (int i = 0; i < static_cast<int>(buffer.size()); ++i) {
-            result += humanize(symbols[i]) + "\n";
-        }
-    }
-    return result;
-}    
 
 #else
   
