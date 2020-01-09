@@ -9,27 +9,30 @@
 
 namespace panda {
 
-static backtrace_producer* producer = nullptr;
 
-void backtrace::install_producer(backtrace_producer& producer_) {
+BacktraceInfo::~BacktraceInfo() {};
+
+static BacktraceProducer* producer = nullptr;
+
+void Backtrace::install_producer(BacktraceProducer& producer_) {
     producer = &producer_;
 }
 
-backtrace::backtrace (const backtrace& other) noexcept : buffer(other.buffer) {}
+Backtrace::Backtrace (const Backtrace& other) noexcept : buffer(other.buffer) {}
 	
 #if defined(__unix__)
 
-backtrace::backtrace () noexcept {
+Backtrace::Backtrace () noexcept {
     buffer.resize(max_depth);
     auto depth = ::backtrace(buffer.data(), max_depth);
     buffer.resize(depth);
 }
 
-backtrace::~backtrace() {}
+Backtrace::~Backtrace() {}
 
-iptr<backtrace_info> backtrace::get_backtrace_info() const noexcept {
+iptr<BacktraceInfo> Backtrace::get_backtrace_info() const noexcept {
     if (producer) { return (*producer)(buffer); }
-    return iptr<backtrace_info>();
+    return iptr<BacktraceInfo>();
 }
 
 #else
@@ -44,11 +47,11 @@ exception::exception () noexcept {}
 
 exception::exception (const string& whats) noexcept : _whats(whats) {}
 
-exception::exception (const exception& oth) noexcept : backtrace(oth), _whats(oth._whats) {}
+exception::exception (const exception& oth) noexcept : Backtrace(oth), _whats(oth._whats) {}
 
 exception& exception::operator= (const exception& oth) noexcept {
     _whats = oth._whats;
-    backtrace::operator=(oth);
+    Backtrace::operator=(oth);
     return *this;
 }
 
