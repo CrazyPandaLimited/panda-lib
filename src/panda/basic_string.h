@@ -1230,7 +1230,7 @@ private:
                 _str_literal = oth._str_literal + offset;
                 break;
             case State::SSO:
-                memcpy(__fill, oth.__fill, 24); // also sets _state to SSO
+                memcpy(__fill, oth.__fill, MAX_SSO_BYTES+1); // also sets _state to SSO
                 _str = _sso + (oth._str - oth._sso) + offset;
                 break;
         }
@@ -1246,7 +1246,7 @@ private:
     template <class Alloc2>
     void _move_from (basic_string<CharT, Traits, Alloc2>&& oth) {
         _length = oth._length;
-        memcpy(__fill, oth.__fill, 24); // also sets _state
+        memcpy(__fill, oth.__fill, MAX_SSO_BYTES+1); // also sets _state
         //#pragma GCC diagnostic pop
         if (oth._state == State::SSO) _str = _sso + (oth._str - oth._sso);
         else _str = oth._str;
