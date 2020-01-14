@@ -856,7 +856,6 @@ public:
 
     template <class Alloc2>
     basic_string& append (const basic_string<CharT, Traits, Alloc2>& str) {
-        if (!_length && _state != State::INTERNAL) return assign(str); // do not optimize if string had reserved memory
         if (str._length) { // can't call append(const CharT*, size_type) because otherwise if &str == this a fuckup would occur
             _reserve_save(_length + str._length);
             traits_type::copy(_str + _length, str._str, str._length);
@@ -867,7 +866,6 @@ public:
 
     template <class Alloc2>
     basic_string& append (const basic_string<CharT, Traits, Alloc2>& str, size_type pos, size_type count = npos) {
-        if (!_length && _state != State::INTERNAL) return assign(str, pos, count); // do not optimize if string had reserved memory
         if (pos > str._length) throw std::out_of_range("basic_string::append");
         if (count > str._length - pos) count = str._length - pos;
         if (count) { // can't call append(const CharT*, size_type) because otherwise if &str == this a fuckup would occur
