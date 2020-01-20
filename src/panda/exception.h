@@ -13,7 +13,7 @@ struct Stackframe: public Refcnt {
     string mangled_name;
     std::uint64_t address = 0;
     std::uint64_t offset = 0;
-    std::uint32_t line_no = 0;
+    std::uint64_t line_no = 0;
 };
 
 using StackframePtr = iptr<Stackframe>;
