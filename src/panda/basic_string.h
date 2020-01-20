@@ -856,7 +856,6 @@ public:
 
     template <class Alloc2>
     basic_string& append (const basic_string<CharT, Traits, Alloc2>& str) {
-        if (!_length && _state != State::INTERNAL) return assign(str); // do not optimize if string had reserved memory
         if (str._length) { // can't call append(const CharT*, size_type) because otherwise if &str == this a fuckup would occur
             _reserve_save(_length + str._length);
             traits_type::copy(_str + _length, str._str, str._length);
@@ -867,7 +866,6 @@ public:
 
     template <class Alloc2>
     basic_string& append (const basic_string<CharT, Traits, Alloc2>& str, size_type pos, size_type count = npos) {
-        if (!_length && _state != State::INTERNAL) return assign(str, pos, count); // do not optimize if string had reserved memory
         if (pos > str._length) throw std::out_of_range("basic_string::append");
         if (count > str._length - pos) count = str._length - pos;
         if (count) { // can't call append(const CharT*, size_type) because otherwise if &str == this a fuckup would occur
@@ -1230,7 +1228,7 @@ private:
                 _str_literal = oth._str_literal + offset;
                 break;
             case State::SSO:
-                memcpy(__fill, oth.__fill, 24); // also sets _state to SSO
+                memcpy(__fill, oth.__fill, MAX_SSO_BYTES+1); // also sets _state to SSO
                 _str = _sso + (oth._str - oth._sso) + offset;
                 break;
         }
@@ -1246,7 +1244,7 @@ private:
     template <class Alloc2>
     void _move_from (basic_string<CharT, Traits, Alloc2>&& oth) {
         _length = oth._length;
-        memcpy(__fill, oth.__fill, 24); // also sets _state
+        memcpy(__fill, oth.__fill, MAX_SSO_BYTES+1); // also sets _state
         //#pragma GCC diagnostic pop
         if (oth._state == State::SSO) _str = _sso + (oth._str - oth._sso);
         else _str = oth._str;
@@ -1293,7 +1291,13 @@ private:
         switch (_state) {
             case State::INTERNAL:
             case State::EXTERNAL:
+                // suppress false-positive uninitialized warning for "_storage.any" for GCC
+                #pragma GCC diagnostic push
+                #pragma GCC diagnostic ignored "-Wpragmas"
+                #pragma GCC diagnostic ignored "-Wunknown-warning-option"
+                #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                 if (_storage.any->refcnt > 1) _detach_cow(_length);
+                #pragma GCC diagnostic pop
                 break;
             case State::LITERAL:
                 _detach_str(_length);
