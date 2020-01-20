@@ -20,8 +20,8 @@ static bool init = _init();
 
 static std::regex re("(.+)\\((.+)\\+0x(.+)\\) \\[0x(.+)\\]");
 
-static std::unique_ptr<Stackframe> as_frame (const char* symbol) {
-    auto r = std::make_unique<Stackframe>();
+static StackframePtr as_frame (const char* symbol) {
+    auto r = StackframePtr(new Stackframe());
     std::cmatch what;
     if (regex_match(symbol, what, re)) {
         panda::string dll           (what[1].first, what[1].length());
@@ -62,15 +62,12 @@ static std::unique_ptr<Stackframe> as_frame (const char* symbol) {
 
 struct glib_backtrace: BacktraceInfo {
 
-    glib_backtrace(std::vector<Stackframe*>&& frames_):frames{std::move(frames_)}{}
-    ~glib_backtrace() override {
-        for(auto& frame: frames) { delete frame; }
-    }
+    glib_backtrace(std::vector<StackframePtr>&& frames_):frames{std::move(frames_)}{}
 
-    const std::vector<Stackframe*>& get_frames() const override { return frames; }
+    const std::vector<StackframePtr>& get_frames() const override { return frames; }
     virtual string to_string() const override { std::abort(); }
 
-    std::vector<Stackframe*> frames;
+    std::vector<StackframePtr> frames;
 };
 
 iptr<BacktraceInfo> glib_produce(const RawTrace& buffer) {
@@ -78,11 +75,11 @@ iptr<BacktraceInfo> glib_produce(const RawTrace& buffer) {
     char** symbols = backtrace_symbols(buffer.data(), buffer.size());
     if (symbols) {
         guard_t guard(&symbols, [](char*** ptr) { free(*ptr); });
-        std::vector<Stackframe*> frames;
+        std::vector<StackframePtr> frames;
         frames.reserve(buffer.size());
         for (int i = 0; i < static_cast<int>(buffer.size()); ++i) {
             auto frame = as_frame(symbols[i]);
-            frames.emplace_back(frame.release());
+            frames.emplace_back(std::move(frame));
         }
         auto ptr = new glib_backtrace(std::move(frames));
         return iptr<BacktraceInfo>(ptr);

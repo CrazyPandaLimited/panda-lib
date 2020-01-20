@@ -6,19 +6,21 @@
 
 namespace panda {
 
-struct Stackframe {
+struct Stackframe: public Refcnt {
     string file;
     string library;
     string name;
     string mangled_name;
-    std::uint32_t line_no = 0;
     std::uint64_t address = 0;
     std::uint64_t offset = 0;
+    std::uint32_t line_no = 0;
 };
+
+using StackframePtr = iptr<Stackframe>;
 
 struct BacktraceInfo : Refcnt {
     virtual ~BacktraceInfo();
-    virtual const std::vector<Stackframe*>& get_frames() const = 0;
+    virtual const std::vector<StackframePtr>& get_frames() const = 0;
     virtual string to_string() const = 0;
 };
 
