@@ -123,7 +123,7 @@ static inline C* _compile (C* ptr, UT value, int base) {
 template <typename UT, typename C>
 static inline typename std::enable_if<std::is_unsigned<UT>::value, to_chars_result>::type _to_chars (C* d, C* dend, UT value, int base) {
     if (base < 2 || base > 36) base = 10;
-    int maxsize = std::ceil(std::numeric_limits<UT>::digits * log(2) / log(base)); /* enough for UT-bit integer represented in given base */
+    int maxsize = std::ceil(std::numeric_limits<UT>::digits * std::log(2) / std::log(base)); /* enough for UT-bit integer represented in given base */
     char strval[maxsize];
     char* end = strval + maxsize;
     char* begin = _compile(end, value, base);
@@ -137,7 +137,7 @@ template <typename T, typename C>
 static inline typename std::enable_if<!std::is_unsigned<T>::value, to_chars_result>::type _to_chars (C* d, C* dend, T value, int base) {
     using UT = typename std::make_unsigned<T>::type;
     if (base < 2 || base > 36) base = 10;
-    int maxsize = std::ceil(std::numeric_limits<UT>::digits * log(2) / log(base) + 1);
+    int maxsize = std::ceil(std::numeric_limits<UT>::digits * std::log(2) / std::log(base) + 1);
     char strval[maxsize];
     char* end = strval + maxsize;
     char* begin;
