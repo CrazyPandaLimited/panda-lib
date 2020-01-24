@@ -1,4 +1,4 @@
-package CPP::panda::lib;
+package Alien::libpanda;
 use XS::Loader;
 
 our $VERSION = '1.3.5';

@@ -3,7 +3,7 @@ use Config;
 use XS::Install;
 
 my %params = (
-    NAME             => 'CPP::panda::lib',
+    NAME             => 'Alien::libpanda',
     CPLUS            => 14,
     SRC              => ['src'],
     INC              => '-Isrc',

@@ -1,6 +1,6 @@
 =head1 NAME
 
-CPP::panda::lib - panda::lib C++ library (alien).
+Alien::libpanda - panda::lib C++ library (alien).
 
 =head1 DESCRIPTION
 
