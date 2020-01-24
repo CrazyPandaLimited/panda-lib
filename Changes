@@ -1,5 +1,6 @@
 1.3.6    xx.xx.2020
            - renamed to Alien::libpanda
+           - fix t/exception.cc tests with -O3
 1.3.5    21.01.2020
            - improve backtrace interface (glibc only)
            - fix SunOS compilation
