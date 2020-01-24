@@ -159,7 +159,7 @@ TEST_CASE("exception with trace, catch exact exception", "[exception]") {
 
         auto frames = trace->get_frames();
         auto& frame0 = frames[0];
-        CHECK_THAT( frame0->library, Catch::Matchers::Contains( "lib.so" ) );
+        CHECK_THAT( frame0->library, Catch::Matchers::Contains( "libpanda.so" ) );
 
         StackframePtr fn00_frame = nullptr;
         StackframePtr fn47_frame = nullptr;
