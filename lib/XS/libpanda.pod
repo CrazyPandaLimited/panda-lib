@@ -1,10 +1,15 @@
 =head1 NAME
 
-Alien::libpanda - panda::lib C++ library (alien).
+XS::libpanda - panda::lib C++ library for XS.
 
 =head1 DESCRIPTION
 
 This library is intended to use only from XS modules.
+No perl interface.
+
+=head1 SEE ALSO
+
+L<XS::Install>
 
 =head1 AUTHOR
 
