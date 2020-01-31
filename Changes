@@ -1,4 +1,4 @@
-1.3.9    xx.xx.2020
+1.3.9    30.01.2020
            - renamed to XS::libpanda
 1.3.8    28.01.2020
            - fix tests for windows (again)
