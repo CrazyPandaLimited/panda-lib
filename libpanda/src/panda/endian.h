@@ -1,9 +1,6 @@
 #pragma once
 #include <stdint.h>
-
-#ifdef _MSC_VER
-#  include <stdlib.h>
-#endif
+#include <panda/endian_config.h>
 
 namespace panda {
 
@@ -11,18 +8,10 @@ namespace detail {
     union check_endianess { unsigned x; unsigned char c; };
     static const bool am_i_little = (check_endianess{1}).c;
 
-#ifdef _MSC_VER
-
-    inline uint16_t swap_bytes16 (uint16_t x) { return _byteswap_ushort(x); }
-    inline uint32_t swap_bytes32 (uint32_t x) { return _byteswap_ulong(x); }
-    inline uint64_t swap_bytes64 (uint64_t x) { return _byteswap_uint64(x); }
-
-#elif defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)) && 0
-
-    inline uint16_t swap_bytes16 (uint16_t x) { return __builtin_swap_bytes16(x); }
-    inline uint32_t swap_bytes32 (uint32_t x) { return __builtin_swap_bytes32(x); }
-    inline uint64_t swap_bytes64 (uint64_t x) { return __builtin_swap_bytes64(x); }
-
+#ifdef LIBPANDA_BUILTIN_BYTESWAP16
+    inline uint16_t swap_bytes16 (uint16_t x) { return LIBPANDA_BUILTIN_BYTESWAP16(x); }
+    inline uint32_t swap_bytes32 (uint32_t x) { return LIBPANDA_BUILTIN_BYTESWAP32(x); }
+    inline uint64_t swap_bytes64 (uint64_t x) { return LIBPANDA_BUILTIN_BYTESWAP64(x); }
 #else
 
     inline uint16_t swap_bytes16 (uint16_t x) {
@@ -39,6 +28,19 @@ namespace detail {
         v2.u32[0] = swap_bytes32(v1.u32[1]);
         v2.u32[1] = swap_bytes32(v1.u32[0]);
         return v2.u64;
+    }
+
+    inline uint64_t swap_bytes64 (uint64_t x)
+    {
+        return
+        ((x & 0xFF00000000000000u) >> 56u) |
+        ((x & 0x00FF000000000000u) >> 40u) |
+        ((x & 0x0000FF0000000000u) >> 24u) |
+        ((x & 0x000000FF00000000u) >>  8u) |
+        ((x & 0x00000000FF000000u) <<  8u) |
+        ((x & 0x0000000000FF0000u) << 24u) |
+        ((x & 0x000000000000FF00u) << 40u) |
+        ((x & 0x00000000000000FFu) << 56u);
     }
 
 #endif

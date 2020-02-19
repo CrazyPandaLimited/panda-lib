@@ -1,0 +1,12 @@
+#pragma once
+
+#if @HAVE_BSWAP@
+    #define LIBPANDA_BUILTIN_BYTESWAP16 __builtin_bswap16
+    #define LIBPANDA_BUILTIN_BYTESWAP32 __builtin_bswap32
+    #define LIBPANDA_BUILTIN_BYTESWAP64 __builtin_bswap64
+#elif @HAVE_BYTESWAP@
+    #include <stdlib.h>
+    #define LIBPANDA_BUILTIN_BYTESWAP16 _byteswap_ushort
+    #define LIBPANDA_BUILTIN_BYTESWAP32 _byteswap_ulong
+    #define LIBPANDA_BUILTIN_BYTESWAP64 _byteswap_uint64
+#endif

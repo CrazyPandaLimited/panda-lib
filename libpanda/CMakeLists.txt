@@ -13,21 +13,22 @@ include(CheckCSourceCompiles)
 
 check_c_source_compiles("
     #include <stdint.h>
-    #include <stdlib.h>
     int main () { return __builtin_bswap64(12345) == 0; }
-" LIBPANDA_HAVE_BSWAP)
+" HAVE_BSWAP)
 
 if(NOT LIBPANDA_HAVE_BSWAP)
     check_c_source_compiles("
-        #include <stdint.h>
         #include <stdlib.h>
         int main () { return _byteswap_uint64(12345) == 0; }
-    " LIBPANDA_HAVE_BYTESWAP)
+    " HAVE_BYTESWAP)
 endif()
 
-add_library(libpanda SHARED ${sources})
-target_include_directories(libpanda PRIVATE src)
+configure_file(src/panda/endian_config.h.in src/panda/endian_config.h)
 
-add_library(libpanda-static STATIC ${sources})
-target_include_directories(libpanda-static PRIVATE src)
+include_directories(src)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/src)
+
+add_library(libpanda SHARED ${sources})
+
+add_library(libpanda-static EXCLUDE_FROM_ALL STATIC ${sources})
 set_target_properties(libpanda-static PROPERTIES LINKER_LANGUAGE CXX OUTPUT_NAME "libpanda")
