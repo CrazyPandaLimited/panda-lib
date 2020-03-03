@@ -1,18 +1,16 @@
 #pragma once
-
-#include <system_error>
+#include "memory.h"
+#include "string.h"
+#include "varint.h"
 #include <map>
 #include <stack>
-
-#include <panda/memory.h>
-#include <panda/string.h>
-#include <panda/varint.h>
+#include <iosfwd>
+#include <system_error>
 
 namespace panda {
 
 namespace error {
-    class NestedCategory : public std::error_category {
-    public:
+    struct NestedCategory : std::error_category {
         const std::error_category& self;
         const NestedCategory* next;
 
@@ -162,22 +160,19 @@ inline bool operator<(const ErrorCode& lhs, const ErrorCode& rhs) noexcept { ret
 inline bool operator<(const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() < rhs; }
 inline bool operator<(const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs < rhs.code(); }
 
-template< class CharT, class Traits >
-std::basic_ostream<CharT,Traits>& operator<<( std::basic_ostream<CharT,Traits>& os, const ErrorCode& ec ) {
-    return os << ec.message();
-}
+std::ostream& operator<< (std::ostream&, const ErrorCode&);
 
 }
 
 namespace std {
-template<> struct hash<panda::ErrorCode> {
-    typedef panda::ErrorCode argument_type;
-    typedef std::size_t result_type;
+    template<> struct hash<panda::ErrorCode> {
+        typedef panda::ErrorCode argument_type;
+        typedef std::size_t result_type;
 
-    result_type operator()(argument_type const& c) const noexcept {
-        result_type const h1 ( std::hash<std::error_code>{}(c.code()) );
-        result_type const h2 ( std::hash<size_t>{}((size_t)&c.category()));
-        return h1 ^ (h2 << 1); // simplest hash combine
-    }
-};
+        result_type operator()(argument_type const& c) const noexcept {
+            result_type const h1 ( std::hash<std::error_code>{}(c.code()) );
+            result_type const h2 ( std::hash<size_t>{}((size_t)&c.category()));
+            return h1 ^ (h2 << 1); // simplest hash combine
+        }
+    };
 }
