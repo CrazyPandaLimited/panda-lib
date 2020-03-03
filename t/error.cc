@@ -12,7 +12,7 @@ class MyCategory : public std::error_category
 {
 public:
     const char * name() const noexcept override {return "MyCategory";}
-    std::string message(int ev) const override {return std::string("MyErr:") + std::to_string(ev);}
+    std::string message(int ev) const override {return std::string("MyErr") + std::to_string(ev);}
 };
 
 const MyCategory my_category;
@@ -49,8 +49,7 @@ TEST_CASE("ErrorCode ctor", "[error]") {
         CHECK(code);
         REQUIRE(code.next());
         CHECK_FALSE(code.next().next());
-        CHECK(code.what() == "MyErr:2, preceded by:\n"
-                             "MyErr:1");
+        CHECK(code.what() == "MyErr2 (2:MyCategory) -> MyErr1 (1:MyCategory)");
         nested_code.clear();
         CHECK(code.next() == Err1); // check it was copy and no sharing
     }

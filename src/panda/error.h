@@ -31,28 +31,42 @@ namespace error {
         bool operator<( const std::error_category& rhs ) const noexcept  { return self.operator <(rhs); }
     };
 
-    const NestedCategory& get_nested_categoty(const std::error_category& self, const NestedCategory* next);
+    const NestedCategory& get_nested_category(const std::error_category& self, const NestedCategory* next);
+
+    extern const NestedCategory& std_system_category;
 }
 
 struct ErrorCode : AllocatedObject<ErrorCode> {
-    ErrorCode() noexcept : ErrorCode(0, std::system_category()) {}
+    ErrorCode() noexcept {
+        codes.push(0);
+        cat = &error::std_system_category;
+    }
+
     ErrorCode(const ErrorCode& o) = default;
     ErrorCode(ErrorCode&&) = default;
 
     ErrorCode(int ec, const std::error_category& ecat) noexcept
-        : cat(&error::get_nested_categoty(ecat, nullptr))
+        : cat(&error::get_nested_category(ecat, nullptr))
     {
         codes.push(ec);
     }
 
-    explicit ErrorCode(const std::error_code& c) noexcept : ErrorCode(c.value(), c.category()) {}
+    ErrorCode(const std::error_code& ec) noexcept {
+        if (!ec) {
+            codes.push(0);
+            cat = &error::std_system_category;
+        } else {
+            codes.push(ec.value());
+            cat = &error::get_nested_category(ec.category(), nullptr);
+        }
+    }
 
-    template< class ErrorCodeEnum >
-    explicit ErrorCode(ErrorCodeEnum e) noexcept : ErrorCode(std::error_code(e)) {}
+    template <class ErrorCodeEnum, typename = std::enable_if_t<std::is_error_code_enum<ErrorCodeEnum>::value, void>>
+    ErrorCode (ErrorCodeEnum e) noexcept : ErrorCode(std::error_code(e)) {}
 
     ErrorCode(const std::error_code& c, const ErrorCode& next) noexcept
         : codes(next.codes)
-        , cat(&error::get_nested_categoty(c.category(), next.cat))
+        , cat(&error::get_nested_category(c.category(), next.cat))
     {
         codes.push(c.value());
     }
@@ -69,19 +83,19 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
         return *this;
     }
 
-    template <class ErrorCodeEnum>
+    template <class ErrorCodeEnum, typename = std::enable_if_t<std::is_error_code_enum<ErrorCodeEnum>::value, void>>
     ErrorCode& operator=(ErrorCodeEnum e) noexcept {
         std::error_code ec(e);
         codes = CodeStack{};
         codes.push(ec.value());
-        cat = &error::get_nested_categoty(ec.category(), nullptr);
+        cat = &error::get_nested_category(ec.category(), nullptr);
         return *this;
     }
 
     void assign( int ec, const std::error_category& ecat ) noexcept {
         codes = CodeStack{};
         codes.push(ec);
-        cat = &error::get_nested_categoty(ecat, nullptr);
+        cat = &error::get_nested_category(ecat, nullptr);
     }
 
     void clear() noexcept {
@@ -104,31 +118,17 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
         return cat->message(codes.top());
     }
 
-    string what() const {
-        //TODO: optimize with foreach code and next category
-        std::string std_msg = message();
-        string res(std_msg.data(), std_msg.length());
-        if (codes.size() > 1) {
-            res += ", preceded by:\n" + next().what();
-        }
-        return res;
-    }
+    string what () const;
 
     explicit operator bool() const noexcept {
-        return bool(code());
+        return value();
     }
 
     std::error_code code() const noexcept {
         return std::error_code(codes.top(), cat->self);
     }
 
-    ErrorCode next() const noexcept {
-        if (codes.size() <= 1) return {};
-        CodeStack new_stack = codes;
-        new_stack.pop();
-        const error::NestedCategory* new_cat = cat->next;
-        return ErrorCode(std::move(new_stack), new_cat);
-    }
+    ErrorCode next () const noexcept;
 
     ~ErrorCode() = default;
 
@@ -149,16 +149,16 @@ private:
 };
 
 inline bool operator==(const ErrorCode& lhs, const ErrorCode& rhs) noexcept { return lhs.code() == rhs.code(); }
-inline bool operator==(const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() == rhs; }
-inline bool operator==(const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs == rhs.code(); }
+//inline bool operator==(const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() == rhs; }
+//inline bool operator==(const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs == rhs.code(); }
 
 inline bool operator!=(const ErrorCode& lhs, const ErrorCode& rhs) noexcept { return !(lhs.code() == rhs.code()); }
-inline bool operator!=(const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() != rhs; }
-inline bool operator!=(const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs != rhs.code(); }
+//inline bool operator!=(const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() != rhs; }
+//inline bool operator!=(const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs != rhs.code(); }
 
 inline bool operator<(const ErrorCode& lhs, const ErrorCode& rhs) noexcept { return lhs.code() < rhs.code(); }
-inline bool operator<(const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() < rhs; }
-inline bool operator<(const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs < rhs.code(); }
+//inline bool operator<(const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() < rhs; }
+//inline bool operator<(const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs < rhs.code(); }
 
 std::ostream& operator<< (std::ostream&, const ErrorCode&);
 
