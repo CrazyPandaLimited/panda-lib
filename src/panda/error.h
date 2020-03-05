@@ -6,7 +6,7 @@
 #include <iosfwd>
 #include <system_error>
 
-namespace panda {
+namespace panda { namespace error {
 
 struct ErrorCode : AllocatedObject<ErrorCode> {
     ErrorCode () noexcept {}
@@ -16,7 +16,7 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
 
     ErrorCode (int ec, const std::error_category& cat) noexcept { if (ec) set(std::error_code(ec, cat)); }
 
-    ErrorCode(const std::error_code& ec) noexcept { if (ec) set(ec); }
+    ErrorCode (const std::error_code& ec) noexcept { if (ec) set(ec); }
 
     template <class N, typename = std::enable_if_t<std::is_error_code_enum<N>::value, void>>
     ErrorCode (N e) noexcept : ErrorCode(std::error_code(e)) {}
@@ -49,6 +49,8 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
         if (!data) return {};
         return std::error_code(data->codes.top(), data->cat->self);
     };
+
+    //operator std::error_code () const { return code(); }
 
     int value () const noexcept {
         if (!data) return 0;
@@ -101,29 +103,39 @@ private:
 inline bool operator== (const ErrorCode& lhs, const ErrorCode& rhs) noexcept { return lhs.code() == rhs.code(); }
 inline bool operator== (const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() == rhs; }
 inline bool operator== (const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs == rhs.code(); }
-template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value, void>>
-inline bool operator== (const ErrorCode& ec, E e) noexcept { return ec.code() == std::error_code(e); }
-template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value, void>>
-inline bool operator== (E e, const ErrorCode& ec) noexcept { return ec.code() == std::error_code(e); }
+inline bool operator== (const ErrorCode& lhs, const std::error_condition& rhs) noexcept { return lhs.code() == rhs; }
+inline bool operator== (const std::error_condition& lhs, const ErrorCode& rhs) noexcept { return lhs == rhs.code(); }
+template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value || std::is_error_condition_enum<E>::value, void>>
+inline bool operator== (const ErrorCode& ec, E e) noexcept { return ec.code() == make_error_code(e); }
+template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value || std::is_error_condition_enum<E>::value, void>>
+inline bool operator== (E e, const ErrorCode& ec) noexcept { return ec.code() == make_error_code(e); }
 
 inline bool operator!= (const ErrorCode& lhs, const ErrorCode& rhs) noexcept { return lhs.code() != rhs.code(); }
 inline bool operator!= (const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() != rhs; }
 inline bool operator!= (const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs != rhs.code(); }
-template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value, void>>
-inline bool operator!= (const ErrorCode& ec, E e) noexcept { return ec.code() != std::error_code(e); }
-template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value, void>>
-inline bool operator!= (E e, const ErrorCode& ec) noexcept { return ec.code() != std::error_code(e); }
+inline bool operator!= (const ErrorCode& lhs, const std::error_condition& rhs) noexcept { return lhs.code() != rhs; }
+inline bool operator!= (const std::error_condition& lhs, const ErrorCode& rhs) noexcept { return lhs != rhs.code(); }
+template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value || std::is_error_condition_enum<E>::value, void>>
+inline bool operator!= (const ErrorCode& ec, E e) noexcept { return ec.code() != make_error_code(e); }
+template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value || std::is_error_condition_enum<E>::value, void>>
+inline bool operator!= (E e, const ErrorCode& ec) noexcept { return ec.code() != make_error_code(e); }
 
 inline bool operator< (const ErrorCode& lhs, const ErrorCode& rhs) noexcept { return lhs.code() < rhs.code(); }
 inline bool operator< (const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() < rhs; }
 inline bool operator< (const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs < rhs.code(); }
-template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value, void>>
-inline bool operator< (const ErrorCode& ec, E e) noexcept { return ec.code() < std::error_code(e); }
-template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value, void>>
-inline bool operator< (E e, const ErrorCode& ec) noexcept { return std::error_code(e) < ec.code(); }
+inline bool operator< (const ErrorCode& lhs, const std::error_condition& rhs) noexcept { return lhs.code() < rhs; }
+inline bool operator< (const std::error_condition& lhs, const ErrorCode& rhs) noexcept { return lhs < rhs.code(); }
+template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value || std::is_error_condition_enum<E>::value, void>>
+inline bool operator< (const ErrorCode& ec, E e) noexcept { return ec.code() < make_error_code(e); }
+template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value || std::is_error_condition_enum<E>::value, void>>
+inline bool operator< (E e, const ErrorCode& ec) noexcept { return make_error_code(e) < ec.code(); }
 
 std::ostream& operator<< (std::ostream&, const ErrorCode&);
 
+}}
+
+namespace panda {
+    using ErrorCode = error::ErrorCode;
 }
 
 namespace std {

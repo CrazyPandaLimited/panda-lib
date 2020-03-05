@@ -3,6 +3,7 @@
 #include <iostream>
 
 namespace panda {
+namespace error {
 
 static thread_local std::map<std::pair<const std::error_category*, const ErrorCode::NestedCategory*>, ErrorCode::NestedCategory> _cache;
 
@@ -94,4 +95,4 @@ std::ostream& operator<< (std::ostream& os, const ErrorCode& ec) {
     return os << ec.what();
 }
 
-}
+}}
