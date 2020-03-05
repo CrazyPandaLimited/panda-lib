@@ -50,8 +50,6 @@ struct ErrorCode : AllocatedObject<ErrorCode> {
         return std::error_code(data->codes.top(), data->cat->self);
     };
 
-    //operator std::error_code () const { return code(); }
-
     int value () const noexcept {
         if (!data) return 0;
         return data->codes.top();
