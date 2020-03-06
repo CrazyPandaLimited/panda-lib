@@ -121,8 +121,6 @@ inline bool operator!= (E e, const ErrorCode& ec) noexcept { return ec.code() !=
 inline bool operator< (const ErrorCode& lhs, const ErrorCode& rhs) noexcept { return lhs.code() < rhs.code(); }
 inline bool operator< (const ErrorCode& lhs, const std::error_code& rhs) noexcept { return lhs.code() < rhs; }
 inline bool operator< (const std::error_code& lhs, const ErrorCode& rhs) noexcept { return lhs < rhs.code(); }
-inline bool operator< (const ErrorCode& lhs, const std::error_condition& rhs) noexcept { return lhs.code() < rhs; }
-inline bool operator< (const std::error_condition& lhs, const ErrorCode& rhs) noexcept { return lhs < rhs.code(); }
 template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value || std::is_error_condition_enum<E>::value, void>>
 inline bool operator< (const ErrorCode& ec, E e) noexcept { return ec.code() < make_error_code(e); }
 template <class E, typename = std::enable_if_t<std::is_error_code_enum<E>::value || std::is_error_condition_enum<E>::value, void>>

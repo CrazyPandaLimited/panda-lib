@@ -72,30 +72,30 @@ TEST("comparisons") {
         CHECK(ErrorCode() == ErrorCode());
         CHECK(ErrorCode(MyErr::Err1) == ErrorCode(MyErr::Err1));
         CHECK(ErrorCode(MyErr::Err1) != ErrorCode());
-        ErrorCode() < ErrorCode();
+        (void)(ErrorCode() < ErrorCode());
     }
     SECTION("ErrorCode to error_code") {
         CHECK(ErrorCode() == std::error_code());
         CHECK(std::error_code() == ErrorCode());
         CHECK(ErrorCode(MyErr::Err1) != std::error_code());
         CHECK(std::error_code() != ErrorCode(MyErr::Err1));
-        ErrorCode() < std::error_code();
-        std::error_code() < ErrorCode();
+        (void)(ErrorCode() < std::error_code());
+        (void)(std::error_code() < ErrorCode());
     }
     SECTION("ErrorCode to error code enum") {
         CHECK(ErrorCode(MyErr::Err1) == MyErr::Err1);
         CHECK(MyErr::Err1 == ErrorCode(MyErr::Err1));
         CHECK(ErrorCode(MyErr::Err1) != MyErr::Err2);
         CHECK(MyErr::Err1 != ErrorCode(MyErr::Err2));
-        ErrorCode() < MyErr::Err1;
-        MyErr::Err1 < ErrorCode();
+        (void)(ErrorCode() < MyErr::Err1);
+        (void)(MyErr::Err1 < ErrorCode());
     }
     SECTION("ErrorCode to error cond enum") {
         CHECK(ErrorCode(make_error_code(std::errc::operation_canceled)) == std::errc::operation_canceled);
         CHECK(std::errc::operation_canceled == ErrorCode(make_error_code(std::errc::operation_canceled)));
         CHECK(ErrorCode() != std::errc::operation_canceled);
         CHECK(std::errc::operation_canceled != ErrorCode());
-        ErrorCode() < std::errc::operation_canceled;
-        std::errc::operation_canceled < ErrorCode();
+        (void)(ErrorCode() < std::errc::operation_canceled);
+        (void)(std::errc::operation_canceled < ErrorCode());
     }
 }
