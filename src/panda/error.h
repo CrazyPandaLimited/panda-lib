@@ -3,6 +3,7 @@
 #include "string.h"
 #include "varint.h"
 #include "refcnt.h"
+#include "expected.h"
 #include <iosfwd>
 #include <system_error>
 
@@ -128,10 +129,53 @@ inline bool operator< (E e, const ErrorCode& ec) noexcept { return make_error_co
 
 std::ostream& operator<< (std::ostream&, const ErrorCode&);
 
+namespace details {
+    inline string error_message(const ErrorCode& e) {
+        return e.what();
+    }
+
+    inline string error_message(const std::error_code& e) {
+        auto r = e.message();
+        return string(r.data(), r.size());
+    }
+
+    template <typename E>
+    struct bad_expected_access_code : std::exception {
+        explicit bad_expected_access_code (E e) : _val(std::move(e)) {}
+
+        virtual const char* what () const noexcept override {
+            if (_message.empty()) {
+                _message = "Bad expected access: " + error_message(_val);
+            }
+            return _message.c_str();
+        }
+
+        const E&  error () const &  { return _val; }
+        const E&& error () const && { return std::move(_val); }
+
+        E&  error () &  { return _val; }
+        E&& error () && { return std::move(_val); }
+
+    private:
+        E _val;
+        mutable std::string _message;
+    };
+}
+
 }}
 
 namespace panda {
     using ErrorCode = error::ErrorCode;
+
+    template <>
+    struct bad_expected_access<ErrorCode> : error::details::bad_expected_access_code<ErrorCode> {
+        using bad_expected_access_code::bad_expected_access_code;
+    };
+
+    template <>
+    struct bad_expected_access<std::error_code> : error::details::bad_expected_access_code<std::error_code> {
+        using bad_expected_access_code::bad_expected_access_code;
+    };
 }
 
 namespace std {

@@ -99,3 +99,14 @@ TEST("comparisons") {
         (void)(std::errc::operation_canceled < ErrorCode());
     }
 }
+
+TEST("bad_expected_access") {
+    string what;
+    try {
+        expected<int, ErrorCode> exp = make_unexpected(ErrorCode(MyErr::Err1));
+        exp.value();
+    } catch (bad_expected_access<ErrorCode>& e) {
+        what = e.what();
+    }
+    REQUIRE(what == "Bad expected access: MyErr1 (1:MyCategory)");
+}
