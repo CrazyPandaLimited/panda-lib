@@ -18,15 +18,15 @@ namespace panda { namespace log {
 
 #define _panda_log_code_point_(module) panda::log::CodePoint{__FILENAME__, __LINE__, &module}
 
-#define panda_should_mlog(module, level) (level >= module.level && details::ilogger && details::ilogger->should_log(level, _panda_log_code_point_(module)))
-#define panda_should_log(level)          panda_should_mlog(panda_log_module, level)
+#define panda_should_mlog(mod, lvl) (lvl >= mod.level && panda::log::details::ilogger && panda::log::details::ilogger->should_log(lvl, _panda_log_code_point_(mod)))
+#define panda_should_log(lvl)       panda_should_mlog(panda_log_module, lvl)
 
-#define panda_elog_m(module, level, code) do {                                      \
-    if (panda_should_mlog(module, level)) {                                         \
-        std::ostream& log = panda::log::details::_get_os();                         \
-        code;                                                                       \
-        panda::log::details::_do_log(log, _panda_log_code_point_(&module), level);  \
-    }                                                                               \
+#define panda_elog_m(mod, lvl, code) do {                                       \
+    if (panda_should_mlog(mod, lvl)) {                                          \
+        std::ostream& log = panda::log::details::_get_os();                     \
+        code;                                                                   \
+        panda::log::details::_do_log(log, _panda_log_code_point_(mod), lvl);    \
+    }                                                                           \
 } while (0)
 
 #define panda_log_m(module, level, msg) panda_elog_m(module, level, { log << msg; })
