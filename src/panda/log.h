@@ -26,7 +26,7 @@ namespace panda { namespace log {
         code;                                                               \
         panda::log::details::_do_log(log, _panda_log_code_point_, level);   \
     }                                                                       \
-} while (0);
+} while (0)
 
 #define panda_log_m(module, level, msg) panda_elog_m(module, level, { log << msg; })
 
