@@ -2,16 +2,18 @@
 #include <cstring>
 #include <memory>
 #include <functional>
-#include "exception/unix_impl.h"
-#include "exception/windows_impl.h"
+#ifdef _WIN32
+  #include "exception/win.icc"
+#else
+  #include "exception/unix.icc"
+#endif
 
 namespace panda {
 
+static RawTraceProducer  rawtrace_producer = get_default_raw_producer();
+static BacktraceProducer bt_producer       = get_default_bt_producer();
 
 BacktraceInfo::~BacktraceInfo() {};
-
-static RawTraceProducer rawtrace_producer = impl::get_default_raw_producer();
-static BacktraceProducer bt_producer = impl::get_default_bt_producer();
 
 void Backtrace::install_producer(BacktraceProducer& producer_) {
     bt_producer = producer_;

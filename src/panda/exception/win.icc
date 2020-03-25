@@ -1,0 +1,12 @@
+
+namespace panda {
+
+static RawTraceProducer get_default_raw_producer () noexcept {
+    return nullptr;
+}
+
+static BacktraceProducer get_default_bt_producer () noexcept {
+    return nullptr;
+}
+
+}

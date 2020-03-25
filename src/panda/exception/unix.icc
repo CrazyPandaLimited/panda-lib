@@ -1,17 +1,14 @@
-#include "unix_impl.h"
-
-#if defined(__unix__) || defined(__APPLE__)
 #include <execinfo.h>
 #include <regex>
 #include <functional>
 #include <cxxabi.h>
 #include <memory>
 
-namespace panda { namespace impl {
+namespace panda {
 
 #if defined (__linux__)
 
-RawTraceProducer get_default_raw_producer() noexcept {
+static RawTraceProducer get_default_raw_producer() noexcept {
     return ::backtrace;
 }
 
@@ -23,7 +20,7 @@ static int bt_adapter(void **dst, int sz) {
     return (int)r;
 }
 
-RawTraceProducer get_default_raw_producer() noexcept {
+static RawTraceProducer get_default_raw_producer() noexcept {
     return bt_adapter;
 }
 #endif
@@ -41,8 +38,7 @@ static StackframePtr as_frame (const char* symbol) {
         panda::string base_off      (what[3].first, what[3].length());
         panda::string symbol_offset (what[4].first, what[4].length());
         panda::string address       (what[5].first, what[5].length());
-#else
-#if !defined(__APPLE__)
+#elif !defined(__APPLE__)
     static std::regex re("0x([0-9a-f]+) <([^+]+)\\+(0x)?([0-9a-f]+)> at (.+)");
     if (regex_match(symbol, what, re)) {
         panda::string dll           (what[5].first, what[5].length());
@@ -58,7 +54,6 @@ static StackframePtr as_frame (const char* symbol) {
         panda::string base_off;
         panda::string symbol_offset (what[4].first, what[4].length());
         panda::string address       (what[2].first, what[2].length());
-#endif
 #endif
         int status;
         string demangled_name = mangled_name;
@@ -95,9 +90,9 @@ static StackframePtr as_frame (const char* symbol) {
     return r;
 }
 
-struct glib_backtrace: BacktraceInfo {
+struct glib_backtrace : BacktraceInfo {
 
-    glib_backtrace(std::vector<StackframePtr>&& frames_):frames{std::move(frames_)}{}
+    glib_backtrace(std::vector<StackframePtr>&& frames_) : frames(std::move(frames_)) {}
 
     const std::vector<StackframePtr>& get_frames() const override { return frames; }
     virtual string to_string() const override { std::abort(); }
@@ -124,10 +119,8 @@ iptr<BacktraceInfo> glibc_producer(const RawTrace& buffer) {
 }
 
 
-BacktraceProducer get_default_bt_producer() noexcept {
+static BacktraceProducer get_default_bt_producer() noexcept {
     return glibc_producer;
 }
 
-}}
-
-#endif
+}
