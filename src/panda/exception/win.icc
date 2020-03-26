@@ -2,11 +2,11 @@
 namespace panda {
 
 static RawTraceProducer get_default_raw_producer () noexcept {
-    return nullptr;
+    return [](void**, int) -> int { return 0; };
 }
 
 static BacktraceProducer get_default_bt_producer () noexcept {
-    return nullptr;
+    return [](const RawTrace&) -> iptr<BacktraceInfo> { return {}; };
 }
 
 }

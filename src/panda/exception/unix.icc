@@ -95,27 +95,25 @@ struct glib_backtrace : BacktraceInfo {
     glib_backtrace(std::vector<StackframePtr>&& frames_) : frames(std::move(frames_)) {}
 
     const std::vector<StackframePtr>& get_frames() const override { return frames; }
-    virtual string to_string() const override { std::abort(); }
+    virtual string to_string() const override { throw "not implemented"; }
 
     std::vector<StackframePtr> frames;
 };
 
-iptr<BacktraceInfo> glibc_producer(const RawTrace& buffer) {
+static iptr<BacktraceInfo> glibc_producer(const RawTrace& buffer) {
     using guard_t = std::unique_ptr<char**, std::function<void(char***)>>;
     char** symbols = ::backtrace_symbols(buffer.data(), buffer.size());
-    if (symbols) {
-        guard_t guard(&symbols, [](char*** ptr) { free(*ptr); });
-        std::vector<StackframePtr> frames;
-        frames.reserve(buffer.size());
-        for (int i = 0; i < static_cast<int>(buffer.size()); ++i) {
-            // printf("symbol = %s\n", symbols[i]);
-            auto frame = as_frame(symbols[i]);
-            frames.emplace_back(std::move(frame));
-        }
-        auto ptr = new glib_backtrace(std::move(frames));
-        return iptr<BacktraceInfo>(ptr);
+    if (!symbols) return {};
+
+    guard_t guard(&symbols, [](char*** ptr) { free(*ptr); });
+    std::vector<StackframePtr> frames;
+    frames.reserve(buffer.size());
+    for (int i = 0; i < static_cast<int>(buffer.size()); ++i) {
+        // printf("symbol = %s\n", symbols[i]);
+        auto frame = as_frame(symbols[i]);
+        frames.emplace_back(std::move(frame));
     }
-    return iptr<BacktraceInfo>();
+    return new glib_backtrace(std::move(frames));
 }
 
 
