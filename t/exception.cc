@@ -1,12 +1,9 @@
 #include "test.h"
 
-#if defined(__unix__) || defined(__APPLE__)
-#include <execinfo.h>
 #include <panda/exception.h>
 #include <iostream>
 
 using namespace panda;
-
 
 // prevent inlining
 extern "C" {
@@ -92,7 +89,9 @@ TEST_CASE("exception with trace, catch exact exception", "[exception]") {
         CHECK_THAT( fn00_frame->library, Catch::Matchers::Contains( "MyTest" ) );
         CHECK_THAT( fn00_frame->name, Catch::Matchers::Contains( "fn00" ) );
         CHECK( fn45_frame->address > 0);
+#ifndef _WIN32
         CHECK( fn45_frame->offset > 0);
+#endif
         CHECK_THAT( fn45_frame->library, Catch::Matchers::Contains( "MyTest" ) );
 
         was_catch = true;
@@ -137,5 +136,3 @@ TEST_CASE("panda::exception with string", "[exception]") {
     }
     REQUIRE(was_catch);
 }
-
-#endif
