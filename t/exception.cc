@@ -76,18 +76,18 @@ TEST_CASE("exception with trace, catch exact exception", "[exception]") {
         auto frames = trace->get_frames();
         REQUIRE(frames.size() >= 47);
         
-        StackframePtr fn00_frame = nullptr;
+        StackframePtr fn01_frame = nullptr;
         StackframePtr fn45_frame = nullptr;
 
         for(auto& f : frames)  {
             std::cout << f->name << "\n";
-            if (f->name.find("fn00") != string::npos) { fn00_frame = f; }
+            if (f->name.find("fn01") != string::npos) { fn01_frame = f; }
             if (f->name.find("fn45") != string::npos) { fn45_frame = f; }
         }
-        REQUIRE(fn00_frame);
+        REQUIRE(fn01_frame);
         REQUIRE(fn45_frame);
-        CHECK_THAT( fn00_frame->library, Catch::Matchers::Contains( "MyTest" ) );
-        CHECK_THAT( fn00_frame->name, Catch::Matchers::Contains( "fn00" ) );
+        CHECK_THAT( fn01_frame->library, Catch::Matchers::Contains( "MyTest" ) );
+        CHECK_THAT( fn01_frame->name, Catch::Matchers::Contains( "fn01" ) );
         CHECK( fn45_frame->address > 0);
 #ifndef _WIN32
         CHECK( fn45_frame->offset > 0);
@@ -112,14 +112,14 @@ TEST_CASE("exception with trace, catch non-final class", "[exception]") {
         REQUIRE((bool)trace);
         auto frames = trace->get_frames();
         REQUIRE(frames.size() >= 47);
-        StackframePtr fn00_frame = nullptr;
+        StackframePtr fn01_frame = nullptr;
         StackframePtr fn45_frame = nullptr;
 
         for(auto& f : frames)  {
-            if (f->name.find("fn00") != string::npos) { fn00_frame = f; }
+            if (f->name.find("fn01") != string::npos) { fn01_frame = f; }
             if (f->name.find("fn45") != string::npos) { fn45_frame = f; }
         }
-        CHECK(fn00_frame);
+        CHECK(fn01_frame);
         CHECK(fn45_frame);
         was_catch = true;
     }
