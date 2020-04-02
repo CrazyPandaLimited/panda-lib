@@ -1,4 +1,4 @@
-1.3.14   xx.xx.2020
+1.3.14   02.04.2020
             - exceptions: add default backtrace producer (info gather info from symbols)
             - exceptions: enable tests for all *nix systems
             - fix logging on global destruction
