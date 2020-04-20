@@ -17,9 +17,9 @@ namespace details {
     static std::ostringstream mt_os;                           // stream for main thread, can't use TLS because it's destroyed much earlier
     static auto mt_id = std::this_thread::get_id();
 
-    std::ostream& _get_os () { return std::this_thread::get_id() == mt_id ? mt_os : *os; }
+    std::ostream& get_os () { return std::this_thread::get_id() == mt_id ? mt_os : *os; }
 
-    bool _do_log (std::ostream& _stream, const CodePoint& cp, Level level) {
+    bool do_log (std::ostream& _stream, const CodePoint& cp, Level level) {
         std::ostringstream& stream = static_cast<std::ostringstream&>(_stream);
         if (!ilogger) return false;
         stream.flush();
@@ -30,8 +30,8 @@ namespace details {
     }
 }
 
-void set_level (Level val, const string& module) {
-    if (module) {
+void set_level (Level val, string_view module) {
+    if (module.length()) {
         auto& modules = ::panda_log_module.children;
         auto iter = modules.find(module);
         if (iter == modules.end()) {
@@ -46,6 +46,16 @@ void set_level (Level val, const string& module) {
 
 void set_logger (ILogger* l) {
     details::ilogger.reset(l);
+}
+
+void set_logger (const logger_fn& f) {
+    struct Logger : ILogger {
+        logger_fn f;
+        Logger (const logger_fn& f) : f(f) {}
+        void log (Level level, const CodePoint& cp, const std::string& s) override { f(level, cp, s); }
+    };
+
+    set_logger(new Logger(f));
 }
 
 std::string CodePoint::to_string () const {
@@ -78,13 +88,9 @@ std::ostream& operator<< (std::ostream& stream, const escaped& str) {
    return stream;
 }
 
-Module::Module(const string& name, Level level)
-    : Module(name, panda_log_module, level)
-{}
+Module::Module (const string& name, Level level) : Module(name, panda_log_module, level) {}
 
-Module::Module(const string& name, Module* parent, Level level)
-    : level(level), name(name)
-{
+Module::Module (const string& name, Module* parent, Level level) : level(level), name(name) {
     if (!parent) return;
 
     this->parent = parent;
@@ -96,7 +102,7 @@ Module::Module(const string& name, Module* parent, Level level)
     parent->children[name] = this;
 }
 
-void Module::set_level(Level level) {
+void Module::set_level (Level level) {
     this->level = level;
     for (auto& p : children) {
         p.second->set_level(level);

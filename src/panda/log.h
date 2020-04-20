@@ -3,10 +3,8 @@
 #include <memory>
 #include <ostream>
 #include <string.h>
-#include <type_traits>
-#include <map>
-#include "string_view.h"
-#include "string.h"
+#include "function.h"
+#include "string_map.h"
 
 namespace panda { namespace log {
 
@@ -22,12 +20,12 @@ namespace panda { namespace log {
 #define panda_should_log(lvl)       panda_should_mlog(panda_log_module, lvl)
 #define panda_should_rlog(lvl)      panda_should_mlog(::panda_log_module, lvl)
 
-#define panda_emlog(mod, lvl, code) do {                                        \
-    if (panda_should_mlog(mod, lvl)) {                                          \
-        std::ostream& log = panda::log::details::_get_os();                     \
-        code;                                                                   \
-        panda::log::details::_do_log(log, _panda_log_code_point_(mod), lvl);    \
-    }                                                                           \
+#define panda_emlog(mod, lvl, code) do {                                    \
+    if (panda_should_mlog(mod, lvl)) {                                      \
+        std::ostream& log = panda::log::details::get_os();                  \
+        code;                                                               \
+        panda::log::details::do_log(log, _panda_log_code_point_(mod), lvl); \
+    }                                                                       \
 } while (0)
 
 #define panda_mlog(module, level, msg)  panda_emlog(module, level, { log << msg; })
@@ -99,21 +97,23 @@ enum Level {
 };
 
 struct Module {
+    using Modules = string_map<string, Module*>;
+
     Module* parent;
     Level   level;
     string  name;
+    Modules children;
 
-    Module(const string& name, Level level = Level::Warning);
-    Module(const string& name, Module& parent, Level level = Level::Warning) : Module(name, &parent, level) {}
-    Module(const string& name, Module* parent, Level level = Level::Warning);
+    Module (const string& name, Level level = Warning);
+    Module (const string& name, Module& parent, Level level = Warning) : Module(name, &parent, level) {}
+    Module (const string& name, Module* parent, Level level = Warning);
 
-    Module(const Module&) = delete;
-    Module(Module&&) = delete;
-    Module & operator =(const Module&) = delete;
+    Module (const Module&) = delete;
+    Module (Module&&)      = delete;
 
-    void set_level(Level level);
+    Module& operator= (const Module&) = delete;
 
-    std::map<string, Module*> children;
+    void set_level (Level);
 };
 
 struct CodePoint {
@@ -124,41 +124,33 @@ struct CodePoint {
 
     std::string to_string () const;
 };
-std::ostream& operator<< (std::ostream&, const CodePoint&);
 
 struct ILogger {
     virtual bool should_log (Level, const CodePoint&) { return true; }
     virtual void log        (Level, const CodePoint&, const std::string&) = 0;
-    virtual ~ILogger() {}
+
+    virtual ~ILogger () {}
 };
+
+using logger_fn = function<void(Level, const CodePoint&, const std::string&)>;
+
+void set_level  (Level, string_view module = "");
+void set_logger (ILogger*);
+void set_logger (const logger_fn&);
+
+struct escaped { string_view src; };
 
 namespace details {
     extern Level                    min_level;
     extern std::unique_ptr<ILogger> ilogger;
 
-    std::ostream& _get_os ();
-    bool          _do_log (std::ostream&, const CodePoint&, Level);
-
-    template <class Func>
-    struct CallbackLogger : ILogger {
-        Func f;
-        CallbackLogger (const Func& f) : f(f) {}
-        void log (Level level, const CodePoint& cp, const std::string& s) override { f(level, cp, s); }
-    };
+    std::ostream& get_os ();
+    bool          do_log (std::ostream&, const CodePoint&, Level);
 }
 
-void set_level  (Level, const string& name = "");
-void set_logger (ILogger*);
-
-template <class Func, typename = std::enable_if_t<!std::is_base_of<ILogger, std::remove_cv_t<std::remove_pointer_t<Func>>>::value>>
-void set_logger (const Func& f) { set_logger(new details::CallbackLogger<Func>(f)); }
-
-struct escaped {
-    string_view src;
-};
+std::ostream& operator<< (std::ostream&, const CodePoint&);
 std::ostream& operator<< (std::ostream&, const escaped&);
 
 }}
 
 extern panda::log::Module panda_log_module;
-

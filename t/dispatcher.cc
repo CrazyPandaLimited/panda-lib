@@ -14,7 +14,9 @@ using Event = Dispatcher::Event;
 using panda::function;
 using panda::string;
 
-TEST_CASE("empty callback dispatcher" , "[callbackdispatcher]") {
+#define TEST(name) TEST_CASE("callback dispatcher: " name, "[callback dispatcher]")
+
+TEST("empty") {
     Dispatcher d;
     d(1);
     REQUIRE(true);
