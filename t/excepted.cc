@@ -3,9 +3,9 @@
 
 using panda::excepted;
 
-TEST_CASE("excepted", "[excepted]") {
-    SECTION("moveable") {
-        excepted<int, double> a;
-        excepted<int, double> b(std::move(a));
-    }
+#define TEST(name) TEST_CASE("excepted: " name, "[excepted]")
+
+TEST("moveable") {
+    excepted<int, double> a;
+    excepted<int, double> b(std::move(a));
 }

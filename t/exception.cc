@@ -1,9 +1,10 @@
 #include "test.h"
-
 #include <panda/exception.h>
 #include <iostream>
 
 using namespace panda;
+
+#define TEST(name) TEST_CASE("exception: " name, "[exception]")
 
 // prevent inlining
 extern "C" {
@@ -63,7 +64,7 @@ void fn48() { fn47(); ++v; }
 
 }
 
-TEST_CASE("exception with trace, catch exact exception", "[exception]") {
+TEST("exception with trace, catch exact exception") {
     bool was_catch = false;
     try {
         fn48();
@@ -99,7 +100,7 @@ TEST_CASE("exception with trace, catch exact exception", "[exception]") {
     REQUIRE(was_catch);
 }
 
-TEST_CASE("exception with trace, catch non-final class", "[exception]") {
+TEST("exception with trace, catch non-final class") {
     bool was_catch = false;
     try {
         fn48();
@@ -126,7 +127,7 @@ TEST_CASE("exception with trace, catch non-final class", "[exception]") {
     REQUIRE(was_catch);
 }
 
-TEST_CASE("panda::exception with string", "[exception]") {
+TEST("panda::exception with string") {
     bool was_catch = false;
     try {
         throw panda::exception("my-description");
@@ -137,8 +138,7 @@ TEST_CASE("panda::exception with string", "[exception]") {
     REQUIRE(was_catch);
 }
 
-TEST_CASE("Backtrace::dump_trace()", "[exception]") {
+TEST("Backtrace::dump_trace()") {
     auto trace = Backtrace::dump_trace();
-    auto npos = string::npos;
-    CHECK(trace.find("dump_trace") != npos);
+    CHECK(trace.find("dump_trace") != string::npos);
 }
