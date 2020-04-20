@@ -136,3 +136,9 @@ TEST_CASE("panda::exception with string", "[exception]") {
     }
     REQUIRE(was_catch);
 }
+
+TEST_CASE("Backtrace::dump_trace()", "[exception]") {
+    auto trace = Backtrace::dump_trace();
+    auto npos = string::npos;
+    CHECK(trace.find("dump_trace") != npos);
+}

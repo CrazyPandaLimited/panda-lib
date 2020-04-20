@@ -173,17 +173,6 @@ public:
     }
 };
 
-struct msvc_backtrace : BacktraceInfo {
-
-    msvc_backtrace(std::vector<StackframePtr>&& frames_) : frames(std::move(frames_)) {}
-
-    const std::vector<StackframePtr>& get_frames() const override { return frames; }
-    virtual string to_string() const override { throw "not implemented"; }
-
-    std::vector<StackframePtr> frames;
-};
-
-
 static RawTraceProducer get_default_raw_producer () noexcept {
     return [](void** ptr, int sz) -> int {
         auto r = ::CaptureStackBackTrace(2, static_cast<unsigned long>(sz), ptr, nullptr);
@@ -208,7 +197,7 @@ static BacktraceProducer get_default_bt_producer () noexcept {
             auto frame = as_frame(ip);
             if (frame) { frames.emplace_back(std::move(frame)); }
         }
-        return new msvc_backtrace(std::move(frames));
+        return new BacktraceInfo(std::move(frames));
     };
 }
 

@@ -15,6 +15,32 @@ static BacktraceProducer bt_producer       = get_default_bt_producer();
 
 BacktraceInfo::~BacktraceInfo() {};
 
+string BacktraceInfo::to_string() const noexcept {
+    string r;
+    for(auto& frame: frames) {
+        // mimic gdb-style
+        r += "0x";
+        r += string::from_number(frame->address, 16);
+        if (frame->name) {
+            r += " in ";
+            r += frame->name;
+        }
+        if (frame->file) {
+            r += " at ";
+            r += frame->file;
+            if (frame->line_no) {
+                r += ":";
+                r += string::from_number(frame->line_no, 10);
+            }
+        } else if(frame->library) {
+            r += " from ";
+            r += frame->library;
+        }
+        r += "\n";
+    }
+    return r;
+}
+
 void Backtrace::install_producer(BacktraceProducer& producer_) {
     bt_producer = producer_;
 }
@@ -34,6 +60,10 @@ Backtrace::~Backtrace() {}
 
 iptr<BacktraceInfo> Backtrace::get_backtrace_info() const noexcept {
     return bt_producer(buffer);
+}
+
+string Backtrace::dump_trace() noexcept {
+    return Backtrace().get_backtrace_info()->to_string();
 }
 
 exception::exception () noexcept {}

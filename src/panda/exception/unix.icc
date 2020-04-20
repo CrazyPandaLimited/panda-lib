@@ -90,16 +90,6 @@ static StackframePtr as_frame (const char* symbol) {
     return r;
 }
 
-struct glib_backtrace : BacktraceInfo {
-
-    glib_backtrace(std::vector<StackframePtr>&& frames_) : frames(std::move(frames_)) {}
-
-    const std::vector<StackframePtr>& get_frames() const override { return frames; }
-    virtual string to_string() const override { throw "not implemented"; }
-
-    std::vector<StackframePtr> frames;
-};
-
 static iptr<BacktraceInfo> glibc_producer(const RawTrace& buffer) {
     using guard_t = std::unique_ptr<char**, std::function<void(char***)>>;
     char** symbols = ::backtrace_symbols(buffer.data(), buffer.size());
@@ -113,7 +103,7 @@ static iptr<BacktraceInfo> glibc_producer(const RawTrace& buffer) {
         auto frame = as_frame(symbols[i]);
         frames.emplace_back(std::move(frame));
     }
-    return new glib_backtrace(std::move(frames));
+    return new BacktraceInfo(std::move(frames));
 }
 
 

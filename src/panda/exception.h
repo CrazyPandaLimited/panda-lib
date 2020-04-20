@@ -20,9 +20,12 @@ struct Stackframe: public Refcnt {
 using StackframePtr = iptr<Stackframe>;
 
 struct BacktraceInfo : Refcnt {
+    BacktraceInfo(std::vector<StackframePtr>&& frames_) : frames(std::move(frames_)) {}
     virtual ~BacktraceInfo();
-    virtual const std::vector<StackframePtr>& get_frames() const = 0;
-    virtual string to_string() const = 0;
+    const std::vector<StackframePtr>& get_frames() const noexcept { return frames;}
+    virtual string to_string() const noexcept;
+
+    std::vector<StackframePtr> frames;
 };
 
 using RawTrace = std::vector<void*>;
@@ -41,6 +44,7 @@ struct Backtrace {
     const RawTrace& get_trace () const noexcept { return buffer; }
 
     static void install_producer(BacktraceProducer& producer);
+    static string dump_trace() noexcept;
 
 private:
     std::vector<void*> buffer;
