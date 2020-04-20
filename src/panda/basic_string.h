@@ -1505,8 +1505,11 @@ private:
 
 };
 
-template <class C, class T, class A>
-const C basic_string<C,T,A>::TERMINAL = C();
+template <class C, class T, class A> const C basic_string<C,T,A>::TERMINAL = C();
+
+template <class C, class T, class A> const typename basic_string<C,T,A>::size_type basic_string<C,T,A>::npos;
+template <class C, class T, class A> const typename basic_string<C,T,A>::size_type basic_string<C,T,A>::MAX_SSO_CHARS;
+template <class C, class T, class A> const typename basic_string<C,T,A>::size_type basic_string<C,T,A>::MAX_SIZE;
 
 template <class C, class T, class A1, class A2> inline bool operator== (const basic_string<C,T,A1>& lhs, const basic_string<C,T,A2>& rhs) { return lhs.compare(rhs) == 0; }
 template <class C, class T, class A>            inline bool operator== (const C* lhs, const basic_string<C,T,A>& rhs)                     { return rhs.compare(lhs) == 0; }
