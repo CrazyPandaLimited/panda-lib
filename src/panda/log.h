@@ -139,14 +139,15 @@ struct ILogger {
 using logger_fn = function<void(Level, const CodePoint&, const std::string&)>;
 
 void set_level  (Level, string_view module = "");
-void set_logger (ILogger*);
+void set_logger (const std::shared_ptr<ILogger>&);
 void set_logger (const logger_fn&);
+void set_logger (std::nullptr_t);
 
 struct escaped { string_view src; };
 
 namespace details {
     extern Level                    min_level;
-    extern std::unique_ptr<ILogger> ilogger;
+    extern std::shared_ptr<ILogger> ilogger;
 
     std::ostream& get_os ();
     bool          do_log (std::ostream&, const CodePoint&, Level);

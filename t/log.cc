@@ -76,7 +76,7 @@ TEST("set_logger") {
             }
         };
 
-        auto logger = new Logger();
+        auto logger = std::make_shared<Logger>();
         set_logger(logger);
 
         panda_log_alert("hello"); chk_line = __LINE__;
@@ -116,7 +116,7 @@ TEST("logger's should_log") {
         }
     };
 
-    auto logger = new Logger();
+    auto logger = std::make_shared<Logger>();
     set_logger(logger);
     set_level(VerboseDebug);
 

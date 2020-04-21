@@ -10,7 +10,7 @@ panda::log::Module panda_log_module("", nullptr);
 namespace panda { namespace log {
 
 namespace details {
-    std::unique_ptr<ILogger> ilogger;
+    std::shared_ptr<ILogger> ilogger;
 
     static thread_local struct { std::ostringstream os; } tls; // struct folding workarounds a bug in FreeBSD with TLS
     static thread_local std::ostringstream* os = &tls.os;      // stream for child threads, TLS via pointers works 3x faster in GCC
@@ -21,11 +21,11 @@ namespace details {
 
     bool do_log (std::ostream& _stream, const CodePoint& cp, Level level) {
         std::ostringstream& stream = static_cast<std::ostringstream&>(_stream);
-        if (!ilogger) return false;
         stream.flush();
         std::string s(stream.str());
         stream.str({});
-        ilogger->log(level, cp, s);
+        auto hold = ilogger;
+        if (hold) hold->log(level, cp, s);
         return true;
     }
 }
@@ -44,8 +44,12 @@ void set_level (Level val, string_view module) {
 
 }
 
-void set_logger (ILogger* l) {
-    details::ilogger.reset(l);
+void set_logger (const std::shared_ptr<ILogger>& l) {
+    details::ilogger = l;
+}
+
+void set_logger (std::nullptr_t) {
+    details::ilogger.reset();
 }
 
 void set_logger (const logger_fn& f) {
@@ -55,7 +59,7 @@ void set_logger (const logger_fn& f) {
         void log (Level level, const CodePoint& cp, const std::string& s) override { f(level, cp, s); }
     };
 
-    set_logger(new Logger(f));
+    set_logger(std::make_shared<Logger>(f));
 }
 
 std::string CodePoint::to_string () const {
