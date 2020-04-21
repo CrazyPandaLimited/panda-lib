@@ -3,8 +3,6 @@
 
 #define TEST(name) TEST_CASE("varint: " name, "[varint]")
 
-using namespace panda;
-
 TEST("encode") {
     CHECK(varint_encode(0) == string("\0"));
     CHECK(varint_encode(1) == string("\1"));

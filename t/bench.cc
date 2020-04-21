@@ -1,7 +1,5 @@
 #include "test.h"
 
-using namespace panda;
-
 struct Base {
     int x;
     virtual ~Base() {}

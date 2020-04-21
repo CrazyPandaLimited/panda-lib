@@ -3,8 +3,6 @@
 
 #define TEST(name) TEST_CASE("error: " name, "[error]")
 
-using namespace panda;
-
 enum MyErr {
     Err1 = 1,
     Err2

@@ -6,10 +6,6 @@
 
 #define TEST(name) TEST_CASE("string_containers: " name, "[string_containers]")
 
-using namespace panda;
-using namespace test;
-using test::Allocator;
-
 using String = panda::basic_string<char, std::char_traits<char>, Allocator<char>>;
 
 static const string_view key1  = "key1key1key1key1key1key1key1key1key1key1key1key1key1key1key1key1key1key1key1key1";

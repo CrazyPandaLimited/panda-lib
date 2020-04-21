@@ -1,10 +1,7 @@
-#include <catch.hpp>
-#include <panda/string.h>
+#include "test.h"
 #include <panda/traits.h>
 
 #define TEST(name) TEST_CASE("traits: " name, "[traits]")
-
-using namespace panda;
 
 TEST("bool_or") {
     struct N {};

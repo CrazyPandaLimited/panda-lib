@@ -1,8 +1,6 @@
 #include "test.h"
 #include <panda/excepted.h>
 
-using panda::excepted;
-
 #define TEST(name) TEST_CASE("excepted: " name, "[excepted]")
 
 TEST("moveable") {

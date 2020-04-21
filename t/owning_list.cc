@@ -1,9 +1,6 @@
 #include "test.h"
 #include <panda/owning_list.h>
 
-using namespace panda;
-using test::Tracer;
-
 #define TEST(name) TEST_CASE("owning_list: " name, "[owning_list]")
 
 TEST("empty") {

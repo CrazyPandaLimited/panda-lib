@@ -2,9 +2,6 @@
 #include <panda/function_utils.h>
 #include <panda/CallbackDispatcher.h>
 
-using test::Tracer;
-using namespace panda;
-
 using Dispatcher = CallbackDispatcher<int(int)>;
 using Event = Dispatcher::Event;
 

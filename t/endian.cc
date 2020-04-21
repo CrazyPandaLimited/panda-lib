@@ -1,8 +1,6 @@
 #include "test.h"
 #include <panda/endian.h>
 
-using namespace panda;
-
 #define TEST(name) TEST_CASE("endian: " name, "[endian]")
 
 TEST("basic") {

@@ -5,8 +5,6 @@
 
 namespace test {
 
-using namespace panda;
-
 template <typename T>
 struct test_string {
     using Allocator  = typename test::Allocator<T>;

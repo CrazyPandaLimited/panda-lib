@@ -2,8 +2,6 @@
 #include <panda/exception.h>
 #include <iostream>
 
-using namespace panda;
-
 #define TEST(name) TEST_CASE("exception: " name, "[exception]")
 
 // prevent inlining

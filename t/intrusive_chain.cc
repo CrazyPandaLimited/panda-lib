@@ -3,7 +3,6 @@
 #include <panda/function.h>
 #include <panda/intrusive_chain.h>
 
-using namespace panda;
 using std::shared_ptr;
 
 #define TEST(name) TEST_CASE("intrusive chain: " name, "[intrusive_chain]")

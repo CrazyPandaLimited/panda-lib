@@ -4,8 +4,6 @@
 
 #define TEST(name) TEST_CASE("to_chars: " name, "[to_chars]")
 
-using panda::string;
-
 struct Exc : std::exception {};
 
 template <typename T> struct nstr;

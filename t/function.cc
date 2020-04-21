@@ -4,10 +4,8 @@
 #include <panda/refcnt.h>
 #include <panda/string.h>
 
-using namespace panda;
 using function_details::make_method;
 using function_details::tmp_abstract_function;
-using test::Tracer;
 
 #define TEST(name) TEST_CASE("function: " name, "[function]")
 

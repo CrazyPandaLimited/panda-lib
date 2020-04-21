@@ -6,6 +6,8 @@
 #include <panda/memory.h>
 #include <panda/CallbackDispatcher.h>
 
+using namespace panda;
+
 namespace test {
 
     struct Tracer {
@@ -112,5 +114,6 @@ namespace test {
             allocs.ext_shbuf_deallocated++;
         }
     };
-
 }
+
+using namespace test;
