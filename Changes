@@ -4,6 +4,7 @@
             - exceptions: add default to_string implementation
             - exceptions: BacktraceInfo has reasonable default implementation
             - exceptions: add Backtrace::dump_trace() default stack trace dumper
+            - massively speedup multiple "+=" operations without reserve() for basic_string
 1.3.14   02.04.2020
             - exceptions: add default backtrace producer (info gather info from symbols)
             - exceptions: enable tests for all *nix systems

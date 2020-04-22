@@ -146,6 +146,7 @@ private:
     static constexpr const size_type BUF_CHARS     = (sizeof(Buffer) - sizeof(Buffer().start)) / sizeof(CharT);
     static constexpr const size_type EBUF_CHARS    = sizeof(ExternalShared) / sizeof(CharT);
     static constexpr const size_type MAX_SSO_BYTES = 3 * sizeof(void*) - 1; // last byte for _state
+    static constexpr const float     GROW_RATE     = 1.6;
     static const CharT TERMINAL;
 
     union {
@@ -847,7 +848,7 @@ public:
 
     basic_string& append (size_type count, CharT ch) {
         if (count) {
-            _reserve_save(_length + count);
+            _reserve_save_extra(_length + count);
             traits_type::assign(_str + _length, count, ch);
             _length += count;
         }
@@ -857,7 +858,7 @@ public:
     template <class Alloc2>
     basic_string& append (const basic_string<CharT, Traits, Alloc2>& str) {
         if (str._length) { // can't call append(const CharT*, size_type) because otherwise if &str == this a fuckup would occur
-            _reserve_save(_length + str._length);
+            _reserve_save_extra(_length + str._length);
             traits_type::copy(_str + _length, str._str, str._length);
             _length += str._length;
         }
@@ -869,7 +870,7 @@ public:
         if (pos > str._length) throw std::out_of_range("basic_string::append");
         if (count > str._length - pos) count = str._length - pos;
         if (count) { // can't call append(const CharT*, size_type) because otherwise if &str == this a fuckup would occur
-            _reserve_save(_length + count);
+            _reserve_save_extra(_length + count);
             traits_type::copy(_str + _length, str._str + pos, count);
             _length += count;
         }
@@ -878,7 +879,7 @@ public:
 
     basic_string& append (const CharT* s, size_type count) { // 's' MUST NOT BE any part of this->data()
         if (count) {
-            _reserve_save(_length + count);
+            _reserve_save_extra(_length + count);
             traits_type::copy(_str + _length, s, count);
             _length += count;
         }
@@ -1322,19 +1323,21 @@ private:
         if (_state == State::LITERAL) _detach_str(_length);
     }
 
-    void _reserve_save (size_type capacity) {
+    void _reserve_save_extra (size_type capacity) { _reserve_save(capacity, GROW_RATE); }
+
+    void _reserve_save (size_type capacity, float extra = 1) {
         if (capacity < _length) capacity = _length;
         switch (_state) {
-            case State::INTERNAL: _reserve_save_internal(capacity); break;
-            case State::EXTERNAL: _reserve_save_external(capacity); break;
-            case State::LITERAL:  _detach_str(capacity);            break;
-            case State::SSO:      _reserve_save_sso(capacity);      break;
+            case State::INTERNAL: _reserve_save_internal(capacity, extra); break;
+            case State::EXTERNAL: _reserve_save_external(capacity, extra); break;
+            case State::LITERAL:  _detach_str(capacity * extra);           break;
+            case State::SSO:      _reserve_save_sso(capacity, extra);      break;
         }
     }
 
-    void _reserve_save_internal (size_type capacity) {
-        if (_storage.internal->refcnt > 1) _detach_cow(capacity);
-        else if (_storage.internal->capacity < capacity) _internal_realloc(capacity); // need to grow storage
+    void _reserve_save_internal (size_type capacity, float extra) {
+        if (_storage.internal->refcnt > 1) _detach_cow(capacity * extra);
+        else if (_storage.internal->capacity < capacity) _internal_realloc(capacity * extra); // need to grow storage
         else if (_capacity_internal() < capacity) { // may not to grow storage if str is moved to the beginning
             traits_type::move(_storage.internal->start, _str, _length);
             _str = _storage.internal->start;
@@ -1359,9 +1362,9 @@ private:
         }
     }
 
-    void _reserve_save_external (size_type capacity) {
-        if (_storage.external->refcnt > 1) _detach_cow(capacity);
-        else if (_storage.external->capacity < capacity) _external_realloc(capacity); // need to grow storage, switch to INTERNAL/SSO
+    void _reserve_save_external (size_type capacity, float extra) {
+        if (_storage.external->refcnt > 1) _detach_cow(capacity * extra);
+        else if (_storage.external->capacity < capacity) _external_realloc(capacity * extra); // need to grow storage, switch to INTERNAL/SSO
         else if (_capacity_external() < capacity) { // may not to grow storage if str is moved to the beginning
             traits_type::move(_storage.external->ptr, _str, _length);
             _str = _storage.external->ptr;
@@ -1377,9 +1380,9 @@ private:
         _free_external(old_buf, old_dtor);
     }
 
-    void _reserve_save_sso (size_type capacity) {
+    void _reserve_save_sso (size_type capacity, float extra) {
         if (MAX_SSO_CHARS < capacity) {
-            _new_internal_from_sso(capacity);
+            _new_internal_from_sso(capacity * extra);
             return;
         }
         else if (_capacity_sso() < capacity) {
