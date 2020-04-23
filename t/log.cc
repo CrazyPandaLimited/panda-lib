@@ -125,6 +125,32 @@ TEST("set_logger") {
     REQUIRE(cp.module == &::panda_log_module);
 }
 
+TEST("set_formatter") {
+    Ctx c;
+    string str;
+
+    set_logger([&str](Level, const CodePoint&, const string& s) {
+        str = s;
+    });
+
+    SECTION("callback") {
+        set_formatter([](Level, const CodePoint&, std::string&) -> string {
+            return "jopa";
+        });
+    }
+    SECTION("object") {
+        struct Formatter : IFormatter {
+            string format (Level, const CodePoint&, std::string&) const override {
+                return "jopa";
+            }
+        };
+        set_formatter(new Formatter());
+    }
+
+    panda_log_alert("hello");
+    REQUIRE(str == "jopa");
+}
+
 TEST("should_log") {
     Ctx c;
     set_level(Debug);
