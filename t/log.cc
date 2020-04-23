@@ -12,7 +12,7 @@ struct Ctx {
     std::string str;
 
     Ctx () {
-        set_logger([this](Level _level, const CodePoint& _cp, const std::string& _str) {
+        set_logger([this](Level _level, const CodePoint& _cp, std::string& _str, const IFormatter&) {
             level = _level;
             cp    = _cp;
             str   = _str;
@@ -52,8 +52,20 @@ TEST("set_logger") {
     CodePoint   cp;
     std::string str;
     int         chk_line;
+    bool        grep = false;
 
-    SECTION("callback") {
+    SECTION("formatting callback") {
+        set_logger([&](Level _level, const CodePoint& _cp, std::string& _str, const IFormatter&) {
+            level = _level;
+            cp    = _cp;
+            str   = _str;
+        });
+
+        panda_log_alert("hello"); chk_line = __LINE__;
+    }
+
+    SECTION("simple callback") {
+        grep = true;
         set_logger([&](Level _level, const CodePoint& _cp, const std::string& _str) {
             level = _level;
             cp    = _cp;
@@ -68,15 +80,33 @@ TEST("set_logger") {
             Level       level;
             CodePoint   cp;
             std::string str;
-
-            void log (Level _level, const CodePoint& _cp, const std::string& _str) override {
-                level = _level;
-                cp    = _cp;
-                str   = _str;
-            }
         };
+        Logger* logger;
 
-        auto logger = std::make_shared<Logger>();
+
+        SECTION("formating") {
+            struct Logger1 : Logger {
+                void log_format (Level _level, const CodePoint& _cp, std::string& _str, const IFormatter&) override {
+                    level = _level;
+                    cp    = _cp;
+                    str   = _str;
+                }
+            };
+            logger = new Logger1();
+        }
+
+        SECTION("simple") {
+            grep = true;
+            struct Logger2 : Logger {
+                void log (Level _level, const CodePoint& _cp, const std::string& _str) override {
+                    level = _level;
+                    cp    = _cp;
+                    str   = _str;
+                }
+            };
+            logger = new Logger2();
+        }
+
         set_logger(logger);
 
         panda_log_alert("hello"); chk_line = __LINE__;
@@ -86,7 +116,8 @@ TEST("set_logger") {
         str   = logger->str;
     }
 
-    REQUIRE(str == "hello");
+    if (grep) REQUIRE_THAT(str, Catch::Contains("hello"));
+    else      REQUIRE(str == "hello");
     REQUIRE(level == Alert);
     REQUIRE(cp.func == __func__);
     REQUIRE(cp.file.length() > 0);
@@ -116,8 +147,8 @@ TEST("logger's should_log") {
         }
     };
 
-    auto logger = std::make_shared<Logger>();
-    set_logger(logger);
+    auto logger = new Logger();
+    set_logger(ILoggerSP(logger));
     set_level(VerboseDebug);
 
     REQUIRE_FALSE(panda_should_log(Critical));

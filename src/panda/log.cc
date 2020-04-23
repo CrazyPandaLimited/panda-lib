@@ -9,8 +9,19 @@ panda::log::Module panda_log_module("", nullptr);
 
 namespace panda { namespace log {
 
+struct PatternFormatter : IFormatter {
+    string_view _fmt;
+    PatternFormatter (string_view fmt) : _fmt(fmt) {}
+    std::string format (Level, const CodePoint&, std::string&) const override;
+};
+
+string_view default_format = "[%L/%M] %f:%l:%F(): %m";
+
+ILogger::~ILogger () {}
+
 namespace details {
-    std::shared_ptr<ILogger> ilogger;
+    ILoggerSP    logger;
+    IFormatterSP formatter = new PatternFormatter(default_format);
 
     static thread_local struct { std::ostringstream os; } tls; // struct folding workarounds a bug in FreeBSD with TLS
     static thread_local std::ostringstream* os = &tls.os;      // stream for child threads, TLS via pointers works 3x faster in GCC
@@ -24,8 +35,11 @@ namespace details {
         stream.flush();
         std::string s(stream.str());
         stream.str({});
-        auto hold = ilogger;
-        if (hold) hold->log(level, cp, s);
+        auto hold_logger = logger;
+        if (hold_logger) {
+            auto hold_formatter = formatter;
+            hold_logger->log_format(level, cp, s, *formatter);
+        }
         return true;
     }
 }
@@ -41,15 +55,31 @@ void set_level (Level val, string_view module) {
     } else {
         panda_log_module.set_level(val);
     }
-
 }
 
-void set_logger (const std::shared_ptr<ILogger>& l) {
-    details::ilogger = l;
+void ILogger::log_format (Level level, const CodePoint& cp, std::string& s, const IFormatter& fmt) {
+    log(level, cp, fmt.format(level, cp, s));
+}
+
+void ILogger::log (Level, const CodePoint&, const std::string&) {
+    assert(0 && "either ILogger::log or ILogger::log_format must be implemented");
+}
+
+void set_logger (const ILoggerSP& l) {
+    details::logger = ILoggerSP(l);
 }
 
 void set_logger (std::nullptr_t) {
-    details::ilogger.reset();
+    details::logger = ILoggerSP();
+}
+
+void set_logger (const logger_format_fn& f) {
+    struct Logger : ILogger {
+        logger_format_fn f;
+        Logger (const logger_format_fn& f) : f(f) {}
+        void log_format (Level level, const CodePoint& cp, std::string& s, const IFormatter& fmt) override { f(level, cp, s, fmt); }
+    };
+    set_logger(new Logger(f));
 }
 
 void set_logger (const logger_fn& f) {
@@ -58,9 +88,27 @@ void set_logger (const logger_fn& f) {
         Logger (const logger_fn& f) : f(f) {}
         void log (Level level, const CodePoint& cp, const std::string& s) override { f(level, cp, s); }
     };
-
-    set_logger(std::make_shared<Logger>(f));
+    set_logger(new Logger(f));
 }
+
+void set_formatter (const IFormatterSP& f) {
+    assert(f);
+    details::formatter = IFormatterSP(f);
+}
+
+void set_formatter (const format_fn& f) {
+    struct Formatter : IFormatter {
+        format_fn f;
+        Formatter (const format_fn& f) : f(f) {}
+        std::string format (Level level, const CodePoint& cp, std::string& s) const override { return f(level, cp, s); }
+    };
+    set_formatter(new Formatter(f));
+}
+
+void set_format (string_view pattern) {
+    details::formatter = IFormatterSP(new PatternFormatter(pattern));
+}
+
 
 std::string CodePoint::to_string () const {
     std::ostringstream os;
@@ -111,6 +159,60 @@ void Module::set_level (Level level) {
     for (auto& p : children) {
         p.second->set_level(level);
     }
+}
+
+/*
+ * %L - level
+ * %M - module
+ * %F - function
+ * %f - file
+ * %l - line
+ * %m - message
+ */
+std::string PatternFormatter::format (Level level, const CodePoint& cp, std::string& msg) const {
+    std::string ret;
+    auto len = _fmt.length();
+    auto s   = _fmt.data();
+    auto se  = s + len;
+    ret.reserve((len > 25 ? len*2 : 50) + msg.length());
+
+    while (s < se) {
+        char c = *s++;
+        if (c != '%' || s == se) {
+            ret += c;
+            continue;
+        }
+        switch (*s++) {
+            case 'F': ret += cp.func.data();         break;
+            case 'f': ret += cp.file.data();         break;
+            case 'l': ret += to_string(cp.line);     break;
+            case 'm': ret += msg;                    break;
+            case 'M':
+                if (cp.module->name.length()) {
+                    ret += cp.module->name.data();
+                } else {
+                    if (s-3 >= _fmt.data() && *(s-3) == '/') ret.pop_back();
+                }
+                break;
+            case 'L':
+                switch (level) {
+                    case VerboseDebug : ret += "DEBUG";     break;
+                    case Debug        : ret += "debug";     break;
+                    case Info         : ret += "info";      break;
+                    case Notice       : ret += "notice";    break;
+                    case Warning      : ret += "warning";   break;
+                    case Error        : ret += "error";     break;
+                    case Critical     : ret += "critical";  break;
+                    case Alert        : ret += "alert";     break;
+                    case Emergency    : ret += "emergency"; break;
+                    default: break;
+                }
+                break;
+            default: ret += *(s-1); // keep symbol after percent
+        }
+    }
+
+    return ret;
 }
 
 }}

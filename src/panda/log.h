@@ -1,4 +1,5 @@
 #pragma once
+//#include <iosfwd>
 #include <string>
 #include <memory>
 #include <ostream>
@@ -16,7 +17,7 @@ namespace panda { namespace log {
 
 #define _panda_log_code_point_(module) panda::log::CodePoint{__FILENAME__, __LINE__, __func__, &module}
 
-#define panda_should_mlog(mod, lvl) (lvl >= mod.level && panda::log::details::ilogger && panda::log::details::ilogger->should_log(lvl, _panda_log_code_point_(mod)))
+#define panda_should_mlog(mod, lvl) (lvl >= mod.level && panda::log::details::logger && panda::log::details::logger->should_log(lvl, _panda_log_code_point_(mod)))
 #define panda_should_log(lvl)       panda_should_mlog(panda_log_module, lvl)
 #define panda_should_rlog(lvl)      panda_should_mlog(::panda_log_module, lvl)
 
@@ -88,6 +89,8 @@ namespace panda { namespace log {
 
 #define PANDA_ASSERT(var, msg) if(!(auto assert_value = var)) { panda_log_emergency("assert failed: " << #var << " is " << assert_value << msg) }
 
+extern string_view default_format;
+
 enum Level {
     VerboseDebug = 0,
     Debug,
@@ -129,25 +132,39 @@ struct CodePoint {
     std::string to_string () const;
 };
 
-struct ILogger {
-    virtual bool should_log (Level, const CodePoint&) { return true; }
-    virtual void log        (Level, const CodePoint&, const std::string&) = 0;
-
-    virtual ~ILogger () {}
+struct IFormatter : AtomicRefcnt {
+    virtual std::string format (Level, const CodePoint&, std::string&) const = 0;
+    virtual ~IFormatter () {}
 };
+using IFormatterSP = iptr<IFormatter>;
 
-using logger_fn = function<void(Level, const CodePoint&, const std::string&)>;
+struct ILogger : AtomicRefcnt {
+    virtual bool should_log (Level, const CodePoint&) { return true; }
+    virtual void log_format (Level, const CodePoint&, std::string&, const IFormatter&);
+    virtual void log        (Level, const CodePoint&, const std::string&);
+    virtual ~ILogger () = 0;
+};
+using ILoggerSP = iptr<ILogger>;
 
-void set_level  (Level, string_view module = "");
-void set_logger (const std::shared_ptr<ILogger>&);
-void set_logger (const logger_fn&);
-void set_logger (std::nullptr_t);
+using format_fn        = function<std::string(Level, const CodePoint&, std::string&)>;
+using logger_format_fn = function<void(Level, const CodePoint&, std::string&, const IFormatter&)>;
+using logger_fn        = function<void(Level, const CodePoint&, const std::string&)>;
+
+void set_level     (Level, string_view module = "");
+void set_logger    (const ILoggerSP&);
+void set_logger    (const logger_format_fn&);
+void set_logger    (const logger_fn&);
+void set_logger    (std::nullptr_t);
+void set_formatter (const IFormatterSP&);
+void set_formatter (const format_fn&);
+void set_format    (string_view pattern);
 
 struct escaped { string_view src; };
 
 namespace details {
-    extern Level                    min_level;
-    extern std::shared_ptr<ILogger> ilogger;
+    extern Level        min_level;
+    extern ILoggerSP    logger;
+    extern IFormatterSP formatter;
 
     std::ostream& get_os ();
     bool          do_log (std::ostream&, const CodePoint&, Level);

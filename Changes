@@ -1,6 +1,9 @@
 1.4.0    xx.xx.2020
             - logger: add root logging macros, add function to codepoint
-            - logger: misc improvements
+            - logger: add formatter feature
+            - logger: use formatter by default, pass to simple logger API compiled string
+            - logger: make logger/formatter usage and changing thread safe via iptr-on-atomic
+            - logger: add pattern formatter (used by default)
             - exceptions: add default to_string implementation
             - exceptions: BacktraceInfo has reasonable default implementation
             - exceptions: add Backtrace::dump_trace() default stack trace dumper
