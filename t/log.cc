@@ -6,16 +6,16 @@
 using namespace panda::log;
 
 struct Ctx {
-    int         cnt = 0;
-    Level       level;
-    CodePoint   cp;
-    std::string str;
+    int       cnt = 0;
+    Level     level;
+    CodePoint cp;
+    string    str;
 
     Ctx () {
         set_logger([this](Level _level, const CodePoint& _cp, std::string& _str, const IFormatter&) {
             level = _level;
             cp    = _cp;
-            str   = _str;
+            str   = string(_str.data(), _str.length());
             ++cnt;
         });
         set_level(Warning);
@@ -77,9 +77,9 @@ TEST("set_logger") {
 
     SECTION("object") {
         struct Logger : ILogger {
-            Level       level;
-            CodePoint   cp;
-            std::string str;
+            Level     level;
+            CodePoint cp;
+            string    str;
         };
         Logger* logger;
 
@@ -89,7 +89,7 @@ TEST("set_logger") {
                 void log_format (Level _level, const CodePoint& _cp, std::string& _str, const IFormatter&) override {
                     level = _level;
                     cp    = _cp;
-                    str   = _str;
+                    str   = string(_str.data(), _str.length());
                 }
             };
             logger = new Logger1();
@@ -98,7 +98,7 @@ TEST("set_logger") {
         SECTION("simple") {
             grep = true;
             struct Logger2 : Logger {
-                void log (Level _level, const CodePoint& _cp, const std::string& _str) override {
+                void log (Level _level, const CodePoint& _cp, const string& _str) override {
                     level = _level;
                     cp    = _cp;
                     str   = _str;
@@ -140,7 +140,7 @@ TEST("logger's should_log") {
     struct Logger : ILogger {
         int cnt = 0;
         int shl_cnt = 0;
-        void log (Level, const CodePoint&, const std::string&) override { ++cnt; }
+        void log (Level, const CodePoint&, const string&) override { ++cnt; }
         bool should_log (Level l, const CodePoint&) override {
             ++shl_cnt;
             return l >= Alert;

@@ -12,7 +12,7 @@ namespace panda { namespace log {
 struct PatternFormatter : IFormatter {
     string_view _fmt;
     PatternFormatter (string_view fmt) : _fmt(fmt) {}
-    std::string format (Level, const CodePoint&, std::string&) const override;
+    string format (Level, const CodePoint&, std::string&) const override;
 };
 
 string_view default_format = "[%L/%M] %f:%l:%F(): %m";
@@ -61,7 +61,7 @@ void ILogger::log_format (Level level, const CodePoint& cp, std::string& s, cons
     log(level, cp, fmt.format(level, cp, s));
 }
 
-void ILogger::log (Level, const CodePoint&, const std::string&) {
+void ILogger::log (Level, const CodePoint&, const string&) {
     assert(0 && "either ILogger::log or ILogger::log_format must be implemented");
 }
 
@@ -86,7 +86,7 @@ void set_logger (const logger_fn& f) {
     struct Logger : ILogger {
         logger_fn f;
         Logger (const logger_fn& f) : f(f) {}
-        void log (Level level, const CodePoint& cp, const std::string& s) override { f(level, cp, s); }
+        void log (Level level, const CodePoint& cp, const string& s) override { f(level, cp, s); }
     };
     set_logger(new Logger(f));
 }
@@ -100,7 +100,7 @@ void set_formatter (const format_fn& f) {
     struct Formatter : IFormatter {
         format_fn f;
         Formatter (const format_fn& f) : f(f) {}
-        std::string format (Level level, const CodePoint& cp, std::string& s) const override { return f(level, cp, s); }
+        string format (Level level, const CodePoint& cp, std::string& s) const override { return f(level, cp, s); }
     };
     set_formatter(new Formatter(f));
 }
@@ -169,12 +169,11 @@ void Module::set_level (Level level) {
  * %l - line
  * %m - message
  */
-std::string PatternFormatter::format (Level level, const CodePoint& cp, std::string& msg) const {
-    std::string ret;
+string PatternFormatter::format (Level level, const CodePoint& cp, std::string& msg) const {
     auto len = _fmt.length();
     auto s   = _fmt.data();
     auto se  = s + len;
-    ret.reserve((len > 25 ? len*2 : 50) + msg.length());
+    string ret((len > 25 ? len*2 : 50) + msg.length());
 
     while (s < se) {
         char c = *s++;
@@ -183,13 +182,13 @@ std::string PatternFormatter::format (Level level, const CodePoint& cp, std::str
             continue;
         }
         switch (*s++) {
-            case 'F': ret += cp.func.data();         break;
-            case 'f': ret += cp.file.data();         break;
-            case 'l': ret += to_string(cp.line);     break;
-            case 'm': ret += msg;                    break;
+            case 'F': ret += cp.func;                               break;
+            case 'f': ret += cp.file;                               break;
+            case 'l': ret += panda::to_string(cp.line);             break;
+            case 'm': ret += string_view(msg.data(), msg.length()); break;
             case 'M':
                 if (cp.module->name.length()) {
-                    ret += cp.module->name.data();
+                    ret += cp.module->name;
                 } else {
                     if (s-3 >= _fmt.data() && *(s-3) == '/') ret.pop_back();
                 }

@@ -133,7 +133,7 @@ struct CodePoint {
 };
 
 struct IFormatter : AtomicRefcnt {
-    virtual std::string format (Level, const CodePoint&, std::string&) const = 0;
+    virtual string format (Level, const CodePoint&, std::string&) const = 0;
     virtual ~IFormatter () {}
 };
 using IFormatterSP = iptr<IFormatter>;
@@ -141,14 +141,14 @@ using IFormatterSP = iptr<IFormatter>;
 struct ILogger : AtomicRefcnt {
     virtual bool should_log (Level, const CodePoint&) { return true; }
     virtual void log_format (Level, const CodePoint&, std::string&, const IFormatter&);
-    virtual void log        (Level, const CodePoint&, const std::string&);
+    virtual void log        (Level, const CodePoint&, const string&);
     virtual ~ILogger () = 0;
 };
 using ILoggerSP = iptr<ILogger>;
 
-using format_fn        = function<std::string(Level, const CodePoint&, std::string&)>;
+using format_fn        = function<string(Level, const CodePoint&, std::string&)>;
 using logger_format_fn = function<void(Level, const CodePoint&, std::string&, const IFormatter&)>;
-using logger_fn        = function<void(Level, const CodePoint&, const std::string&)>;
+using logger_fn        = function<void(Level, const CodePoint&, const string&)>;
 
 void set_level     (Level, string_view module = "");
 void set_logger    (const ILoggerSP&);
