@@ -161,37 +161,6 @@ TEST("should_log") {
     REQUIRE(panda_should_log(Critical));
 }
 
-TEST("logger's should_log") {
-    Ctx c;
-    struct Logger : ILogger {
-        int cnt = 0;
-        int shl_cnt = 0;
-        void log (Level, const CodePoint&, const string&) override { ++cnt; }
-        bool should_log (Level l, const CodePoint&) override {
-            ++shl_cnt;
-            return l >= Alert;
-        }
-    };
-
-    auto logger = new Logger();
-    set_logger(ILoggerSP(logger));
-    set_level(VerboseDebug);
-
-    REQUIRE_FALSE(panda_should_log(Critical));
-    REQUIRE(logger->shl_cnt == 1);
-
-    REQUIRE(panda_should_log(Alert));
-    REQUIRE(logger->shl_cnt == 2);
-
-    panda_log_critical("");
-    REQUIRE(logger->cnt == 0);
-    REQUIRE(logger->shl_cnt == 3);
-
-    panda_log_emergency("");
-    REQUIRE(logger->cnt == 1);
-    REQUIRE(logger->shl_cnt == 4);
-}
-
 TEST("streaming params") {
     Ctx c;
     panda_log_warning("1" << "2" << "3");

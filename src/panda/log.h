@@ -17,7 +17,7 @@ namespace panda { namespace log {
 
 #define _panda_log_code_point_(module) panda::log::CodePoint{__FILENAME__, __LINE__, __func__, &module}
 
-#define panda_should_mlog(mod, lvl) (lvl >= mod.level && panda::log::details::logger && panda::log::details::logger->should_log(lvl, _panda_log_code_point_(mod)))
+#define panda_should_mlog(mod, lvl) (lvl >= mod.level && panda::log::details::logger)
 #define panda_should_log(lvl)       panda_should_mlog(panda_log_module, lvl)
 #define panda_should_rlog(lvl)      panda_should_mlog(::panda_log_module, lvl)
 
@@ -139,7 +139,6 @@ struct IFormatter : AtomicRefcnt {
 using IFormatterSP = iptr<IFormatter>;
 
 struct ILogger : AtomicRefcnt {
-    virtual bool should_log (Level, const CodePoint&) { return true; }
     virtual void log_format (Level, const CodePoint&, std::string&, const IFormatter&);
     virtual void log        (Level, const CodePoint&, const string&);
     virtual ~ILogger () = 0;

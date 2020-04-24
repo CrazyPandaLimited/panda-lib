@@ -4,6 +4,7 @@
 #include <thread>
 #include <iomanip>
 #include <sstream>
+#include <mutex>
 
 panda::log::Module panda_log_module("", nullptr);
 
@@ -28,6 +29,8 @@ namespace details {
     static std::ostringstream mt_os;                           // stream for main thread, can't use TLS because it's destroyed much earlier
     static auto mt_id = std::this_thread::get_id();
 
+    static std::mutex mtx;
+
     std::ostream& get_os () { return std::this_thread::get_id() == mt_id ? mt_os : *os; }
 
     bool do_log (std::ostream& _stream, const CodePoint& cp, Level level) {
@@ -35,10 +38,11 @@ namespace details {
         stream.flush();
         std::string s(stream.str());
         stream.str({});
-        auto hold_logger = logger;
-        if (hold_logger) {
-            auto hold_formatter = formatter;
-            hold_logger->log_format(level, cp, s, *formatter);
+        //std::lock_guard<std::mutex> guard(mtx);
+        //auto hold_logger = logger;
+        if (logger) {
+            //auto hold_formatter = formatter;
+            logger->log_format(level, cp, s, *formatter);
         }
         return true;
     }
@@ -66,10 +70,12 @@ void ILogger::log (Level, const CodePoint&, const string&) {
 }
 
 void set_logger (const ILoggerSP& l) {
+    std::lock_guard<std::mutex> guard(details::mtx);
     details::logger = ILoggerSP(l);
 }
 
 void set_logger (std::nullptr_t) {
+    std::lock_guard<std::mutex> guard(details::mtx);
     details::logger = ILoggerSP();
 }
 
