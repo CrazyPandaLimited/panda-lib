@@ -22,27 +22,43 @@ ILogger::~ILogger () {}
 
 namespace details {
     ILoggerSP    logger;
-    IFormatterSP formatter = new PatternFormatter(default_format);
+    IFormatterSP formatter = IFormatterSP(new PatternFormatter(default_format));
 
-    static thread_local struct { std::ostringstream os; } tls; // struct folding workarounds a bug in FreeBSD with TLS
-    static thread_local std::ostringstream* os = &tls.os;      // stream for child threads, TLS via pointers works 3x faster in GCC
-    static std::ostringstream mt_os;                           // stream for main thread, can't use TLS because it's destroyed much earlier
+    struct Data {
+        ILoggerSP          logger;
+        IFormatterSP       formatter;
+        std::ostringstream os;
+    };
+
+    static Data mt_data; // data for main thread, can't use TLS because it's destroyed much earlier
     static auto mt_id = std::this_thread::get_id();
+
+    static thread_local Data  _ct_data;            // data for child threads
+    static thread_local auto* ct_data = &_ct_data; // TLS via pointers works 3x faster in GCC
 
     static std::mutex mtx;
 
-    std::ostream& get_os () { return std::this_thread::get_id() == mt_id ? mt_os : *os; }
+    std::ostream& get_os () { return std::this_thread::get_id() == mt_id ? mt_data.os : ct_data->os; }
 
     bool do_log (std::ostream& _stream, const CodePoint& cp, Level level) {
         std::ostringstream& stream = static_cast<std::ostringstream&>(_stream);
         stream.flush();
         std::string s(stream.str());
         stream.str({});
-        //std::lock_guard<std::mutex> guard(mtx);
-        //auto hold_logger = logger;
-        if (logger) {
-            //auto hold_formatter = formatter;
-            logger->log_format(level, cp, s, *formatter);
+
+        auto& data = std::this_thread::get_id() == mt_id ? mt_data : *ct_data;
+
+        if (data.logger != logger) {
+            std::lock_guard<std::mutex> guard(mtx);
+            data.logger = logger;
+        }
+        if (data.formatter != formatter) {
+            std::lock_guard<std::mutex> guard(mtx);
+            data.formatter = formatter;
+        }
+
+        if (data.logger) {
+            data.logger->log_format(level, cp, s, *(data.formatter));
         }
         return true;
     }
@@ -71,12 +87,12 @@ void ILogger::log (Level, const CodePoint&, const string&) {
 
 void set_logger (const ILoggerSP& l) {
     std::lock_guard<std::mutex> guard(details::mtx);
-    details::logger = ILoggerSP(l);
+    details::logger = l;
 }
 
 void set_logger (std::nullptr_t) {
     std::lock_guard<std::mutex> guard(details::mtx);
-    details::logger = ILoggerSP();
+    details::logger.reset();
 }
 
 void set_logger (const logger_format_fn& f) {
@@ -99,7 +115,8 @@ void set_logger (const logger_fn& f) {
 
 void set_formatter (const IFormatterSP& f) {
     assert(f);
-    details::formatter = IFormatterSP(f);
+    std::lock_guard<std::mutex> guard(details::mtx);
+    details::formatter = f;
 }
 
 void set_formatter (const format_fn& f) {
@@ -112,9 +129,8 @@ void set_formatter (const format_fn& f) {
 }
 
 void set_format (string_view pattern) {
-    details::formatter = IFormatterSP(new PatternFormatter(pattern));
+    set_formatter(new PatternFormatter(pattern));
 }
-
 
 std::string CodePoint::to_string () const {
     std::ostringstream os;
