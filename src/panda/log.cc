@@ -38,7 +38,9 @@ namespace details {
 
     static std::mutex mtx;
 
-    std::ostream& get_os () { return std::this_thread::get_id() == mt_id ? mt_data.os : ct_data->os; }
+    static Data& get_data () { return std::this_thread::get_id() == mt_id ? mt_data : *ct_data; }
+
+    std::ostream& get_os () { return get_data().os; }
 
     bool do_log (std::ostream& _stream, const CodePoint& cp, Level level) {
         std::ostringstream& stream = static_cast<std::ostringstream&>(_stream);
@@ -46,7 +48,7 @@ namespace details {
         std::string s(stream.str());
         stream.str({});
 
-        auto& data = std::this_thread::get_id() == mt_id ? mt_data : *ct_data;
+        auto& data = get_data();
 
         if (data.logger != logger) {
             std::lock_guard<std::mutex> guard(mtx);
@@ -87,12 +89,13 @@ void ILogger::log (Level, const CodePoint&, const string&) {
 
 void set_logger (const ILoggerSP& l) {
     std::lock_guard<std::mutex> guard(details::mtx);
-    details::logger = l;
+    details::logger = details::get_data().logger = l;
 }
 
 void set_logger (std::nullptr_t) {
     std::lock_guard<std::mutex> guard(details::mtx);
     details::logger.reset();
+    details::get_data().logger.reset();
 }
 
 void set_logger (const logger_format_fn& f) {
@@ -114,9 +117,9 @@ void set_logger (const logger_fn& f) {
 }
 
 void set_formatter (const IFormatterSP& f) {
-    assert(f);
+    if (!f) return set_format(default_format);
     std::lock_guard<std::mutex> guard(details::mtx);
-    details::formatter = f;
+    details::formatter = details::get_data().formatter = f;
 }
 
 void set_formatter (const format_fn& f) {

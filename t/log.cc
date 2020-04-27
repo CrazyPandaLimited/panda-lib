@@ -125,6 +125,30 @@ TEST("set_logger") {
     REQUIRE(cp.module == &::panda_log_module);
 }
 
+TEST("destroy old logger") {
+    struct Logger : ILogger {
+        int* dtor;
+        void log (Level, const CodePoint&, const string&) override {}
+        ~Logger () { (*dtor)++; }
+    };
+
+    int dtor = 0;
+    auto logger = new Logger();
+    logger->dtor = &dtor;
+
+    set_logger(logger);
+    panda_log_error("");
+    REQUIRE(dtor == 0);
+
+    auto logger2 = new Logger();
+    logger2->dtor = &dtor;
+    set_logger(logger2);
+    REQUIRE(dtor == 1);
+
+    set_logger(nullptr);
+    REQUIRE(dtor == 2);
+}
+
 TEST("set_formatter") {
     Ctx c;
     string str;
