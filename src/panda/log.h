@@ -2,10 +2,11 @@
 //#include <iosfwd>
 #include <string>
 #include <memory>
+#include <vector>
 #include <ostream>
 #include <string.h>
+#include "string.h"
 #include "function.h"
-#include "string_map.h"
 
 namespace panda { namespace log {
 
@@ -104,7 +105,7 @@ enum Level {
 };
 
 struct Module {
-    using Modules = string_map<string, Module*>;
+    using Modules = std::vector<Module*>;
 
     Module* parent;
     Level   level;
@@ -121,6 +122,8 @@ struct Module {
     Module& operator= (const Module&) = delete;
 
     void set_level (Level);
+
+    virtual ~Module ();
 };
 
 struct CodePoint {
@@ -161,9 +164,7 @@ void set_format    (string_view pattern);
 struct escaped { string_view src; };
 
 namespace details {
-    extern Level        min_level;
-    extern ILoggerSP    logger;
-    extern IFormatterSP formatter;
+    extern ILoggerSP logger;
 
     std::ostream& get_os ();
     bool          do_log (std::ostream&, const CodePoint&, Level);

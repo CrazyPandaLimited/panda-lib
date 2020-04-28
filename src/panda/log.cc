@@ -4,7 +4,10 @@
 #include <thread>
 #include <iomanip>
 #include <sstream>
+#include <algorithm>
 #include <mutex>
+#include "exception.h"
+#include "unordered_string_map.h"
 
 panda::log::Module panda_log_module("", nullptr);
 
@@ -21,8 +24,7 @@ string_view default_format = "[%L/%M] %f:%l:%F(): %m";
 ILogger::~ILogger () {}
 
 namespace details {
-    ILoggerSP    logger;
-    IFormatterSP formatter = IFormatterSP(new PatternFormatter(default_format));
+    using Modules = unordered_string_multimap<string, Module*>;
 
     struct Data {
         ILoggerSP          logger;
@@ -30,13 +32,19 @@ namespace details {
         std::ostringstream os;
     };
 
-    static Data mt_data; // data for main thread, can't use TLS because it's destroyed much earlier
-    static auto mt_id = std::this_thread::get_id();
+    ILoggerSP logger;
+
+    static std::recursive_mutex mtx;
+    #define LOG_LOCK std::lock_guard<decltype(mtx)> guard(mtx);
+    #define MOD_LOCK std::lock_guard<decltype(mtx)> guard(mtx);
+
+    static IFormatterSP formatter = IFormatterSP(new PatternFormatter(default_format));
+    static Modules      modules;
+    static auto         mt_id = std::this_thread::get_id();
+    static Data         mt_data; // data for main thread, can't use TLS because it's destroyed much earlier
 
     static thread_local Data  _ct_data;            // data for child threads
     static thread_local auto* ct_data = &_ct_data; // TLS via pointers works 3x faster in GCC
-
-    static std::mutex mtx;
 
     static Data& get_data () { return std::this_thread::get_id() == mt_id ? mt_data : *ct_data; }
 
@@ -51,11 +59,11 @@ namespace details {
         auto& data = get_data();
 
         if (data.logger != logger) {
-            std::lock_guard<std::mutex> guard(mtx);
+            LOG_LOCK;
             data.logger = logger;
         }
         if (data.formatter != formatter) {
-            std::lock_guard<std::mutex> guard(mtx);
+            LOG_LOCK;
             data.formatter = formatter;
         }
 
@@ -65,19 +73,7 @@ namespace details {
         return true;
     }
 }
-
-void set_level (Level val, string_view module) {
-    if (module.length()) {
-        auto& modules = ::panda_log_module.children;
-        auto iter = modules.find(module);
-        if (iter == modules.end()) {
-            throw std::invalid_argument("unknown module");
-        }
-        iter->second->set_level(val);
-    } else {
-        panda_log_module.set_level(val);
-    }
-}
+using namespace details;
 
 void ILogger::log_format (Level level, const CodePoint& cp, std::string& s, const IFormatter& fmt) {
     log(level, cp, fmt.format(level, cp, s));
@@ -88,14 +84,14 @@ void ILogger::log (Level, const CodePoint&, const string&) {
 }
 
 void set_logger (const ILoggerSP& l) {
-    std::lock_guard<std::mutex> guard(details::mtx);
-    details::logger = details::get_data().logger = l;
+    LOG_LOCK;
+    logger = get_data().logger = l;
 }
 
 void set_logger (std::nullptr_t) {
-    std::lock_guard<std::mutex> guard(details::mtx);
-    details::logger.reset();
-    details::get_data().logger.reset();
+    LOG_LOCK;
+    logger.reset();
+    get_data().logger.reset();
 }
 
 void set_logger (const logger_format_fn& f) {
@@ -118,8 +114,8 @@ void set_logger (const logger_fn& f) {
 
 void set_formatter (const IFormatterSP& f) {
     if (!f) return set_format(default_format);
-    std::lock_guard<std::mutex> guard(details::mtx);
-    details::formatter = details::get_data().formatter = f;
+    LOG_LOCK;
+    formatter = get_data().formatter = f;
 }
 
 void set_formatter (const format_fn& f) {
@@ -133,6 +129,60 @@ void set_formatter (const format_fn& f) {
 
 void set_format (string_view pattern) {
     set_formatter(new PatternFormatter(pattern));
+}
+
+Module::Module (const string& name, Level level) : Module(name, panda_log_module, level) {}
+
+Module::Module (const string& name, Module* parent, Level level) : parent(parent), level(level), name(name) {
+    MOD_LOCK;
+
+    if (parent) {
+        parent->children.push_back(this);
+        if (parent->name) this->name = parent->name + "::" + name;
+    }
+
+    if (this->name) modules.emplace(this->name, this);
+}
+
+void Module::set_level (Level level) {
+    MOD_LOCK;
+    this->level = level;
+    for (auto& m : children) m->set_level(level);
+}
+
+Module::~Module () {
+    MOD_LOCK;
+    for (auto& m : children) m->parent = nullptr;
+    if (parent) {
+        auto it = std::find(parent->children.begin(), parent->children.end(), this);
+        assert(it != parent->children.end());
+        parent->children.erase(it);
+    }
+
+    if (name) {
+        auto range = modules.equal_range(name);
+        while (range.first != range.second) {
+            if (range.first->second != this) {
+                ++range.first;
+                continue;
+            }
+            modules.erase(range.first);
+            break;
+        }
+    }
+}
+
+void set_level (Level val, string_view modname) {
+    MOD_LOCK;
+    if (!modname.length()) return ::panda_log_module.set_level(val);
+
+    auto range = modules.equal_range(modname);
+    if (range.first == range.second) throw exception(string("unknown module: ") + modname);
+
+    while (range.first != range.second) {
+        range.first->second->set_level(val);
+        ++range.first;
+    }
 }
 
 std::string CodePoint::to_string () const {
@@ -163,27 +213,6 @@ std::ostream& operator<< (std::ostream& stream, const escaped& str) {
        }
    }
    return stream;
-}
-
-Module::Module (const string& name, Level level) : Module(name, panda_log_module, level) {}
-
-Module::Module (const string& name, Module* parent, Level level) : level(level), name(name) {
-    if (!parent) return;
-
-    this->parent = parent;
-
-    if (parent->children.find(name) != parent->children.end()) {
-        string msg = "panda::log::Module " + name + "is already registered";
-        throw std::logic_error(msg.c_str());
-    }
-    parent->children[name] = this;
-}
-
-void Module::set_level (Level level) {
-    this->level = level;
-    for (auto& p : children) {
-        p.second->set_level(level);
-    }
 }
 
 /*

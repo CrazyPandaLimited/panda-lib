@@ -208,9 +208,33 @@ TEST("code-eval logging") {
     REQUIRE(val);
 }
 
+TEST("modules") {
+    SECTION("single") {
+        auto mod = new Module("mymod");
+        CHECK(mod->name == "mymod");
+        set_level(Debug, "mymod");
+        delete mod;
+        CHECK_THROWS(set_level(Debug, "mymod"));
+    }
+    SECTION("with submodule") {
+        auto mod = new Module("mymod");
+        Module smod("sub", mod);
+        CHECK(mod->name == "mymod");
+        CHECK(smod.name == "mymod::sub");
+        CHECK(mod->children.size() == 1);
+
+        delete mod;
+        CHECK(smod.parent == nullptr); // became a root module
+        CHECK(smod.name == "mymod::sub"); // name didn't change
+        CHECK_THROWS(set_level(Debug, "mymod"));
+        set_level(Debug, "mymod::sub"); // submodule still can be used
+    }
+}
+
 TEST("logging to module") {
     Ctx c;
     static Module mod("mymod1");
+    CHECK(mod.name == "mymod1");
     mod.level = Debug;
 
     panda_log_verbose_debug("hi");
@@ -271,6 +295,10 @@ TEST("set level for module") {
         CHECK(panda_log_module.level == Warning);
         CHECK(mod.level == Error);
         CHECK(submod.level == Error);
+        set_level(Critical, "mymod2::submod2");
+        CHECK(panda_log_module.level == Warning);
+        CHECK(mod.level == Error);
+        CHECK(submod.level == Critical);
     }
 }
 
