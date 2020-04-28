@@ -10,6 +10,7 @@ using namespace panda;
 
 namespace test {
 
+
     struct Tracer {
         static int copy_calls;
         static int ctor_calls;
@@ -114,6 +115,8 @@ namespace test {
             allocs.ext_shbuf_deallocated++;
         }
     };
+
+    const char* external_fn();
 }
 
 using namespace test;
