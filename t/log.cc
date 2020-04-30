@@ -239,19 +239,19 @@ TEST("logging to module") {
 
     panda_log_verbose_debug("hi");
     CHECK(c.cnt == 0);
-    panda_mlog_verbose_debug(mod, "hi");
+    panda_log_verbose_debug(mod, "hi");
     CHECK(c.cnt == 0);
 
     panda_log_debug("hi");
     CHECK(c.cnt == 0);
-    panda_mlog_debug(mod, "hi");
+    panda_log_debug(mod, "hi");
     c.check_called();
     CHECK(c.cp.module == &mod);
 
     panda_log_warning("hi");
     c.check_called();
     CHECK(c.cp.module == &panda_log_module);
-    panda_mlog_warning(mod, "hi");
+    panda_log_warning(mod, "hi");
     c.check_called();
     CHECK(c.cp.module == &mod);
 
@@ -259,7 +259,7 @@ TEST("logging to module") {
 
     panda_log_debug("hi");
     CHECK(c.cnt == 0);
-    panda_mlog_debug(mod, "hi");
+    panda_log_debug(mod, "hi");
     CHECK(c.cnt == 0);
 }
 
@@ -340,6 +340,8 @@ TEST("logging by scopes") {
         CHECK(c.cp.module->name == "scope2");
     }
 }
+
+//TEST("")
 
 TEST("panda_rlog_*") {
     Ctx c;

@@ -1,12 +1,13 @@
 #pragma once
+#include "pp.h"
+#include "string.h"
+#include "function.h"
 //#include <iosfwd>
 #include <string>
 #include <memory>
 #include <vector>
 #include <ostream>
 #include <string.h>
-#include "string.h"
-#include "function.h"
 
 namespace panda { namespace log {
 
@@ -16,71 +17,65 @@ namespace panda { namespace log {
 #  define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
 
-#define _panda_log_code_point_(module) panda::log::CodePoint{__FILENAME__, __LINE__, __func__, &module}
+#define PANDA_LOG_CODE_POINT(module) panda::log::CodePoint{__FILENAME__, __LINE__, __func__, &module}
 
-#define panda_should_mlog(mod, lvl) (lvl >= mod.level && panda::log::details::logger)
-#define panda_should_log(lvl)       panda_should_mlog(panda_log_module, lvl)
-#define panda_should_rlog(lvl)      panda_should_mlog(::panda_log_module, lvl)
+#define panda_should_log(...)       PANDA_PP_VFUNC(panda_should_log, __VA_ARGS__)
+#define panda_should_log1(lvl)      panda_should_log2(lvl, panda_log_module)
+#define panda_should_log2(lvl, mod) (lvl >= mod.level && panda::log::details::logger)
+#define panda_should_rlog(lvl)      panda_should_log(lvl, ::panda_log_module)
 
-#define panda_emlog(mod, lvl, code) do {                                    \
-    if (panda_should_mlog(mod, lvl)) {                                      \
+#define panda_elog(...)             PANDA_PP_VFUNC(panda_elog, __VA_ARGS__)
+#define panda_elog2(lvl, code)      panda_elog3(lvl, panda_log_module, code)
+#define panda_elog3(lvl, mod, code) do {                                    \
+    if (panda_should_log2(lvl, mod)) {                                      \
         std::ostream& log = panda::log::details::get_os();                  \
         code;                                                               \
-        panda::log::details::do_log(log, _panda_log_code_point_(mod), lvl); \
+        panda::log::details::do_log(log, PANDA_LOG_CODE_POINT(mod), lvl);   \
     }                                                                       \
 } while (0)
 
-#define panda_mlog(module, level, msg)  panda_emlog(module, level, { log << msg; })
-#define panda_elog(level, code)         panda_emlog(panda_log_module, level, code)
-#define panda_log(level, msg)           panda_mlog(panda_log_module, level, msg)
-#define panda_rlog(level, msg)          panda_mlog(::panda_log_module, level, msg)
+#define panda_log(...)                 PANDA_PP_VFUNC(panda_log, __VA_ARGS__)
+#define panda_log1(level)              panda_log2(level, "")
+#define panda_log2(level, msg)         panda_log3(level, panda_log_module, msg)
+#define panda_log3(level, module, msg) panda_elog3(level, module, { log << msg; })
 
-#define panda_log_verbose_debug(msg)    panda_log(panda::log::VerboseDebug, msg)
-#define panda_log_debug(msg)            panda_log(panda::log::Debug, msg)
-#define panda_log_info(msg)             panda_log(panda::log::Info, msg)
-#define panda_log_notice(msg)           panda_log(panda::log::Notice, msg)
-#define panda_log_warn(msg)             panda_log(panda::log::Warning, msg)
-#define panda_log_warning(msg)          panda_log(panda::log::Warning, msg)
-#define panda_log_error(msg)            panda_log(panda::log::Error, msg)
-#define panda_log_critical(msg)         panda_log(panda::log::Critical, msg)
-#define panda_log_alert(msg)            panda_log(panda::log::Alert, msg)
-#define panda_log_emergency(msg)        panda_log(panda::log::Emergency, msg)
+#define panda_rlog(level, msg)          panda_log(level, ::panda_log_module, msg)
 
-#define panda_elog_verbose_debug(code)  panda_elog(panda::log::VerboseDebug, code)
-#define panda_elog_debug(code)          panda_elog(panda::log::Debug, code)
-#define panda_elog_info(code)           panda_elog(panda::log::Info, code)
-#define panda_elog_notice(code)         panda_elog(panda::log::Notice, code)
-#define panda_elog_warn(code)           panda_elog(panda::log::Warning, code)
-#define panda_elog_warning(code)        panda_elog(panda::log::Warning, code)
-#define panda_elog_error(code)          panda_elog(panda::log::Error, code)
-#define panda_elog_critical(code)       panda_elog(panda::log::Critical, code)
-#define panda_elog_alert(code)          panda_elog(panda::log::Alert, code)
-#define panda_elog_emergency(code)      panda_elog(panda::log::Emergency, code)
+#define panda_log_verbose_debug(...)    panda_log(panda::log::VerboseDebug, __VA_ARGS__)
+#define panda_log_debug(...)            panda_log(panda::log::Debug,        __VA_ARGS__)
+#define panda_log_info(...)             panda_log(panda::log::Info,         __VA_ARGS__)
+#define panda_log_notice(...)           panda_log(panda::log::Notice,       __VA_ARGS__)
+#define panda_log_warn(...)             panda_log(panda::log::Warning,      __VA_ARGS__)
+#define panda_log_warning(...)          panda_log(panda::log::Warning,      __VA_ARGS__)
+#define panda_log_error(...)            panda_log(panda::log::Error,        __VA_ARGS__)
+#define panda_log_critical(...)         panda_log(panda::log::Critical,     __VA_ARGS__)
+#define panda_log_alert(...)            panda_log(panda::log::Alert,        __VA_ARGS__)
+#define panda_log_emergency(...)        panda_log(panda::log::Emergency,    __VA_ARGS__)
 
-#define panda_mlog_verbose_debug(module, msg)   panda_mlog(module, panda::log::VerboseDebug, msg)
-#define panda_mlog_debug(module, msg)           panda_mlog(module, panda::log::Debug, msg)
-#define panda_mlog_info(module, msg)            panda_mlog(module, panda::log::Info, msg)
-#define panda_mlog_notice(module, msg)          panda_mlog(module, panda::log::Notice, msg)
-#define panda_mlog_warn(module, msg)            panda_mlog(module, panda::log::Warning, msg)
-#define panda_mlog_warning(module, msg)         panda_mlog(module, panda::log::Warning, msg)
-#define panda_mlog_error(module, msg)           panda_mlog(module, panda::log::Error, msg)
-#define panda_mlog_critical(module, msg)        panda_mlog(module, panda::log::Critical, msg)
-#define panda_mlog_alert(module, msg)           panda_mlog(module, panda::log::Alert, msg)
-#define panda_mlog_emergency(module, msg)       panda_mlog(module, panda::log::Emergency, msg)
+#define panda_elog_verbose_debug(...)  panda_elog(panda::log::VerboseDebug, __VA_ARGS__)
+#define panda_elog_debug(...)          panda_elog(panda::log::Debug, __VA_ARGS__)
+#define panda_elog_info(...)           panda_elog(panda::log::Info, __VA_ARGS__)
+#define panda_elog_notice(...)         panda_elog(panda::log::Notice, __VA_ARGS__)
+#define panda_elog_warn(...)           panda_elog(panda::log::Warning, __VA_ARGS__)
+#define panda_elog_warning(...)        panda_elog(panda::log::Warning, __VA_ARGS__)
+#define panda_elog_error(...)          panda_elog(panda::log::Error, __VA_ARGS__)
+#define panda_elog_critical(...)       panda_elog(panda::log::Critical, __VA_ARGS__)
+#define panda_elog_alert(...)          panda_elog(panda::log::Alert, __VA_ARGS__)
+#define panda_elog_emergency(...)      panda_elog(panda::log::Emergency, __VA_ARGS__)
 
-#define panda_rlog_verbose_debug(msg)   panda_mlog(::panda_log_module, panda::log::VerboseDebug, msg)
-#define panda_rlog_debug(msg)           panda_mlog(::panda_log_module, panda::log::Debug, msg)
-#define panda_rlog_info(msg)            panda_mlog(::panda_log_module, panda::log::Info, msg)
-#define panda_rlog_notice(msg)          panda_mlog(::panda_log_module, panda::log::Notice, msg)
-#define panda_rlog_warn(msg)            panda_mlog(::panda_log_module, panda::log::Warning, msg)
-#define panda_rlog_warning(msg)         panda_mlog(::panda_log_module, panda::log::Warning, msg)
-#define panda_rlog_error(msg)           panda_mlog(::panda_log_module, panda::log::Error, msg)
-#define panda_rlog_critical(msg)        panda_mlog(::panda_log_module, panda::log::Critical, msg)
-#define panda_rlog_alert(msg)           panda_mlog(::panda_log_module, panda::log::Alert, msg)
-#define panda_rlog_emergency(msg)       panda_mlog(::panda_log_module, panda::log::Emergency, msg)
+#define panda_rlog_verbose_debug(msg)   panda_rlog(panda::log::VerboseDebug, msg)
+#define panda_rlog_debug(msg)           panda_rlog(panda::log::Debug, msg)
+#define panda_rlog_info(msg)            panda_rlog(panda::log::Info, msg)
+#define panda_rlog_notice(msg)          panda_rlog(panda::log::Notice, msg)
+#define panda_rlog_warn(msg)            panda_rlog(panda::log::Warning, msg)
+#define panda_rlog_warning(msg)         panda_rlog(panda::log::Warning, msg)
+#define panda_rlog_error(msg)           panda_rlog(panda::log::Error, msg)
+#define panda_rlog_critical(msg)        panda_rlog(panda::log::Critical, msg)
+#define panda_rlog_alert(msg)           panda_rlog(panda::log::Alert, msg)
+#define panda_rlog_emergency(msg)       panda_rlog(panda::log::Emergency, msg)
 
-#define panda_mlog_ctor(mod)    panda_mlog_verbose_debug(mod, __func__ << " [ctor]")
-#define panda_mlog_dtor(mod)    panda_mlog_verbose_debug(mod, __func__ << " [dtor]")
+#define panda_mlog_ctor(mod)    panda_log_verbose_debug(mod, __func__ << " [ctor]")
+#define panda_mlog_dtor(mod)    panda_log_verbose_debug(mod, __func__ << " [dtor]")
 #define panda_log_ctor()        panda_mlog_ctor(panda_log_module)
 #define panda_log_dtor()        panda_mlog_dtor(panda_log_module)
 #define panda_rlog_ctor()       panda_mlog_ctor(::panda_log_module)
