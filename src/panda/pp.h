@@ -1,14 +1,39 @@
 #pragma once
 
-// get number of arguments with PANDA_PP_NARG
-#define PANDA_PP_NARG(...)  PANDA_PP__NARG_I_(__VA_ARGS__,PANDA_PP__RSEQ_N())
-#define PANDA_PP__NARG_I_(...) PANDA_PP__ARG_N(__VA_ARGS__)
-#define PANDA_PP__ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, _9,_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_20,_21,_22,_23,_24,_25,_26,_27,_28,_29,_30,_31,_32, \
-                       _33,_34,_35,_36,_37,_38,_39,_40,_41,_42,_43,_44,_45,_46,_47,_48,_49,_50,_51,_52,_53,_54,_55,_56,_57,_58,_59,_60,_61,_62,_63,     \
-                         N,...) N
-#define PANDA_PP__RSEQ_N() 63,62,61,60,59,58,57,56,55,54,53,52,51,50,49,48,47,46,45,44,43,42,41,40,39,38,37,36,35,34,33,32,\
-                           31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
+#define PANDA_PP__CONCAT(name, n) name##n
+#define PANDA_PP_CONCAT(name, n) PANDA_PP__CONCAT(name, n)
 
-#define PANDA_PP__VFUNC_INTERNAL(name, n) name##n
-#define PANDA_PP__VFUNC(name, n) PANDA_PP__VFUNC_INTERNAL(name, n)
-#define PANDA_PP_VFUNC(func, ...) PANDA_PP__VFUNC(func, PANDA_PP_NARG(__VA_ARGS__)) (__VA_ARGS__)
+// ===================== examine if is __VA_ARGS__ is empty with PANDA_PP_IS_EMPTY_ARGS ==============================
+#define PANDA_PP_ISEMPTY(...) PANDA_PP__ISEMPTY(                                                                  \
+    /* test if there is just one argument, eventually an empty one */                           \
+    PANDA_PP__ISEMPTY_HAS_COMMA(__VA_ARGS__),                                                   \
+    /* test if _TRIGGER_PARENTHESIS_ together with the argument adds a comma */                 \
+    PANDA_PP__ISEMPTY_HAS_COMMA(PANDA_PP__ISEMPTY_TRIGGER_PARENTHESIS_ __VA_ARGS__),            \
+    /* test if the argument together with a parenthesis adds a comma */                         \
+    PANDA_PP__ISEMPTY_HAS_COMMA(__VA_ARGS__ (/*empty*/)),                                       \
+    /* test if placing it between _TRIGGER_PARENTHESIS_ and the parenthesis adds a comma */     \
+    PANDA_PP__ISEMPTY_HAS_COMMA(PANDA_PP__ISEMPTY_TRIGGER_PARENTHESIS_ __VA_ARGS__ (/*empty*/)) \
+)
+#define PANDA_PP__ISEMPTY(_0, _1, _2, _3)            PANDA_PP__ISEMPTY_HAS_COMMA(PANDA_PP__ISEMPTY_PASTE5(PANDA_PP__ISEMPTY_CASE_, _0, _1, _2, _3))
+#define PANDA_PP__ISEMPTY_HAS_COMMA(...)             PANDA_PP__ISEMPTY_ARG16(__VA_ARGS__, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
+#define PANDA_PP__ISEMPTY_TRIGGER_PARENTHESIS_(...)  ,
+#define PANDA_PP__ISEMPTY_PASTE5(_0, _1, _2, _3, _4) _0 ## _1 ## _2 ## _3 ## _4
+#define PANDA_PP__ISEMPTY_CASE_0001                  ,
+#define PANDA_PP__ISEMPTY_ARG16(_0,_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,...) _15
+
+// ===================== get number of arguments ==============================
+#define PANDA_PP_NARG(...)     PANDA_PP_CONCAT(PANDA_PP__NARG, PANDA_PP_ISEMPTY(__VA_ARGS__)) (__VA_ARGS__)
+#define PANDA_PP__NARG1(...)   0
+#define PANDA_PP__NARG0(...)   PANDA_PP__NARG_I_(__VA_ARGS__,PANDA_PP__RSEQ_N())
+#define PANDA_PP__NARG_I_(...) PANDA_PP__ARG_N(__VA_ARGS__)
+#define PANDA_PP__RSEQ_N()     16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0
+#define PANDA_PP__ARG_N(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,_16,N,...) N
+
+// ===================== Variadic args overloading ==============================
+#define PANDA_PP_VFUNC(func, ...) PANDA_PP_VFUNC1(func, __VA_ARGS__)
+#define PANDA_PP_VFUNC1(func, ...) PANDA_PP_CONCAT(func, PANDA_PP_NARG(__VA_ARGS__)) (__VA_ARGS__)
+
+#define PANDA_PP_VJOIN(...)        PANDA_PP__VJOIN(__VA_ARGS__)
+#define PANDA_PP__VJOIN(arg, ...)  PANDA_PP_CONCAT(PANDA_PP__VJOIN, PANDA_PP_ISEMPTY(__VA_ARGS__)) (arg, __VA_ARGS__)
+#define PANDA_PP__VJOIN1(arg, ...) arg
+#define PANDA_PP__VJOIN0(arg, ...) arg, __VA_ARGS__

@@ -341,7 +341,17 @@ TEST("logging by scopes") {
     }
 }
 
-//TEST("")
+TEST("empty log") {
+    Ctx c;
+    SECTION("case 1") {
+        panda_log(Error);
+    }
+    SECTION("case 2") {
+        panda_log_error();
+    }
+    c.check_called();
+    CHECK(c.str == "==> MARK <==");
+}
 
 TEST("panda_rlog_*") {
     Ctx c;

@@ -19,25 +19,26 @@ namespace panda { namespace log {
 
 #define PANDA_LOG_CODE_POINT(module) panda::log::CodePoint{__FILENAME__, __LINE__, __func__, &module}
 
-#define panda_should_log(...)       PANDA_PP_VFUNC(panda_should_log, __VA_ARGS__)
-#define panda_should_log1(lvl)      panda_should_log2(lvl, panda_log_module)
-#define panda_should_log2(lvl, mod) (lvl >= mod.level && panda::log::details::logger)
-#define panda_should_rlog(lvl)      panda_should_log(lvl, ::panda_log_module)
+#define panda_should_log(...)       PANDA_PP_VFUNC(PANDA_SHOULD_LOG, __VA_ARGS__)
+#define PANDA_SHOULD_LOG1(lvl)      PANDA_SHOULD_LOG2(lvl, panda_log_module)
+#define PANDA_SHOULD_LOG2(lvl, mod) (lvl >= mod.level && panda::log::details::logger)
+#define panda_should_rlog(lvl)      PANDA_SHOULD_LOG2(lvl, ::panda_log_module)
 
-#define panda_elog(...)             PANDA_PP_VFUNC(panda_elog, __VA_ARGS__)
-#define panda_elog2(lvl, code)      panda_elog3(lvl, panda_log_module, code)
-#define panda_elog3(lvl, mod, code) do {                                    \
-    if (panda_should_log2(lvl, mod)) {                                      \
+#define panda_elog(...)             PANDA_PP_VFUNC(PANDA_ELOG, __VA_ARGS__)
+#define PANDA_ELOG2(lvl, code)      PANDA_ELOG3(lvl, panda_log_module, code)
+#define PANDA_ELOG3(lvl, mod, code) do {                                    \
+    if (PANDA_SHOULD_LOG2(lvl, mod)) {                                      \
         std::ostream& log = panda::log::details::get_os();                  \
         code;                                                               \
         panda::log::details::do_log(log, PANDA_LOG_CODE_POINT(mod), lvl);   \
     }                                                                       \
 } while (0)
 
-#define panda_log(...)                 PANDA_PP_VFUNC(panda_log, __VA_ARGS__)
-#define panda_log1(level)              panda_log2(level, "")
-#define panda_log2(level, msg)         panda_log3(level, panda_log_module, msg)
-#define panda_log3(level, module, msg) panda_elog3(level, module, { log << msg; })
+#define panda_log(...)                 PANDA_LOG(__VA_ARGS__)                                      // proxy to expand args
+#define PANDA_LOG(lvl, ...)            PANDA_PP_VFUNC(PANDA_LOG, PANDA_PP_VJOIN(lvl, __VA_ARGS__)) // separate first arg to detect empty args
+#define PANDA_LOG1(level)              PANDA_LOG2(level, "==> MARK <==")
+#define PANDA_LOG2(level, msg)         PANDA_LOG3(level, panda_log_module, msg)
+#define PANDA_LOG3(level, module, msg) PANDA_ELOG3(level, module, { log << msg; })
 
 #define panda_rlog(level, msg)          panda_log(level, ::panda_log_module, msg)
 
@@ -74,12 +75,14 @@ namespace panda { namespace log {
 #define panda_rlog_alert(msg)           panda_rlog(panda::log::Alert, msg)
 #define panda_rlog_emergency(msg)       panda_rlog(panda::log::Emergency, msg)
 
-#define panda_mlog_ctor(mod)    panda_log_verbose_debug(mod, __func__ << " [ctor]")
-#define panda_mlog_dtor(mod)    panda_log_verbose_debug(mod, __func__ << " [dtor]")
-#define panda_log_ctor()        panda_mlog_ctor(panda_log_module)
-#define panda_log_dtor()        panda_mlog_dtor(panda_log_module)
-#define panda_rlog_ctor()       panda_mlog_ctor(::panda_log_module)
-#define panda_rlog_dtor()       panda_mlog_dtor(::panda_log_module)
+#define panda_log_ctor(...)  PANDA_PP_VFUNC(PANDA_LOG_CTOR, __VA_ARGS__)
+#define panda_log_dtor(...)  PANDA_PP_VFUNC(PANDA_LOG_DTOR, __VA_ARGS__)
+#define PANDA_LOG_CTOR0()    PANDA_LOG_CTOR1(panda_log_module)
+#define PANDA_LOG_CTOR1(mod) PANDA_LOG3(panda::log::VerboseDebug, mod, __func__ << " [ctor]")
+#define PANDA_LOG_DTOR0()    PANDA_LOG_DTOR1(panda_log_module)
+#define PANDA_LOG_DTOR1(mod) PANDA_LOG3(panda::log::VerboseDebug, mod, __func__ << " [dtor]")
+#define panda_rlog_ctor()    panda_log_ctor(::panda_log_module)
+#define panda_rlog_dtor()    panda_log_dtor(::panda_log_module)
 
 #define panda_debug_v(var) panda_log(panda::log::Debug, #var << " = " << (var))
 
