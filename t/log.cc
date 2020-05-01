@@ -195,15 +195,22 @@ TEST("code-eval logging") {
     Ctx c;
     bool val = false;
 
-    panda_elog_debug({
+    panda_log_debug([&]{
         val = true;
     });
 
     REQUIRE_FALSE(val);
 
-    panda_elog_warning({
+    panda_log_warning([&]{
+        log << "text";
         val = true;
     });
+    CHECK(c.str == "text");
+
+    panda_log(Error, [&]{
+        log << "hello";
+    });
+    CHECK(c.str == "hello");
 
     REQUIRE(val);
 }

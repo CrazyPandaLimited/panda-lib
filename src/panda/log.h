@@ -24,23 +24,22 @@ namespace panda { namespace log {
 #define PANDA_SHOULD_LOG2(lvl, mod) (lvl >= mod.level && panda::log::details::logger)
 #define panda_should_rlog(lvl)      PANDA_SHOULD_LOG2(lvl, ::panda_log_module)
 
-#define panda_elog(...)             PANDA_PP_VFUNC(PANDA_ELOG, __VA_ARGS__)
-#define PANDA_ELOG2(lvl, code)      PANDA_ELOG3(lvl, panda_log_module, code)
-#define PANDA_ELOG3(lvl, mod, code) do {                                    \
-    if (PANDA_SHOULD_LOG2(lvl, mod)) {                                      \
-        std::ostream& log = panda::log::details::get_os();                  \
-        code;                                                               \
-        panda::log::details::do_log(log, PANDA_LOG_CODE_POINT(mod), lvl);   \
-    }                                                                       \
-} while (0)
-
-#define panda_log(...)                 PANDA_LOG(__VA_ARGS__)                                      // proxy to expand args
-#define PANDA_LOG(lvl, ...)            PANDA_PP_VFUNC(PANDA_LOG, PANDA_PP_VJOIN(lvl, __VA_ARGS__)) // separate first arg to detect empty args
+#define panda_log(...)                 PANDA_LOG(__VA_ARGS__)                                        // proxy to expand args
+#define PANDA_LOG(level, ...)          PANDA_PP_VFUNC(PANDA_LOG, PANDA_PP_VJOIN(level, __VA_ARGS__)) // separate first arg to detect empty args
 #define PANDA_LOG1(level)              PANDA_LOG2(level, "==> MARK <==")
 #define PANDA_LOG2(level, msg)         PANDA_LOG3(level, panda_log_module, msg)
-#define PANDA_LOG3(level, module, msg) PANDA_ELOG3(level, module, { log << msg; })
-
-#define panda_rlog(level, msg)          panda_log(level, ::panda_log_module, msg)
+#define PANDA_LOG3(level, module, msg) do {                                                                 \
+    if (PANDA_SHOULD_LOG2(level, module)) {                                                                 \
+        std::ostream& log = panda::log::details::get_os();                                                  \
+        panda::static_if<panda::log::details::IsEval<panda::log::details::getf(#msg)>::value>([&](auto) {   \
+            (panda::log::details::LambdaStream&)log << msg;                                                 \
+        })(panda::log::details::Unique1{});                                                                 \
+        panda::static_if<!panda::log::details::IsEval<panda::log::details::getf(#msg)>::value>([&](auto) {  \
+            log << msg;                                                                                     \
+        })(panda::log::details::Unique2{});                                                                 \
+        panda::log::details::do_log(log, PANDA_LOG_CODE_POINT(module), level);                              \
+    }                                                                                                       \
+} while (0)
 
 #define panda_log_verbose_debug(...)    panda_log(panda::log::VerboseDebug, __VA_ARGS__)
 #define panda_log_debug(...)            panda_log(panda::log::Debug,        __VA_ARGS__)
@@ -53,17 +52,7 @@ namespace panda { namespace log {
 #define panda_log_alert(...)            panda_log(panda::log::Alert,        __VA_ARGS__)
 #define panda_log_emergency(...)        panda_log(panda::log::Emergency,    __VA_ARGS__)
 
-#define panda_elog_verbose_debug(...)  panda_elog(panda::log::VerboseDebug, __VA_ARGS__)
-#define panda_elog_debug(...)          panda_elog(panda::log::Debug, __VA_ARGS__)
-#define panda_elog_info(...)           panda_elog(panda::log::Info, __VA_ARGS__)
-#define panda_elog_notice(...)         panda_elog(panda::log::Notice, __VA_ARGS__)
-#define panda_elog_warn(...)           panda_elog(panda::log::Warning, __VA_ARGS__)
-#define panda_elog_warning(...)        panda_elog(panda::log::Warning, __VA_ARGS__)
-#define panda_elog_error(...)          panda_elog(panda::log::Error, __VA_ARGS__)
-#define panda_elog_critical(...)       panda_elog(panda::log::Critical, __VA_ARGS__)
-#define panda_elog_alert(...)          panda_elog(panda::log::Alert, __VA_ARGS__)
-#define panda_elog_emergency(...)      panda_elog(panda::log::Emergency, __VA_ARGS__)
-
+#define panda_rlog(level, msg)          panda_log(level, ::panda_log_module, msg)
 #define panda_rlog_verbose_debug(msg)   panda_rlog(panda::log::VerboseDebug, msg)
 #define panda_rlog_debug(msg)           panda_rlog(panda::log::Debug, msg)
 #define panda_rlog_info(msg)            panda_rlog(panda::log::Info, msg)
@@ -166,6 +155,22 @@ namespace details {
 
     std::ostream& get_os ();
     bool          do_log (std::ostream&, const CodePoint&, Level);
+
+    template <char T> struct IsEval      : std::false_type {};
+    template <>       struct IsEval<'['> : std::true_type  {};
+
+    static constexpr inline char getf (const char* s) { return *s; }
+
+
+    struct LambdaStream : std::ostream {};
+    struct Unique1 {};
+    struct Unique2 {};
+
+    template <class T>
+    std::enable_if_t<panda::has_call_operator<T>::value, LambdaStream&> operator<< (LambdaStream& os, T&& f) {
+        f();
+        return os;
+    }
 }
 
 std::ostream& operator<< (std::ostream&, const CodePoint&);
