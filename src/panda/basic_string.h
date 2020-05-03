@@ -703,12 +703,12 @@ public:
     }
 
     template<class _CharT, typename = typename std::enable_if<std::is_same<_CharT, CharT>::value>::type>
-    size_type rfind (const _CharT* const& s, size_type pos = 0) const {
+    size_type rfind (const _CharT* const& s, size_type pos = npos) const {
         return rfind(s, pos, traits_type::length(s));
     }
 
     template <size_type SIZE>
-    size_type rfind (const CharT (&s)[SIZE], size_type pos = 0) const {
+    size_type rfind (const CharT (&s)[SIZE], size_type pos = npos) const {
         return rfind(s, pos, SIZE-1);
     }
 

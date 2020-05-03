@@ -19,7 +19,8 @@ struct PatternFormatter : IFormatter {
     string format (Level, const CodePoint&, std::string&) const override;
 };
 
-string_view default_format = "[%L/%M] %f:%l:%F(): %m";
+string_view default_format  = "[%L/%M] %f:%l:%F(): %m";
+string_view default_message = "==> MARK <==";
 
 ILogger::~ILogger () {}
 

@@ -17,19 +17,19 @@ namespace panda { namespace log {
 #  define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
 
-#define PANDA_LOG_CODE_POINT(module) panda::log::CodePoint{__FILENAME__, __LINE__, __func__, &module}
+#define PANDA_LOG_CODE_POINT(module) panda::log::CodePoint(__FILENAME__, __LINE__, __func__, &(module))
 
 #define panda_should_log(...)       PANDA_PP_VFUNC(PANDA_SHOULD_LOG, __VA_ARGS__)
 #define PANDA_SHOULD_LOG1(lvl)      PANDA_SHOULD_LOG2(lvl, panda_log_module)
-#define PANDA_SHOULD_LOG2(lvl, mod) (lvl >= mod.level && panda::log::details::logger)
+#define PANDA_SHOULD_LOG2(lvl, mod) ((lvl) >= (mod).level && panda::log::details::logger)
 #define panda_should_rlog(lvl)      PANDA_SHOULD_LOG2(lvl, ::panda_log_module)
 
-#define panda_log(...)                 PANDA_LOG(__VA_ARGS__)                                        // proxy to expand args
-#define PANDA_LOG(level, ...)          PANDA_PP_VFUNC(PANDA_LOG, PANDA_PP_VJOIN(level, __VA_ARGS__)) // separate first arg to detect empty args
-#define PANDA_LOG1(level)              PANDA_LOG2(level, "==> MARK <==")
-#define PANDA_LOG2(level, msg)         PANDA_LOG3(level, panda_log_module, msg)
-#define PANDA_LOG3(level, module, msg) do {                                                                 \
-    if (PANDA_SHOULD_LOG2(level, module)) {                                                                 \
+#define panda_log(...)            PANDA_LOG(__VA_ARGS__)                                      // proxy to expand args
+#define PANDA_LOG(lvl, ...)       PANDA_PP_VFUNC(PANDA_LOG, PANDA_PP_VJOIN(lvl, __VA_ARGS__)) // separate first arg to detect empty args
+#define PANDA_LOG1(lvl)           PANDA_LOG2(lvl, default_message)
+#define PANDA_LOG2(lvl, msg)      PANDA_LOG3(lvl, panda_log_module, msg)
+#define PANDA_LOG3(lvl, mod, msg) do {                                                                      \
+    if (PANDA_SHOULD_LOG2(lvl, mod)) {                                                                      \
         std::ostream& log = panda::log::details::get_os();                                                  \
         panda::static_if<panda::log::details::IsEval<panda::log::details::getf(#msg)>::value>([&](auto) {   \
             (panda::log::details::LambdaStream&)log << msg;                                                 \
@@ -37,7 +37,7 @@ namespace panda { namespace log {
         panda::static_if<!panda::log::details::IsEval<panda::log::details::getf(#msg)>::value>([&](auto) {  \
             log << msg;                                                                                     \
         })(panda::log::details::Unique2{});                                                                 \
-        panda::log::details::do_log(log, PANDA_LOG_CODE_POINT(module), level);                              \
+        panda::log::details::do_log(log, PANDA_LOG_CODE_POINT(mod), lvl);                                   \
     }                                                                                                       \
 } while (0)
 
@@ -78,6 +78,7 @@ namespace panda { namespace log {
 #define PANDA_ASSERT(var, msg) if(!(auto assert_value = var)) { panda_log_emergency("assert failed: " << #var << " is " << assert_value << msg) }
 
 extern string_view default_format;
+extern string_view default_message;
 
 enum Level {
     VerboseDebug = 0,
@@ -114,6 +115,10 @@ struct Module {
 };
 
 struct CodePoint {
+    CodePoint () : line(), module() {}
+    CodePoint (const string_view& file, uint32_t line, const string_view& func, const Module* module)
+        : file(file), line(line), func(func), module(module) {}
+
     string_view   file;
     uint32_t      line;
     string_view   func;
