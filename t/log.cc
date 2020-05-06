@@ -1,5 +1,6 @@
 #include "test.h"
 #include <panda/log.h>
+#include <regex>
 
 #define TEST(name) TEST_CASE("log: " name, "[log]")
 
@@ -10,12 +11,14 @@ struct Ctx {
     Level     level;
     CodePoint cp;
     string    str;
+    string    fstr;
 
     Ctx () {
-        set_logger([this](Level _level, const CodePoint& _cp, std::string& _str, const IFormatter&) {
+        set_logger([this](Level _level, const CodePoint& _cp, std::string& _str, const IFormatter& formatter) {
             level = _level;
             cp    = _cp;
             str   = string(_str.data(), _str.length());
+            fstr  = formatter.format(level, cp, _str);
             ++cnt;
         });
         set_level(Warning);
@@ -173,6 +176,26 @@ TEST("set_formatter") {
 
     panda_log_alert("hello");
     REQUIRE(str == "jopa");
+}
+
+TEST("set_format") {
+    Ctx c;
+    Module panda_log_module("epta");
+    set_format("LEVEL=%L FILE=%f LINE=%l FUNC=%F MODULE=%M MESSAGE=%m DATE=%d DATEH=%D TIME=%t TIMEH=%T PID=%p THREAD=%P UNIX=%u UNIXH=%U ");
+    panda_log_alert("mymsg");
+    WARN(c.fstr);
+    auto res = std::regex_search(std::string(c.fstr.c_str()), std::regex(
+        "LEVEL=alert FILE=log.cc LINE=185 FUNC=\\w+ MODULE=epta MESSAGE=mymsg "
+        "DATE=\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2} "
+        "DATEH=\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(\\.\\d+)? "
+        "TIME=\\d{2}:\\d{2}:\\d{2} "
+        "TIMEH=\\d{2}:\\d{2}:\\d{2}(\\.\\d+)? "
+        "PID=\\d+ "
+        "THREAD=\\w+ "
+        "UNIX=\\d+ "
+        "UNIXH=\\d+(\\.\\d+)? "
+    ));
+    CHECK(res);
 }
 
 TEST("should_log") {

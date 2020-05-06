@@ -1,5 +1,6 @@
 #include "log.h"
 #include <math.h>
+#include <time.h>
 #include <memory>
 #include <thread>
 #include <iomanip>
@@ -8,6 +9,16 @@
 #include <mutex>
 #include "exception.h"
 #include "unordered_string_map.h"
+
+#ifdef _WIN32
+    #include <process.h>
+    #define _PANDA_GETPID _getpid()
+    #define _PANDA_LOCALTIME(epoch_ptr, tm_ptr) (localtime_s(tm_ptr, epoch_ptr) == 0)
+#else
+    #include <unistd.h>
+    #define _PANDA_GETPID getpid()
+    #define _PANDA_LOCALTIME(epoch_ptr, tm_ptr) (localtime_r(epoch_ptr, tm_ptr) != nullptr)
+#endif
 
 panda::log::Module panda_log_module("", nullptr);
 
@@ -223,7 +234,63 @@ std::ostream& operator<< (std::ostream& stream, const escaped& str) {
  * %f - file
  * %l - line
  * %m - message
+ * %d - current datetime (YYYY/MM/DD HH:MM:SS)
+ * %D - current datetime hires (YYYY/MM/DD HH:MM:SS.SSS)
+ * %t - current time (HH:MM:SS)
+ * %T - current time hires (HH:MM:SS.SSS)
+ * %p - current process id
+ * %P - current thread id
  */
+
+static void add_mks (string& dest, long nsec) {
+    dest += '.';
+    auto mksec = nsec / 1000;
+    if (mksec < 100000) dest += '0';
+    if (mksec < 10000)  dest += '0';
+    if (mksec < 1000)   dest += '0';
+    if (mksec < 100)    dest += '0';
+    if (mksec < 10)     dest += '0';
+    dest += panda::to_string(mksec);
+}
+
+static inline struct timespec now_hires () {
+    struct timespec ts;
+    int status = clock_gettime(CLOCK_REALTIME, &ts);
+    if (status != 0) {
+        ts.tv_sec = 0;
+        ts.tv_nsec = 0;
+    }
+    return ts;
+}
+
+static inline time_t now () { return std::time(nullptr); }
+
+static inline void ymdhms (string& dest, time_t epoch) {
+    struct tm dt;
+    if (!_PANDA_LOCALTIME(&epoch, &dt)) return;
+
+    auto cap = 23;
+    string tmp(cap);
+
+    auto len = strftime(tmp.buf(), cap, "%Y-%m-%d %H:%M:%S", &dt);
+    tmp.length(len);
+
+    dest += tmp;
+}
+
+static inline void hms (string& dest, time_t epoch) {
+    struct tm dt;
+    if (!_PANDA_LOCALTIME(&epoch, &dt)) return;
+
+    auto cap = 23;
+    string tmp(cap);
+
+    auto len = strftime(tmp.buf(), cap, "%H:%M:%S", &dt);
+    tmp.length(len);
+
+    dest += tmp;
+}
+
 string PatternFormatter::format (Level level, const CodePoint& cp, std::string& msg) const {
     auto len = _fmt.length();
     auto s   = _fmt.data();
@@ -241,14 +308,15 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
             case 'f': ret += cp.file;                               break;
             case 'l': ret += panda::to_string(cp.line);             break;
             case 'm': ret += string_view(msg.data(), msg.length()); break;
-            case 'M':
+            case 'M': {
                 if (cp.module->name.length()) {
                     ret += cp.module->name;
                 } else {
                     if (s-3 >= _fmt.data() && *(s-3) == '/') ret.pop_back();
                 }
                 break;
-            case 'L':
+            }
+            case 'L': {
                 switch (level) {
                     case VerboseDebug : ret += "DEBUG";     break;
                     case Debug        : ret += "debug";     break;
@@ -262,6 +330,50 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                     default: break;
                 }
                 break;
+            }
+            case 'd': {
+                ymdhms(ret, now());
+                break;
+            }
+            case 'D': {
+                auto now = now_hires();
+                ymdhms(ret, now.tv_sec);
+                add_mks(ret, now.tv_nsec);
+                //auto now = date::Date::now_hires();
+                //ret += now.to_string();
+                break;
+            }
+            case 't': {
+                hms(ret, now());
+                break;
+            }
+            case 'T': {
+                auto now = now_hires();
+                hms(ret, now.tv_sec);
+                add_mks(ret, now.tv_nsec);
+                break;
+            }
+            case 'p': {
+                ret += panda::to_string(_PANDA_GETPID);
+                break;
+            }
+            case 'P': {
+                std::stringstream ss;
+                ss << std::this_thread::get_id();
+                auto str = ss.str();
+                ret.append(str.data(), str.length());
+                break;
+            }
+            case 'u': {
+                ret += panda::to_string(now());
+                break;
+            }
+            case 'U': {
+                auto now = now_hires();
+                ret += panda::to_string(now.tv_sec);
+                add_mks(ret, now.tv_nsec);
+                break;
+            }
             default: ret += *(s-1); // keep symbol after percent
         }
     }
