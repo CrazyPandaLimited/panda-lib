@@ -30,7 +30,7 @@ struct PatternFormatter : IFormatter {
     string format (Level, const CodePoint&, std::string&) const override;
 };
 
-string_view default_format  = "[%L/%M] %f:%l:%F(): %m";
+string_view default_format  = "%d [%L/%M] %f:%l,%F(): %m";
 string_view default_message = "==> MARK <==";
 
 ILogger::~ILogger () {}
@@ -304,7 +304,11 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
             continue;
         }
         switch (*s++) {
-            case 'F': ret += cp.func;                               break;
+            case 'F': {
+                if (cp.func.length()) ret += cp.func;
+                else                  ret += "<top>";
+                break;
+            }
             case 'f': ret += cp.file;                               break;
             case 'l': ret += panda::to_string(cp.line);             break;
             case 'm': ret += string_view(msg.data(), msg.length()); break;
