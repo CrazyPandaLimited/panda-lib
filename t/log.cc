@@ -54,7 +54,7 @@ TEST("set_logger") {
     Level       level;
     CodePoint   cp;
     std::string str;
-    int         chk_line;
+    uint32_t    chk_line;
     bool        grep = false;
 
     SECTION("formatting callback") {

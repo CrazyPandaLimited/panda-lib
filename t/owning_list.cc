@@ -30,7 +30,7 @@ TEST("2 elements") {
     list.push_back(1);
     REQUIRE(list.size() == 2);
     auto iter = list.begin();
-    size_t i = 0;
+    int i = 0;
     for (; iter != list.end(); ++iter) {
         REQUIRE(*iter == i);
         ++i;
@@ -55,7 +55,7 @@ TEST("remove 1") {
     list.push_back(2);
     list.remove(2);
     list.push_back(1);
-    size_t i = 0;
+    int i = 0;
     for (auto iter = list.begin(); iter != list.end(); ++iter) {
         REQUIRE(*iter == i++);
     }
@@ -70,7 +70,7 @@ TEST("remove in iteration") {
     for (auto iter = list.begin(); iter != list.end(); ++iter) {
         list.remove(2);
     }
-    size_t i = 0;
+    int i = 0;
     for (auto iter = list.begin(); iter != list.end(); ++iter) {
         REQUIRE(*iter == i++);
     }
