@@ -388,4 +388,6 @@ TEST("panda_rlog_*") {
     static Module panda_log_module("non-root");
     panda_rlog_error("");
     CHECK(c.cp.module == &::panda_log_module);
+
+    //panda_
 }

@@ -28,7 +28,7 @@ struct PatternFormatter : IFormatter {
     string format (Level, const CodePoint&, std::string&) const override;
 };
 
-string_view default_format  = "%d [%L/%M] %f:%l,%F(): %m";
+string_view default_format  = "%d %c[%L/%M]%C %f:%l,%F(): %m";
 string_view default_message = "==> MARK <==";
 
 ILogger::~ILogger () {}
@@ -238,7 +238,12 @@ std::ostream& operator<< (std::ostream& stream, const escaped& str) {
  * %T - current time hires (HH:MM:SS.SSS)
  * %p - current process id
  * %P - current thread id
+ * %c - start color
+ * %C - end color
  */
+
+static const char* colors[]      = {"", "", "", "", "\e[33m", "\e[31m", "\e[41m", "\e[41m", "\e[41m"};
+static const char  clear_color[] = "\e[0m";
 
 static void add_mks (string& dest, long nsec) {
     dest += '.';
@@ -341,8 +346,6 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                 auto now = now_hires();
                 ymdhms(ret, now.tv_sec);
                 add_mks(ret, now.tv_nsec);
-                //auto now = date::Date::now_hires();
-                //ret += now.to_string();
                 break;
             }
             case 't': {
@@ -376,6 +379,8 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                 add_mks(ret, now.tv_nsec);
                 break;
             }
+            case 'c': ret += colors[level]; break;
+            case 'C': if (colors[level]) ret += clear_color; break;
             default: ret += *(s-1); // keep symbol after percent
         }
     }
