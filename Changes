@@ -6,6 +6,7 @@
             - logger: make logger/formatter usage and changing thread safe via iptr-on-atomic
             - logger: add pattern formatter (used by default)
             - logger: improve logger API with variadic macros
+            - logger: fix main module initialization order
             - exceptions: add default to_string implementation
             - exceptions: BacktraceInfo has reasonable default implementation
             - exceptions: add Backtrace::dump_trace() default stack trace dumper

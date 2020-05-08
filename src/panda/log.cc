@@ -20,8 +20,6 @@
     #define _PANDA_LOCALTIME(epoch_ptr, tm_ptr) (localtime_r(epoch_ptr, tm_ptr) != nullptr)
 #endif
 
-panda::log::Module panda_log_module("", nullptr);
-
 namespace panda { namespace log {
 
 struct PatternFormatter : IFormatter {
@@ -386,3 +384,6 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
 }
 
 }}
+
+panda::log::Module panda_log_module("", nullptr);
+
