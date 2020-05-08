@@ -242,7 +242,11 @@ std::ostream& operator<< (std::ostream& stream, const escaped& str) {
  * %C - end color
  */
 
-static const char* colors[]      = {"", "", "", "", "\e[33m", "\e[31m", "\e[41m", "\e[41m", "\e[41m"};
+#ifdef _WIN32
+static const char* colors[] = {nullptr};
+#else
+static const char* colors[] = {nullptr, nullptr, nullptr, nullptr, "\e[33m", "\e[31m", "\e[41m", "\e[41m", "\e[41m"};
+#endif
 static const char  clear_color[] = "\e[0m";
 
 static void add_mks (string& dest, long nsec) {
@@ -379,7 +383,7 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                 add_mks(ret, now.tv_nsec);
                 break;
             }
-            case 'c': ret += colors[level]; break;
+            case 'c': if (colors[level]) ret += colors[level]; break;
             case 'C': if (colors[level]) ret += clear_color; break;
             default: ret += *(s-1); // keep symbol after percent
         }
