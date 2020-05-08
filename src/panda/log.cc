@@ -1,12 +1,13 @@
 #include "log.h"
+#include <mutex>
 #include <math.h>
 #include <time.h>
 #include <memory>
 #include <thread>
 #include <iomanip>
 #include <sstream>
+#include <string.h>
 #include <algorithm>
-#include <mutex>
 #include "exception.h"
 #include "unordered_string_map.h"
 
@@ -316,7 +317,17 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                 else                  ret += "<top>";
                 break;
             }
-            case 'f': ret += cp.file;                               break;
+            case 'f': {
+                auto file = cp.file;
+                auto pos = file.rfind('/');
+                if (pos < file.length()) file = file.substr(pos+1);
+              #ifdef _WIN32
+                pos = file.rfind('\\');
+                if (pos < file.length()) file = file.substr(pos+1);
+              #endif
+                ret += file;
+                break;
+            }
             case 'l': ret += panda::to_string(cp.line);             break;
             case 'm': ret += string_view(msg.data(), msg.length()); break;
             case 'M': {

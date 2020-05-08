@@ -7,17 +7,10 @@
 #include <memory>
 #include <vector>
 #include <ostream>
-#include <string.h>
 
 namespace panda { namespace log {
 
-#ifdef WIN32
-#  define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-#else
-#  define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#endif
-
-#define PANDA_LOG_CODE_POINT(module) panda::log::CodePoint(__FILENAME__, __LINE__, __func__, &(module))
+#define PANDA_LOG_CODE_POINT(module) panda::log::CodePoint(__FILE__, __LINE__, __func__, &(module))
 
 #define panda_should_log(...)       PANDA_PP_VFUNC(PANDA_SHOULD_LOG, __VA_ARGS__)
 #define PANDA_SHOULD_LOG1(lvl)      PANDA_SHOULD_LOG2(lvl, panda_log_module)
