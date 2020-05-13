@@ -21,6 +21,10 @@
     #define _PANDA_LOCALTIME(epoch_ptr, tm_ptr) (localtime_r(epoch_ptr, tm_ptr) != nullptr)
 #endif
 
+#ifdef _GNU_SOURCE
+    extern char* program_invocation_name;
+#endif
+
 namespace panda { namespace log {
 
 struct PatternFormatter : IFormatter {
@@ -29,7 +33,7 @@ struct PatternFormatter : IFormatter {
     string format (Level, const CodePoint&, std::string&) const override;
 };
 
-string_view default_format  = "%d %c[%L/%M]%C %f:%l,%F(): %m";
+string_view default_format  = "%1t %c[%L/%1M]%C %f:%l,%F(): %m";
 string_view default_message = "==> MARK <==";
 
 ILogger::~ILogger () {}
@@ -227,18 +231,26 @@ std::ostream& operator<< (std::ostream& stream, const escaped& str) {
 }
 
 /*
+ * SYNTAX OF TOKEN: %X or %xX or %.yX or %x.yX
+ * where x and y are optional digits (default is 0), and X is one of the following letters:
  * %L - level
  * %M - module
+ *      if module has no name (root), removes x chars on the left and y chars on the right.
  * %F - function
  * %f - file
+ *      x=0: only file name
+ *      x=1: full path as it appeared during compilation
  * %l - line
  * %m - message
- * %d - current datetime (YYYY/MM/DD HH:MM:SS)
- * %D - current datetime hires (YYYY/MM/DD HH:MM:SS.SSS)
- * %t - current time (HH:MM:SS)
- * %T - current time hires (HH:MM:SS.SSS)
+ * %t - current time
+ *      x=0: YYYY/MM/DD HH:MM:SS
+ *      x=1: YY/MM/DD HH:MM:SS
+ *      x=2: HH:MM:SS
+ *      x=3: UNIX TIMESTAMP
+ *      y>0: high resolution time, adds fractional part after seconds with "y" digits precision
+ * %T - current thread id
  * %p - current process id
- * %P - current thread id
+ * %P - current process title
  * %c - start color
  * %C - end color
  */
@@ -249,55 +261,56 @@ static const char* colors[] = {nullptr};
 static const char* colors[] = {nullptr, nullptr, nullptr, nullptr, "\e[33m", "\e[31m", "\e[41m", "\e[41m", "\e[41m"};
 #endif
 static const char  clear_color[] = "\e[0m";
+static const char* dates[] = {"%Y-%m-%d %H:%M:%S", "%y-%m-%d %H:%M:%S", "%H:%M:%S"};
 
-static void add_mks (string& dest, long nsec) {
+static void add_mks (string& dest, long nsec, unsigned prec) {
     dest += '.';
-    auto mksec = nsec / 1000;
-    if (mksec < 100000) dest += '0';
-    if (mksec < 10000)  dest += '0';
-    if (mksec < 1000)   dest += '0';
-    if (mksec < 100)    dest += '0';
-    if (mksec < 10)     dest += '0';
-    dest += panda::to_string(mksec);
+    if (nsec < 100000000) dest += '0';
+    if (nsec < 10000000)  dest += '0';
+    if (nsec < 1000000)   dest += '0';
+    if (nsec < 100000)    dest += '0';
+    if (nsec < 10000)     dest += '0';
+    if (nsec < 1000)      dest += '0';
+    if (nsec < 100)       dest += '0';
+    if (nsec < 10)        dest += '0';
+    dest += panda::to_string(nsec);
+    dest.length(dest.length() - 9 + prec);
 }
 
-static inline struct timespec now_hires () {
+static inline struct timespec now (unsigned hires) {
     struct timespec ts;
-    int status = clock_gettime(CLOCK_REALTIME, &ts);
-    if (status != 0) {
-        ts.tv_sec = 0;
+    if (hires) {
+        int status = clock_gettime(CLOCK_REALTIME, &ts);
+        if (status != 0) {
+            ts.tv_sec = 0;
+            ts.tv_nsec = 0;
+        }
+    } else {
+        ts.tv_sec = std::time(nullptr);
         ts.tv_nsec = 0;
     }
     return ts;
 }
 
-static inline time_t now () { return std::time(nullptr); }
-
-static inline void ymdhms (string& dest, time_t epoch) {
+static inline void ymdhms (string& dest, time_t epoch, unsigned type) {
     struct tm dt;
     if (!_PANDA_LOCALTIME(&epoch, &dt)) return;
 
     auto cap = 23;
     string tmp(cap);
 
-    auto len = strftime(tmp.buf(), cap, "%Y-%m-%d %H:%M:%S", &dt);
+    assert(type < 3);
+    auto len = strftime(tmp.buf(), cap, dates[type], &dt);
     tmp.length(len);
 
     dest += tmp;
 }
 
-static inline void hms (string& dest, time_t epoch) {
-    struct tm dt;
-    if (!_PANDA_LOCALTIME(&epoch, &dt)) return;
-
-    auto cap = 23;
-    string tmp(cap);
-
-    auto len = strftime(tmp.buf(), cap, "%H:%M:%S", &dt);
-    tmp.length(len);
-
-    dest += tmp;
-}
+#ifdef _GNU_SOURCE
+    static inline const char* get$0 () { return program_invocation_name; }
+#else
+    static inline const char* get$0 () { return "<unknown>"; }
+#endif
 
 string PatternFormatter::format (Level level, const CodePoint& cp, std::string& msg) const {
     auto len = _fmt.length();
@@ -311,6 +324,11 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
             ret += c;
             continue;
         }
+
+        unsigned x = 0, y = 0;
+        bool dot = false;
+
+        SWITCH:
         switch (*s++) {
             case 'F': {
                 if (cp.func.length()) ret += cp.func;
@@ -318,23 +336,26 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                 break;
             }
             case 'f': {
-                auto file = cp.file;
-                auto pos = file.rfind('/');
-                if (pos < file.length()) file = file.substr(pos+1);
-              #ifdef _WIN32
-                pos = file.rfind('\\');
-                if (pos < file.length()) file = file.substr(pos+1);
-              #endif
-                ret += file;
+                if (x) ret += cp.file;
+                else {
+                    auto file = cp.file;
+                    auto pos = file.rfind('/');
+                    if (pos < file.length()) file = file.substr(pos+1);
+                  #ifdef _WIN32
+                    pos = file.rfind('\\');
+                    if (pos < file.length()) file = file.substr(pos+1);
+                  #endif
+                    ret += file;
+                }
                 break;
             }
             case 'l': ret += panda::to_string(cp.line);             break;
             case 'm': ret += string_view(msg.data(), msg.length()); break;
             case 'M': {
-                if (cp.module->name.length()) {
-                    ret += cp.module->name;
-                } else {
-                    if (s-3 >= _fmt.data() && *(s-3) == '/') ret.pop_back();
+                if (cp.module->name.length()) ret += cp.module->name;
+                else {
+                    if (x && ret.length() >= x) ret.length(ret.length() - x);
+                    s += y;
                 }
                 break;
             }
@@ -353,24 +374,18 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                 }
                 break;
             }
-            case 'd': {
-                ymdhms(ret, now());
-                break;
-            }
-            case 'D': {
-                auto now = now_hires();
-                ymdhms(ret, now.tv_sec);
-                add_mks(ret, now.tv_nsec);
-                break;
-            }
             case 't': {
-                hms(ret, now());
+                auto t = now(y);
+                if (x < 3) ymdhms(ret, t.tv_sec, x);
+                else       ret += panda::to_string(t.tv_sec);
+                if (y) add_mks(ret, t.tv_nsec, y);
                 break;
             }
             case 'T': {
-                auto now = now_hires();
-                hms(ret, now.tv_sec);
-                add_mks(ret, now.tv_nsec);
+                std::stringstream ss;
+                ss << std::this_thread::get_id();
+                auto str = ss.str();
+                ret.append(str.data(), str.length());
                 break;
             }
             case 'p': {
@@ -378,25 +393,22 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                 break;
             }
             case 'P': {
-                std::stringstream ss;
-                ss << std::this_thread::get_id();
-                auto str = ss.str();
-                ret.append(str.data(), str.length());
-                break;
-            }
-            case 'u': {
-                ret += panda::to_string(now());
-                break;
-            }
-            case 'U': {
-                auto now = now_hires();
-                ret += panda::to_string(now.tv_sec);
-                add_mks(ret, now.tv_nsec);
+                ret += get$0();
                 break;
             }
             case 'c': if (colors[level]) ret += colors[level]; break;
             case 'C': if (colors[level]) ret += clear_color; break;
-            default: ret += *(s-1); // keep symbol after percent
+            case '.': {
+                if (s == se) throw exception("bad formatter pattern");
+                dot = true;
+                goto SWITCH;
+            }
+            default: {
+                char c = *(s-1);
+                if (s == se || c < '0' || c > '9') throw exception("bad formatter pattern");
+                (dot ? y : x) = c - '0';
+                goto SWITCH;
+            }
         }
     }
 
