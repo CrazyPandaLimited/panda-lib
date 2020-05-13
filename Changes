@@ -7,6 +7,8 @@
             - logger: add pattern formatter (used by default)
             - logger: improve logger API with variadic macros
             - logger: fix main module initialization order
+            - logger: add console logger impl
+            - logger: add multi logger
             - exceptions: export Windows Debugger Enginge in API
             - exceptions: add default to_string implementation
             - exceptions: BacktraceInfo has reasonable default implementation
