@@ -4,16 +4,14 @@
 
 TEST("set_logger") {
     Ctx c;
-    Level       level;
-    CodePoint   cp;
+    Info        info;
     std::string str;
     uint32_t    chk_line;
     bool        grep = false;
 
     SECTION("formatting callback") {
-        set_logger([&](Level _level, const CodePoint& _cp, std::string& _str, const IFormatter&) {
-            level = _level;
-            cp    = _cp;
+        set_logger([&](std::string& _str, const Info& _info, const IFormatter&) {
+            info  = _info;
             str   = _str;
         });
 
@@ -22,9 +20,8 @@ TEST("set_logger") {
 
     SECTION("simple callback") {
         grep = true;
-        set_logger([&](Level _level, const CodePoint& _cp, const std::string& _str) {
-            level = _level;
-            cp    = _cp;
+        set_logger([&](const std::string& _str, const Info& _info) {
+            info  = _info;
             str   = _str;
         });
 
@@ -33,19 +30,17 @@ TEST("set_logger") {
 
     SECTION("object") {
         struct Logger : ILogger {
-            Level     level;
-            CodePoint cp;
-            string    str;
+            Info   info;
+            string str;
         };
         Logger* logger;
 
 
         SECTION("formating") {
             struct Logger1 : Logger {
-                void log_format (Level _level, const CodePoint& _cp, std::string& _str, const IFormatter&) override {
-                    level = _level;
-                    cp    = _cp;
-                    str   = string(_str.data(), _str.length());
+                void log_format (std::string& _str, const Info& _info, const IFormatter&) override {
+                    info = _info;
+                    str  = string(_str.data(), _str.length());
                 }
             };
             logger = new Logger1();
@@ -54,10 +49,9 @@ TEST("set_logger") {
         SECTION("simple") {
             grep = true;
             struct Logger2 : Logger {
-                void log (Level _level, const CodePoint& _cp, const string& _str) override {
-                    level = _level;
-                    cp    = _cp;
-                    str   = _str;
+                void log (const string& _str, const Info& _info) override {
+                    info = _info;
+                    str  = _str;
                 }
             };
             logger = new Logger2();
@@ -67,24 +61,23 @@ TEST("set_logger") {
 
         panda_log_alert("hello"); chk_line = __LINE__;
 
-        level = logger->level;
-        cp    = logger->cp;
-        str   = logger->str;
+        info = logger->info;
+        str  = logger->str;
     }
 
     if (grep) REQUIRE_THAT(str, Catch::Contains("hello"));
     else      REQUIRE(str == "hello");
-    REQUIRE(level == Alert);
-    REQUIRE(cp.func == __func__);
-    REQUIRE(cp.file.length() > 0);
-    REQUIRE(cp.line == chk_line);
-    REQUIRE(cp.module == &::panda_log_module);
+    REQUIRE(info.level == ALERT);
+    REQUIRE(info.func == __func__);
+    REQUIRE(info.file.length() > 0);
+    REQUIRE(info.line == chk_line);
+    REQUIRE(info.module == &::panda_log_module);
 }
 
 TEST("destroy old logger") {
     struct Logger : ILogger {
         int* dtor;
-        void log (Level, const CodePoint&, const string&) override {}
+        void log (const string&, const Info&) override {}
         ~Logger () { (*dtor)++; }
     };
 

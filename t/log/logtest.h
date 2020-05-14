@@ -6,20 +6,18 @@ using namespace panda::log;
 
 struct Ctx {
     int       cnt = 0;
-    Level     level;
-    CodePoint cp;
+    Info      info;
     string    str;
     string    fstr;
 
     Ctx () {
-        set_logger([this](Level _level, const CodePoint& _cp, std::string& _str, const IFormatter& formatter) {
-            level = _level;
-            cp    = _cp;
+        set_logger([this](std::string& _str, const Info& _info, const IFormatter& formatter) {
+            info  = _info;
             str   = string(_str.data(), _str.length());
-            fstr  = formatter.format(level, cp, _str);
+            fstr  = formatter.format(_str, _info);
             ++cnt;
         });
-        set_level(Warning);
+        set_level(WARNING);
     }
 
     void check_called () {

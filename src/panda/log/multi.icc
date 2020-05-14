@@ -11,17 +11,17 @@ MultiLogger::MultiLogger (const Channels& list) : channels(list) {
 
 MultiLogger::~MultiLogger () {}
 
-void MultiLogger::log_format (Level level, const CodePoint& cp, std::string& rawmsg, const IFormatter& fmt) {
+void MultiLogger::log_format (std::string& rawmsg, const Info& info, const IFormatter& fmt) {
     string defmsg;
     for (auto& row : channels) {
-        if (level < row.min_level) continue;
+        if (info.level < row.min_level) continue;
         string msg;
-        if (row.formatter) msg = row.formatter->format(level, cp, rawmsg);
+        if (row.formatter) msg = row.formatter->format(rawmsg, info);
         else {
-            if (!defmsg) defmsg = fmt.format(level, cp, rawmsg);
+            if (!defmsg) defmsg = fmt.format(rawmsg, info);
             msg = defmsg;
         }
-        row.logger->log(level, cp, msg);
+        row.logger->log(msg, info);
     }
 };
 

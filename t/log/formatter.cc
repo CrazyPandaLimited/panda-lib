@@ -12,18 +12,18 @@ TEST("set_formatter") {
     Ctx c;
     string str;
 
-    set_logger([&str](Level, const CodePoint&, const string& s) {
+    set_logger([&str](const string& s, const Info&) {
         str = s;
     });
 
     SECTION("callback") {
-        set_formatter([](Level, const CodePoint&, std::string&) -> string {
+        set_formatter([](std::string&, const Info&) -> string {
             return "jopa";
         });
     }
     SECTION("object") {
         struct Formatter : IFormatter {
-            string format (Level, const CodePoint&, std::string&) const override {
+            string format (std::string&, const Info&) const override {
                 return "jopa";
             }
         };

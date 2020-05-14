@@ -45,7 +45,7 @@ namespace details {
 
     std::ostream& get_os () { return get_data().os; }
 
-    bool do_log (std::ostream& _stream, const CodePoint& cp, Level level) {
+    bool do_log (std::ostream& _stream, const Info& info) {
         std::ostringstream& stream = static_cast<std::ostringstream&>(_stream);
         stream.flush();
         std::string s(stream.str());
@@ -63,18 +63,18 @@ namespace details {
         }
 
         if (data.logger) {
-            data.logger->log_format(level, cp, s, *(data.formatter));
+            data.logger->log_format(s, info, *(data.formatter));
         }
         return true;
     }
 }
 using namespace details;
 
-void ILogger::log_format (Level level, const CodePoint& cp, std::string& s, const IFormatter& fmt) {
-    log(level, cp, fmt.format(level, cp, s));
+void ILogger::log_format (std::string& s, const Info& info, const IFormatter& fmt) {
+    log(fmt.format(s, info), info);
 }
 
-void ILogger::log (Level, const CodePoint&, const string&) {
+void ILogger::log (const string&, const Info&) {
     assert(0 && "either ILogger::log or ILogger::log_format must be implemented");
 }
 
@@ -82,7 +82,7 @@ ILoggerSP fn2logger (const logger_format_fn& f) {
     struct Logger : ILogger {
         logger_format_fn f;
         Logger (const logger_format_fn& f) : f(f) {}
-        void log_format (Level level, const CodePoint& cp, std::string& s, const IFormatter& fmt) override { f(level, cp, s, fmt); }
+        void log_format (std::string& s, const Info& i, const IFormatter& fmt) override { f(s, i, fmt); }
     };
     return new Logger(f);
 }
@@ -91,7 +91,7 @@ ILoggerSP fn2logger (const logger_fn& f) {
     struct Logger : ILogger {
         logger_fn f;
         Logger (const logger_fn& f) : f(f) {}
-        void log (Level level, const CodePoint& cp, const string& s) override { f(level, cp, s); }
+        void log (const string& s, const Info& i) override { f(s, i); }
     };
     return new Logger(f);
 }
@@ -100,7 +100,7 @@ IFormatterSP fn2formatter (const format_fn& f) {
     struct Formatter : IFormatter {
         format_fn f;
         Formatter (const format_fn& f) : f(f) {}
-        string format (Level level, const CodePoint& cp, std::string& s) const override { return f(level, cp, s); }
+        string format (std::string& s, const Info& i) const override { return f(s, i); }
     };
     return new Formatter(f);
 }
@@ -176,24 +176,24 @@ void set_level (Level val, string_view modname) {
     }
 }
 
-std::string CodePoint::to_string () const {
-    std::ostringstream os;
-    os << *this;
-    os.flush();
-    return os.str();
-}
+//std::string CodePoint::to_string () const {
+//    std::ostringstream os;
+//    os << *this;
+//    os.flush();
+//    return os.str();
+//}
 
-std::ostream& operator<< (std::ostream& stream, const CodePoint& cp) {
-    size_t total = cp.file.size() + log10(cp.line) + 2;
-    const char* whitespaces = "                        "; // 24 spaces
-    if (total < 24) {
-        whitespaces += total;
-    } else {
-        whitespaces = "";
-    }
-    stream << cp.file << ":" << cp.line << whitespaces;
-    return stream;
-}
+//std::ostream& operator<< (std::ostream& stream, const CodePoint& cp) {
+//    size_t total = cp.file.size() + log10(cp.line) + 2;
+//    const char* whitespaces = "                        "; // 24 spaces
+//    if (total < 24) {
+//        whitespaces += total;
+//    } else {
+//        whitespaces = "";
+//    }
+//    stream << cp.file << ":" << cp.line << whitespaces;
+//    return stream;
+//}
 
 std::ostream& operator<< (std::ostream& stream, const escaped& str) {
    for (auto c : str.src) {

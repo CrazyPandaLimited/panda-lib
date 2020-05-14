@@ -9,17 +9,17 @@ TEST("log to multi channels") {
     set_format("%m");
     set_logger(new MultiLogger({
         {
-            fn2logger([&](Level l, const CodePoint& cp, const string& msg) {
-                CHECK(l == Critical);
-                CHECK(cp.line == 28);
+            fn2logger([&](const string& msg, const Info& info) {
+                CHECK(info.level == CRITICAL);
+                CHECK(info.line == 28);
                 CHECK(msg == "hi");
                 ++cnt;
             })
         },
         {
-            fn2logger([&](Level l, const CodePoint& cp, const string& msg) {
-                CHECK(l == Critical);
-                CHECK(cp.line == 28);
+            fn2logger([&](const string& msg, const Info& info) {
+                CHECK(info.level == CRITICAL);
+                CHECK(info.line == 28);
                 CHECK(msg == "hi");
                 ++cnt;
             })
@@ -33,9 +33,9 @@ TEST("using min_level") {
     Ctx c;
     int cnt = 0;
     set_logger(new MultiLogger({
-        { fn2logger([&](Level, const CodePoint&, const string&) { cnt += 1; }), Notice },
-        { fn2logger([&](Level, const CodePoint&, const string&) { cnt += 100; }), Error },
-        { fn2logger([&](Level, const CodePoint&, const string&) { cnt += 10; }), Warning },
+        { fn2logger([&](const string&, const Info&) { cnt += 1; }), NOTICE },
+        { fn2logger([&](const string&, const Info&) { cnt += 100; }), ERROR },
+        { fn2logger([&](const string&, const Info&) { cnt += 10; }), WARNING },
     }));
     panda_log_warning("hi");
     CHECK(cnt == 11);
@@ -46,9 +46,9 @@ TEST("using different formatters") {
     set_format("F1:%m");
     string m1,m2,m3;
     set_logger(new MultiLogger({
-        { fn2logger([&](Level, const CodePoint&, const string& m) { m1=m; }), new PatternFormatter("F2:%m"), Debug },
-        { fn2logger([&](Level, const CodePoint&, const string& m) { m2=m; }), new PatternFormatter("F3:%m") },
-        { fn2logger([&](Level, const CodePoint&, const string& m) { m3=m; }) },
+        { fn2logger([&](const string& m, const Info&) { m1=m; }), new PatternFormatter("F2:%m"), DEBUG },
+        { fn2logger([&](const string& m, const Info&) { m2=m; }), new PatternFormatter("F3:%m") },
+        { fn2logger([&](const string& m, const Info&) { m3=m; }) },
     }));
     panda_log_error("hi");
     CHECK(m1 == "F2:hi");

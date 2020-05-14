@@ -78,7 +78,7 @@ static inline void ymdhms (string& dest, time_t epoch, unsigned type) {
     dest += tmp;
 }
 
-string PatternFormatter::format (Level level, const CodePoint& cp, std::string& msg) const {
+string PatternFormatter::format (std::string& msg, const Info& info) const {
     auto len = _fmt.length();
     auto s   = _fmt.data();
     auto se  = s + len;
@@ -97,14 +97,14 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
         SWITCH:
         switch (*s++) {
             case 'F': {
-                if (cp.func.length()) ret += cp.func;
-                else                  ret += "<top>";
+                if (info.func.length()) ret += info.func;
+                else                    ret += "<top>";
                 break;
             }
             case 'f': {
-                if (x) ret += cp.file;
+                if (x) ret += info.file;
                 else {
-                    auto file = cp.file;
+                    auto file = info.file;
                     auto pos = file.rfind('/');
                     if (pos < file.length()) file = file.substr(pos+1);
                   #ifdef _WIN32
@@ -115,10 +115,10 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                 }
                 break;
             }
-            case 'l': ret += panda::to_string(cp.line);             break;
+            case 'l': ret += panda::to_string(info.line);           break;
             case 'm': ret += string_view(msg.data(), msg.length()); break;
             case 'M': {
-                if (cp.module->name.length()) ret += cp.module->name;
+                if (info.module->name.length()) ret += info.module->name;
                 else {
                     if (x && ret.length() >= x) ret.length(ret.length() - x);
                     s += y;
@@ -126,16 +126,16 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                 break;
             }
             case 'L': {
-                switch (level) {
-                    case VerboseDebug : ret += "DEBUG";     break;
-                    case Debug        : ret += "debug";     break;
-                    case Info         : ret += "info";      break;
-                    case Notice       : ret += "notice";    break;
-                    case Warning      : ret += "warning";   break;
-                    case Error        : ret += "error";     break;
-                    case Critical     : ret += "critical";  break;
-                    case Alert        : ret += "alert";     break;
-                    case Emergency    : ret += "emergency"; break;
+                switch (info.level) {
+                    case VERBOSE_DEBUG : ret += "DEBUG";     break;
+                    case DEBUG         : ret += "debug";     break;
+                    case INFO          : ret += "info";      break;
+                    case NOTICE        : ret += "notice";    break;
+                    case WARNING       : ret += "warning";   break;
+                    case ERROR         : ret += "error";     break;
+                    case CRITICAL      : ret += "critical";  break;
+                    case ALERT         : ret += "alert";     break;
+                    case EMERGENCY     : ret += "emergency"; break;
                     default: break;
                 }
                 break;
@@ -162,8 +162,8 @@ string PatternFormatter::format (Level level, const CodePoint& cp, std::string& 
                 ret += get$0();
                 break;
             }
-            case 'c': if (colors[level]) ret += colors[level]; break;
-            case 'C': if (colors[level]) ret += clear_color; break;
+            case 'c': if (colors[info.level]) ret += colors[info.level]; break;
+            case 'C': if (colors[info.level]) ret += clear_color; break;
             case '.': {
                 if (s == se) throw exception("bad formatter pattern");
                 dot = true;

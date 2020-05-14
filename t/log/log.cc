@@ -4,13 +4,13 @@
 
 TEST("set_level") {
     Ctx c;
-    set_level(VerboseDebug);
+    set_level(VERBOSE_DEBUG);
     panda_log_verbose_debug("");
     c.check_called();
     panda_log_critical("");
     c.check_called();
 
-    set_level(Debug);
+    set_level(DEBUG);
     panda_log_verbose_debug("");
     REQUIRE(c.cnt == 0);
     panda_log_debug("");
@@ -19,12 +19,12 @@ TEST("set_level") {
 
 TEST("should_log") {
     Ctx c;
-    set_level(Debug);
-    REQUIRE_FALSE(panda_should_log(VerboseDebug));
-    REQUIRE(panda_should_log(Debug));
-    set_level(Error);
-    REQUIRE_FALSE(panda_should_log(Debug));
-    REQUIRE(panda_should_log(Critical));
+    set_level(DEBUG);
+    REQUIRE_FALSE(panda_should_log(VERBOSE_DEBUG));
+    REQUIRE(panda_should_log(DEBUG));
+    set_level(ERROR);
+    REQUIRE_FALSE(panda_should_log(DEBUG));
+    REQUIRE(panda_should_log(CRITICAL));
 }
 
 TEST("streaming params") {
@@ -49,7 +49,7 @@ TEST("code-eval logging") {
     });
     CHECK(c.str == "text");
 
-    panda_log(Error, [&]{
+    panda_log(ERROR, [&]{
         log << "hello";
     });
     CHECK(c.str == "hello");
@@ -60,7 +60,7 @@ TEST("code-eval logging") {
 TEST("empty log") {
     Ctx c;
     SECTION("case 1") {
-        panda_log(Error);
+        panda_log(ERROR);
     }
     SECTION("case 2") {
         panda_log_error();

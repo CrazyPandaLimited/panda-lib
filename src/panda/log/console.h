@@ -6,7 +6,7 @@ namespace panda { namespace log {
 struct ConsoleLogger : ILogger {
     ConsoleLogger () {}
 
-    void log (Level, const CodePoint&, const string&) override;
+    void log (const string&, const Info&) override;
 };
 
 }}

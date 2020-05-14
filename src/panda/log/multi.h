@@ -6,7 +6,7 @@ namespace panda { namespace log {
 
 struct MultiLogger : ILogger {
     struct Channel {
-        Channel (const ILoggerSP& l, const IFormatterSP& f = {}, Level minl = Debug) : logger(l), formatter(f), min_level(minl) {}
+        Channel (const ILoggerSP& l, const IFormatterSP& f = {}, Level minl = DEBUG) : logger(l), formatter(f), min_level(minl) {}
         Channel (const ILoggerSP& l, Level minl)                                     : logger(l), min_level(minl) {}
         ILoggerSP    logger;
         IFormatterSP formatter;
@@ -17,7 +17,7 @@ struct MultiLogger : ILogger {
     MultiLogger  (const Channels&);
     ~MultiLogger ();
 
-    void log_format (Level, const CodePoint&, std::string&, const IFormatter&) override;
+    void log_format (std::string&, const Info&, const IFormatter&) override;
 
 private:
     const Channels channels; // could not be changed for thread-safety

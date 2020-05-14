@@ -3,7 +3,7 @@
 
 namespace panda { namespace log {
 
-void ConsoleLogger::log (Level, const CodePoint&, const string& msg) {
+void ConsoleLogger::log (const string& msg, const Info&) {
     std::cout << msg << std::endl;
 };
 

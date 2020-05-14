@@ -10,7 +10,7 @@
 
 namespace panda { namespace log {
 
-#define PANDA_LOG_CODE_POINT(module) panda::log::CodePoint(__FILE__, __LINE__, __func__, &(module))
+#define PANDA_LOG_INFO(lvl, mod) panda::log::Info(lvl, &(mod), __FILE__, __LINE__, __func__)
 
 #define panda_should_log(...)       PANDA_PP_VFUNC(PANDA_SHOULD_LOG, __VA_ARGS__)
 #define PANDA_SHOULD_LOG1(lvl)      PANDA_SHOULD_LOG2(lvl, panda_log_module)
@@ -30,58 +30,58 @@ namespace panda { namespace log {
         panda::static_if<!panda::log::details::IsEval<panda::log::details::getf(#msg)>::value>([&](auto) {  \
             log << msg;                                                                                     \
         })(panda::log::details::Unique2{});                                                                 \
-        panda::log::details::do_log(log, PANDA_LOG_CODE_POINT(mod), lvl);                                   \
+        panda::log::details::do_log(log, PANDA_LOG_INFO(lvl, mod));                                         \
     }                                                                                                       \
 } while (0)
 
-#define panda_log_verbose_debug(...)    panda_log(panda::log::VerboseDebug, __VA_ARGS__)
-#define panda_log_debug(...)            panda_log(panda::log::Debug,        __VA_ARGS__)
-#define panda_log_info(...)             panda_log(panda::log::Info,         __VA_ARGS__)
-#define panda_log_notice(...)           panda_log(panda::log::Notice,       __VA_ARGS__)
-#define panda_log_warn(...)             panda_log(panda::log::Warning,      __VA_ARGS__)
-#define panda_log_warning(...)          panda_log(panda::log::Warning,      __VA_ARGS__)
-#define panda_log_error(...)            panda_log(panda::log::Error,        __VA_ARGS__)
-#define panda_log_critical(...)         panda_log(panda::log::Critical,     __VA_ARGS__)
-#define panda_log_alert(...)            panda_log(panda::log::Alert,        __VA_ARGS__)
-#define panda_log_emergency(...)        panda_log(panda::log::Emergency,    __VA_ARGS__)
+#define panda_log_verbose_debug(...)    panda_log(panda::log::VERBOSE_DEBUG, __VA_ARGS__)
+#define panda_log_debug(...)            panda_log(panda::log::DEBUG,        __VA_ARGS__)
+#define panda_log_info(...)             panda_log(panda::log::INFO,         __VA_ARGS__)
+#define panda_log_notice(...)           panda_log(panda::log::NOTICE,       __VA_ARGS__)
+#define panda_log_warn(...)             panda_log(panda::log::WARNING,      __VA_ARGS__)
+#define panda_log_warning(...)          panda_log(panda::log::WARNING,      __VA_ARGS__)
+#define panda_log_error(...)            panda_log(panda::log::ERROR,        __VA_ARGS__)
+#define panda_log_critical(...)         panda_log(panda::log::CRITICAL,     __VA_ARGS__)
+#define panda_log_alert(...)            panda_log(panda::log::ALERT,        __VA_ARGS__)
+#define panda_log_emergency(...)        panda_log(panda::log::EMERGENCY,    __VA_ARGS__)
 
 #define panda_rlog(level, msg)          panda_log(level, ::panda_log_module, msg)
-#define panda_rlog_verbose_debug(msg)   panda_rlog(panda::log::VerboseDebug, msg)
-#define panda_rlog_debug(msg)           panda_rlog(panda::log::Debug, msg)
-#define panda_rlog_info(msg)            panda_rlog(panda::log::Info, msg)
-#define panda_rlog_notice(msg)          panda_rlog(panda::log::Notice, msg)
-#define panda_rlog_warn(msg)            panda_rlog(panda::log::Warning, msg)
-#define panda_rlog_warning(msg)         panda_rlog(panda::log::Warning, msg)
-#define panda_rlog_error(msg)           panda_rlog(panda::log::Error, msg)
-#define panda_rlog_critical(msg)        panda_rlog(panda::log::Critical, msg)
-#define panda_rlog_alert(msg)           panda_rlog(panda::log::Alert, msg)
-#define panda_rlog_emergency(msg)       panda_rlog(panda::log::Emergency, msg)
+#define panda_rlog_verbose_debug(msg)   panda_rlog(panda::log::VERBOSE_DEBUG, msg)
+#define panda_rlog_debug(msg)           panda_rlog(panda::log::DEBUG, msg)
+#define panda_rlog_info(msg)            panda_rlog(panda::log::INFO, msg)
+#define panda_rlog_notice(msg)          panda_rlog(panda::log::NOTICE, msg)
+#define panda_rlog_warn(msg)            panda_rlog(panda::log::WARNING, msg)
+#define panda_rlog_warning(msg)         panda_rlog(panda::log::WARNING, msg)
+#define panda_rlog_error(msg)           panda_rlog(panda::log::ERROR, msg)
+#define panda_rlog_critical(msg)        panda_rlog(panda::log::CRITICAL, msg)
+#define panda_rlog_alert(msg)           panda_rlog(panda::log::ALERT, msg)
+#define panda_rlog_emergency(msg)       panda_rlog(panda::log::EMERGENCY, msg)
 
 #define panda_log_ctor(...)  PANDA_PP_VFUNC(PANDA_LOG_CTOR, __VA_ARGS__)
 #define panda_log_dtor(...)  PANDA_PP_VFUNC(PANDA_LOG_DTOR, __VA_ARGS__)
 #define PANDA_LOG_CTOR0()    PANDA_LOG_CTOR1(panda_log_module)
-#define PANDA_LOG_CTOR1(mod) PANDA_LOG3(panda::log::VerboseDebug, mod, __func__ << " [ctor]")
+#define PANDA_LOG_CTOR1(mod) PANDA_LOG3(panda::log::VERBOSE_DEBUG, mod, __func__ << " [ctor]")
 #define PANDA_LOG_DTOR0()    PANDA_LOG_DTOR1(panda_log_module)
-#define PANDA_LOG_DTOR1(mod) PANDA_LOG3(panda::log::VerboseDebug, mod, __func__ << " [dtor]")
+#define PANDA_LOG_DTOR1(mod) PANDA_LOG3(panda::log::VERBOSE_DEBUG, mod, __func__ << " [dtor]")
 #define panda_rlog_ctor()    panda_log_ctor(::panda_log_module)
 #define panda_rlog_dtor()    panda_log_dtor(::panda_log_module)
 
-#define panda_debug_v(var) panda_log(panda::log::Debug, #var << " = " << (var))
+#define panda_debug_v(var) panda_log_debug(#var << " = " << (var))
 
 #define PANDA_ASSERT(var, msg) if(!(auto assert_value = var)) { panda_log_emergency("assert failed: " << #var << " is " << assert_value << msg) }
 
 extern string_view default_message;
 
 enum Level {
-    VerboseDebug = 0,
-    Debug,
-    Info,
-    Notice,
-    Warning,
-    Error,
-    Critical,
-    Alert,
-    Emergency
+    VERBOSE_DEBUG = 0,
+    DEBUG,
+    INFO,
+    NOTICE,
+    WARNING,
+    ERROR,
+    CRITICAL,
+    ALERT,
+    EMERGENCY
 };
 
 struct Module {
@@ -92,9 +92,9 @@ struct Module {
     string  name;
     Modules children;
 
-    Module (const string& name, Level level = Warning);
-    Module (const string& name, Module& parent, Level level = Warning) : Module(name, &parent, level) {}
-    Module (const string& name, Module* parent, Level level = Warning);
+    Module (const string& name, Level level = WARNING);
+    Module (const string& name, Module& parent, Level level = WARNING) : Module(name, &parent, level) {}
+    Module (const string& name, Module* parent, Level level = WARNING);
 
     Module (const Module&) = delete;
     Module (Module&&)      = delete;
@@ -106,35 +106,36 @@ struct Module {
     virtual ~Module ();
 };
 
-struct CodePoint {
-    CodePoint () : line(), module() {}
-    CodePoint (const string_view& file, uint32_t line, const string_view& func, const Module* module)
-        : file(file), line(line), func(func), module(module) {}
+struct Info {
+    Info () : level(), module(), line() {}
+    Info (Level level, const Module* module, const string_view& file, uint32_t line, const string_view& func)
+        : level(level), module(module), file(file), line(line), func(func) {}
 
+    Level         level;
+    const Module* module;
     string_view   file;
     uint32_t      line;
     string_view   func;
-    const Module* module;
 
-    std::string to_string () const;
+    //std::string to_string () const;
 };
 
 struct IFormatter : AtomicRefcnt {
-    virtual string format (Level, const CodePoint&, std::string&) const = 0;
+    virtual string format (std::string&, const Info&) const = 0;
     virtual ~IFormatter () {}
 };
 using IFormatterSP = iptr<IFormatter>;
 
 struct ILogger : AtomicRefcnt {
-    virtual void log_format (Level, const CodePoint&, std::string&, const IFormatter&);
-    virtual void log        (Level, const CodePoint&, const string&);
+    virtual void log_format (std::string&, const Info&, const IFormatter&);
+    virtual void log        (const string&, const Info&);
     virtual ~ILogger () = 0;
 };
 using ILoggerSP = iptr<ILogger>;
 
-using format_fn        = function<string(Level, const CodePoint&, std::string&)>;
-using logger_format_fn = function<void(Level, const CodePoint&, std::string&, const IFormatter&)>;
-using logger_fn        = function<void(Level, const CodePoint&, const string&)>;
+using format_fn        = function<string(std::string&, const Info&)>;
+using logger_format_fn = function<void(std::string&, const Info&, const IFormatter&)>;
+using logger_fn        = function<void(const string&, const Info&)>;
 
 ILoggerSP    fn2logger    (const logger_format_fn&);
 ILoggerSP    fn2logger    (const logger_fn&);
@@ -155,7 +156,7 @@ namespace details {
     extern ILoggerSP logger;
 
     std::ostream& get_os ();
-    bool          do_log (std::ostream&, const CodePoint&, Level);
+    bool          do_log (std::ostream&, const Info&);
 
     template <char T> struct IsEval      : std::false_type {};
     template <>       struct IsEval<'['> : std::true_type  {};
@@ -174,7 +175,7 @@ namespace details {
     }
 }
 
-std::ostream& operator<< (std::ostream&, const CodePoint&);
+//std::ostream& operator<< (std::ostream&, const CodePoint&);
 std::ostream& operator<< (std::ostream&, const escaped&);
 
 }}
