@@ -49,21 +49,6 @@ static void add_mks (string& dest, long nsec, unsigned prec) {
     dest.length(dest.length() - 9 + prec);
 }
 
-static inline struct timespec now (unsigned hires) {
-    struct timespec ts;
-    if (hires) {
-        int status = clock_gettime(CLOCK_REALTIME, &ts);
-        if (status != 0) {
-            ts.tv_sec = 0;
-            ts.tv_nsec = 0;
-        }
-    } else {
-        ts.tv_sec = std::time(nullptr);
-        ts.tv_nsec = 0;
-    }
-    return ts;
-}
-
 static inline void ymdhms (string& dest, time_t epoch, unsigned type) {
     struct tm dt;
     if (!_PANDA_LOCALTIME(&epoch, &dt)) return;
@@ -141,10 +126,9 @@ string PatternFormatter::format (std::string& msg, const Info& info) const {
                 break;
             }
             case 't': {
-                auto t = now(y);
-                if (x < 3) ymdhms(ret, t.tv_sec, x);
-                else       ret += panda::to_string(t.tv_sec);
-                if (y) add_mks(ret, t.tv_nsec, y);
+                if (x < 3) ymdhms(ret, info.time.tv_sec, x);
+                else       ret += panda::to_string(info.time.tv_sec);
+                if (y) add_mks(ret, info.time.tv_nsec, y);
                 break;
             }
             case 'T': {

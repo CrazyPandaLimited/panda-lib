@@ -64,6 +64,8 @@ namespace details {
 
         if (data.logger) {
             Info info(level, module, cp.file, cp.line, cp.func);
+            int status = clock_gettime(CLOCK_REALTIME, &info.time);
+            if (status != 0) info.time.tv_sec = info.time.tv_nsec = 0;
             data.logger->log_format(s, info, *(data.formatter));
         }
         return true;

@@ -123,6 +123,7 @@ struct Info {
     string_view   file;
     uint32_t      line;
     string_view   func;
+    timespec      time;
 };
 
 struct IFormatter : AtomicRefcnt {
