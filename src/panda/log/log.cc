@@ -45,7 +45,7 @@ namespace details {
 
     std::ostream& get_os () { return get_data().os; }
 
-    bool do_log (std::ostream& _stream, const Info& info) {
+    bool do_log (std::ostream& _stream, Level level, const Module* module, const CodePoint& cp) {
         std::ostringstream& stream = static_cast<std::ostringstream&>(_stream);
         stream.flush();
         std::string s(stream.str());
@@ -63,6 +63,7 @@ namespace details {
         }
 
         if (data.logger) {
+            Info info(level, module, cp.file, cp.line, cp.func);
             data.logger->log_format(s, info, *(data.formatter));
         }
         return true;
@@ -175,25 +176,6 @@ void set_level (Level val, string_view modname) {
         ++range.first;
     }
 }
-
-//std::string CodePoint::to_string () const {
-//    std::ostringstream os;
-//    os << *this;
-//    os.flush();
-//    return os.str();
-//}
-
-//std::ostream& operator<< (std::ostream& stream, const CodePoint& cp) {
-//    size_t total = cp.file.size() + log10(cp.line) + 2;
-//    const char* whitespaces = "                        "; // 24 spaces
-//    if (total < 24) {
-//        whitespaces += total;
-//    } else {
-//        whitespaces = "";
-//    }
-//    stream << cp.file << ":" << cp.line << whitespaces;
-//    return stream;
-//}
 
 std::ostream& operator<< (std::ostream& stream, const escaped& str) {
    for (auto c : str.src) {

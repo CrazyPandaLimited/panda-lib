@@ -3,6 +3,7 @@
 #include "../string.h"
 #include "../function.h"
 //#include <iosfwd>
+#include <time.h>
 #include <string>
 #include <memory>
 #include <vector>
@@ -10,7 +11,7 @@
 
 namespace panda { namespace log {
 
-#define PANDA_LOG_INFO(lvl, mod) panda::log::Info(lvl, &(mod), __FILE__, __LINE__, __func__)
+#define PANDA_LOG_CODE_POINT panda::log::CodePoint{__FILE__, __LINE__, __func__}
 
 #define panda_should_log(...)       PANDA_PP_VFUNC(PANDA_SHOULD_LOG, __VA_ARGS__)
 #define PANDA_SHOULD_LOG1(lvl)      PANDA_SHOULD_LOG2(lvl, panda_log_module)
@@ -30,7 +31,7 @@ namespace panda { namespace log {
         panda::static_if<!panda::log::details::IsEval<panda::log::details::getf(#msg)>::value>([&](auto) {  \
             log << msg;                                                                                     \
         })(panda::log::details::Unique2{});                                                                 \
-        panda::log::details::do_log(log, PANDA_LOG_INFO(lvl, mod));                                         \
+        panda::log::details::do_log(log, lvl, &(mod), PANDA_LOG_CODE_POINT);                                \
     }                                                                                                       \
 } while (0)
 
@@ -106,6 +107,12 @@ struct Module {
     virtual ~Module ();
 };
 
+struct CodePoint {
+    string_view   file;
+    uint32_t      line;
+    string_view   func;
+};
+
 struct Info {
     Info () : level(), module(), line() {}
     Info (Level level, const Module* module, const string_view& file, uint32_t line, const string_view& func)
@@ -116,8 +123,6 @@ struct Info {
     string_view   file;
     uint32_t      line;
     string_view   func;
-
-    //std::string to_string () const;
 };
 
 struct IFormatter : AtomicRefcnt {
@@ -156,7 +161,7 @@ namespace details {
     extern ILoggerSP logger;
 
     std::ostream& get_os ();
-    bool          do_log (std::ostream&, const Info&);
+    bool          do_log (std::ostream&, Level, const Module*, const CodePoint&);
 
     template <char T> struct IsEval      : std::false_type {};
     template <>       struct IsEval<'['> : std::true_type  {};
@@ -175,7 +180,6 @@ namespace details {
     }
 }
 
-//std::ostream& operator<< (std::ostream&, const CodePoint&);
 std::ostream& operator<< (std::ostream&, const escaped&);
 
 }}
