@@ -182,6 +182,9 @@ public:
     template <size_type SIZE> // implicit constructor for literals, literals are expected to be null-terminated
     constexpr basic_string (const CharT (&str)[SIZE]) noexcept : _str_literal(str), _length(SIZE-1), _state(State::LITERAL) {}
 
+    template <size_type SIZE> // implicit constructor for literals, literals are expected to be null-terminated
+    constexpr basic_string (CharT (&str)[SIZE]) noexcept : basic_string(str, SIZE) {}
+
     template<class _CharT, typename = typename std::enable_if<std::is_same<_CharT, CharT>::value>::type>
     // GCC < 6 has a bug determining return value type for literals, so this ctor must be implicitly available
     #if !defined(__GNUC__) || defined(__clang__) || __GNUC__ >= 6

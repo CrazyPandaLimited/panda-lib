@@ -1,5 +1,6 @@
 1.4.0    xx.xx.2020
             - basic_string: avoid access to uninitialized memory in c_str()
+            - basic_string: distinguish char array from const char array in constructor for safety
             - logger: add root logging macros, add function to codepoint
             - logger: add formatter feature
             - logger: use formatter by default, pass to simple logger API compiled string
