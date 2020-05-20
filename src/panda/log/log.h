@@ -149,12 +149,16 @@ IFormatterSP fn2formatter (const format_fn&);
 
 void set_level     (Level, string_view module = "");
 void set_logger    (const ILoggerSP&);
-void set_logger    (std::nullptr_t);
 void set_formatter (const IFormatterSP&);
 
 inline void set_logger    (const logger_format_fn& f) { set_logger(fn2logger(f)); }
 inline void set_logger    (const logger_fn& f)        { set_logger(fn2logger(f)); }
+inline void set_logger    (std::nullptr_t)            { set_logger(ILoggerSP()); }
 inline void set_formatter (const format_fn& f)        { set_formatter(fn2formatter(f)); }
+inline void set_formatter (std::nullptr_t)            { set_formatter(IFormatterSP()); }
+
+ILoggerSP    get_logger    ();
+IFormatterSP get_formatter ();
 
 struct escaped { string_view src; };
 

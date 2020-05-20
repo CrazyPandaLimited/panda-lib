@@ -113,16 +113,28 @@ void set_logger (const ILoggerSP& l) {
     logger = get_data().logger = l;
 }
 
-void set_logger (std::nullptr_t) {
-    LOG_LOCK;
-    logger.reset();
-    get_data().logger.reset();
-}
-
 void set_formatter (const IFormatterSP& f) {
     if (!f) return set_format(default_format);
     LOG_LOCK;
     formatter = get_data().formatter = f;
+}
+
+ILoggerSP get_logger () {
+    auto& data = get_data();
+    if (data.logger != logger) {
+        LOG_LOCK;
+        data.logger = logger;
+    }
+    return data.logger;
+}
+
+IFormatterSP get_formatter () {
+    auto& data = get_data();
+    if (data.formatter != formatter) {
+        LOG_LOCK;
+        data.formatter = formatter;
+    }
+    return data.formatter;
 }
 
 Module::Module (const string& name, Level level) : Module(name, panda_log_module, level) {}
