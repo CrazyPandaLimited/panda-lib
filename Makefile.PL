@@ -11,7 +11,7 @@ my %params = (
     CCFLAGS          => '-Wall -Wextra',
     MIN_PERL_VERSION => '5.12.0',
     test             => { SRC => 't', BIN_DEPS => 'Test::Catch', RECURSIVE_TEST_FILES => 1 },
-    LIBS             => ['-lexecinfo -ldbgeng -lole32'],
+    LIBS             => [$^O eq 'Win32' ? '-lexecinfo -ldbgeng -lole32' : ''],
 );
 
 if ($ENV{SANITIZE}) {
