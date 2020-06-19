@@ -1,4 +1,4 @@
-1.4.0    xx.xx.2020
+1.4.0    19.06.2020
             - basic_string: avoid access to uninitialized memory in c_str()
             - basic_string: distinguish char array from const char array in constructor for safety
             - logger: add root logging macros, add function to codepoint
