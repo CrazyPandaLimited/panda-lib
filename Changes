@@ -1,3 +1,5 @@
+1.4.2    23.06.2020
+            - exceptions: fix test for raspberry pi
 1.4.1    22.06.2020
             - exceptions: more correctly handle on systems with buggy glibc/libunwind
             - exceptions: disable test on systems with buggy glibc/libunwind
