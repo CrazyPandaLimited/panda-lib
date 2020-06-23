@@ -1,4 +1,4 @@
-1.4.1    xx.xx.2020
+1.4.1    22.06.2020
             - exceptions: more correctly handle on systems with buggy glibc/libunwind
             - exceptions: disable test on systems with buggy glibc/libunwind
 1.4.0    19.06.2020

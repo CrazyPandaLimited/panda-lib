@@ -51,7 +51,7 @@ Backtrace::Backtrace () noexcept {
     void* temp_buff[max_depth];
     auto depth = rawtrace_producer(temp_buff, max_depth);
     if (depth > 0) {
-        buffer.resize(max_depth);
+        buffer.resize(depth);
         std::memcpy(buffer.data(), temp_buff, sizeof(void*) * depth);
     }
 }

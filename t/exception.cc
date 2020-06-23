@@ -138,5 +138,5 @@ TEST("panda::exception with string") {
 
 TEST("Backtrace::dump_trace()") {
     auto trace = Backtrace::dump_trace();
-    CHECK(trace.find("dump_trace") != string::npos);
+    CHECK_THAT( trace, Catch::Matchers::Contains( "Backtrace" ) );
 }
