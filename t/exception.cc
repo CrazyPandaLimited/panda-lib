@@ -68,7 +68,7 @@ TEST("exception with trace, catch exact exception") {
         fn48();
     } catch( const bt<std::invalid_argument>& e) {
         auto trace = e.get_backtrace_info();
-        REQUIRE(e.get_trace().size() == 50);
+        REQUIRE(e.get_trace().size() >= 49);
         REQUIRE((bool)trace);
         REQUIRE(e.what() == std::string("Oops!"));
 
@@ -106,7 +106,7 @@ TEST("exception with trace, catch non-final class") {
         REQUIRE(e.what() == std::string("Oops!"));
         auto bt = dyn_cast<const panda::Backtrace*>(&e);
         REQUIRE(bt);
-        REQUIRE(bt->get_trace().size() == 50);
+        REQUIRE(bt->get_trace().size() >= 49);
         auto trace = bt->get_backtrace_info();
         REQUIRE((bool)trace);
         auto frames = trace->get_frames();
