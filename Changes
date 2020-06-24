@@ -1,4 +1,4 @@
-1.4.3    xx.xx.2020
+1.4.3    x4.06.2020
             - exceptions: fix tests on *BSD
 1.4.2    23.06.2020
             - exceptions: fix test for raspberry pi
