@@ -1,8 +1,4 @@
-extern "C" {
-#include "EXTERN.h"
-#include "perl.h"
-#include "XSUB.h"
-}
+#include <xsheader.h>
 #include <panda/exception.h>
 
 using namespace panda;

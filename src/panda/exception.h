@@ -29,8 +29,8 @@ struct BacktraceInfo : Refcnt {
 };
 
 using RawTrace = std::vector<void*>;
-using BacktraceProducer = iptr<BacktraceInfo>(*)(const RawTrace&);
 using RawTraceProducer = int(*)(void**, int);
+using BacktraceProducer = StackframePtr(*)(const void* raw_frame);
 
 struct Backtrace {
     static const constexpr int max_depth = 50;

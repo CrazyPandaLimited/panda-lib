@@ -1,4 +1,8 @@
-1.4.3    x4.06.2020
+1.4.4    27.06.2020
+            - exceptions: allow fallback on default resolver
+            - exceptions, unix/glibc:: dump frame info even if symbol isn't available
+            - fix compilation issues on win32
+1.4.3    24.06.2020
             - exceptions: fix tests on *BSD
 1.4.2    23.06.2020
             - exceptions: fix test for raspberry pi

@@ -2,6 +2,7 @@
 #include <cstring>
 #include <memory>
 #include <functional>
+
 #ifdef _WIN32
   #include "exception/win.icc"
 #else
@@ -10,8 +11,10 @@
 
 namespace panda {
 
-static RawTraceProducer  rawtrace_producer = get_default_raw_producer();
-static BacktraceProducer bt_producer       = get_default_bt_producer();
+using FrameProducers = std::vector<BacktraceProducer>;
+
+static RawTraceProducer rawtrace_producer = get_default_raw_producer();
+static FrameProducers   frame_producers { get_default_bt_producer() };
 
 BacktraceInfo::~BacktraceInfo() {};
 
@@ -42,7 +45,7 @@ string BacktraceInfo::to_string() const noexcept {
 }
 
 void Backtrace::install_producer(BacktraceProducer& producer_) {
-    bt_producer = producer_;
+    frame_producers.push_back(producer_);
 }
 
 Backtrace::Backtrace (const Backtrace& other) noexcept : buffer(other.buffer) {}
@@ -59,7 +62,15 @@ Backtrace::Backtrace () noexcept {
 Backtrace::~Backtrace() {}
 
 iptr<BacktraceInfo> Backtrace::get_backtrace_info() const noexcept {
-    return bt_producer(buffer);
+    std::vector<StackframePtr> frames_info;
+    for(auto frame_ptr: buffer) {
+        StackframePtr frame;
+        for(auto it = frame_producers.rbegin(); it != frame_producers.rend() && !frame; ++it) {
+            frame = (*it)(frame_ptr);
+        }
+        if (frame) frames_info.emplace_back(std::move(frame));
+    }
+    return iptr<BacktraceInfo>(new BacktraceInfo(std::move(frames_info)));
 }
 
 string Backtrace::dump_trace() noexcept {

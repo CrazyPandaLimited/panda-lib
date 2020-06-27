@@ -82,7 +82,7 @@ static RawTraceProducer get_default_raw_producer () noexcept {
     };
 }
 
-static StackframePtr as_frame(const void* ip) noexcept {
+static StackframePtr win_producer(const void* ip) noexcept {
     StackframePtr r{};
     SimpleDebuggingSymbols idebug;
     if (!idebug.is_inited()) { return r; }
@@ -93,14 +93,7 @@ static StackframePtr as_frame(const void* ip) noexcept {
 }
 
 static BacktraceProducer get_default_bt_producer () noexcept {
-    return [](const RawTrace& traces) -> iptr<BacktraceInfo> {
-        std::vector<StackframePtr> frames;
-        for(auto ip: traces) {
-            auto frame = as_frame(ip);
-            if (frame) { frames.emplace_back(std::move(frame)); }
-        }
-        return new BacktraceInfo(std::move(frames));
-    };
+    return win_producer;
 }
 
 }
