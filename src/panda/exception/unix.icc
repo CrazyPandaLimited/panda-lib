@@ -33,7 +33,6 @@ static StackframePtr as_frame (const char* symbol) {
 #if defined (__linux__)
     static std::regex re("(.+)\\((.*)\\+(0x)?([0-9a-f]+)\\) \\[0x([0-9a-f]+)\\]");
     if (regex_match(symbol, what, re)) {
-        r = new Stackframe();
         panda::string dll           (what[1].first, what[1].length());
         panda::string mangled_name  (what[2].first, what[2].length());
         panda::string base_off      (what[3].first, what[3].length());
@@ -56,6 +55,7 @@ static StackframePtr as_frame (const char* symbol) {
         panda::string symbol_offset (what[4].first, what[4].length());
         panda::string address       (what[2].first, what[2].length());
 #endif
+        r = new Stackframe();
         int status;
         string demangled_name = mangled_name;
         // https://en.wikipedia.org/wiki/Name_mangling, check it starts with '_Z'. The

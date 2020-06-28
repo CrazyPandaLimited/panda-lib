@@ -1,3 +1,5 @@
+1.4.5    28.06.2020
+            - exceptions: fix segfaults on *BSD
 1.4.4    27.06.2020
             - exceptions: allow fallback on default resolver
             - exceptions, unix/glibc:: dump frame info even if symbol isn't available
