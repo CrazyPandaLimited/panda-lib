@@ -62,11 +62,17 @@ Backtrace::Backtrace () noexcept {
 Backtrace::~Backtrace() {}
 
 iptr<BacktraceInfo> Backtrace::get_backtrace_info() const noexcept {
-    std::vector<StackframePtr> frames_info;
-    for(auto frame_ptr: buffer) {
-        StackframePtr frame;
-        for(auto it = frame_producers.rbegin(); it != frame_producers.rend() && !frame; ++it) {
-            frame = (*it)(frame_ptr);
+    std::vector<StackframeSP> frames_info;
+    std::vector<BacktraceBackendSP> backends;
+    for(auto it = frame_producers.rbegin(); it != frame_producers.rend(); ++it) {
+        auto backend = (*it)(*this);
+        if (backend) backends.emplace_back(std::move(backend));
+    }
+
+    for (size_t i = 0; i < buffer.size(); ++i) {
+        StackframeSP frame;
+        for (size_t j = 0; j < backends.size() && !frame; ++j) {
+            frame = backends[j]->get_frame(i);
         }
         if (frame) frames_info.emplace_back(std::move(frame));
     }

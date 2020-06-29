@@ -26,9 +26,9 @@ static RawTraceProducer get_default_raw_producer() noexcept {
 #endif
 
 
-static StackframePtr as_frame (const char* symbol) {
+static StackframeSP as_frame (const char* symbol) {
     using guard_t = std::unique_ptr<char*, std::function<void(char**)>>;
-    StackframePtr r;
+    StackframeSP r;
     std::cmatch what;
 #if defined (__linux__)
     static std::regex re("(.+)\\((.*)\\+(0x)?([0-9a-f]+)\\) \\[0x([0-9a-f]+)\\]");
@@ -90,13 +90,31 @@ static StackframePtr as_frame (const char* symbol) {
     return r;
 }
 
-StackframePtr glibc_producer(const void* frame_ptr) {
-    using guard_t = std::unique_ptr<char**, std::function<void(char***)>>;
-    char** symbols = ::backtrace_symbols((void *const*)&frame_ptr, 1);
-    if (!symbols) return {};
+struct GlibcBacktrace : BacktraceBackend {
+    char** symbols = nullptr;
+    std::size_t size = 0;
+    const Backtrace& raw_traces;
+    bool gathered = false;
 
-    guard_t guard(&symbols, [](char*** ptr) { free(*ptr); });
-    return as_frame(symbols[0]);
+    GlibcBacktrace(const Backtrace& raw_traces_) noexcept: raw_traces{raw_traces_} {}
+    ~GlibcBacktrace() { if (symbols) { free(symbols); } }
+
+    void gather() noexcept {
+        auto& buffer = raw_traces.buffer;
+        symbols = ::backtrace_symbols(buffer.data(), buffer.size());
+        if (symbols) { size = buffer.size(); }
+        gathered  = true;
+    }
+
+    StackframeSP get_frame(size_t i) {
+        if (!gathered) gather();
+        if (i >= size) throw std::out_of_range("invalind frame index");
+        return as_frame(symbols[i]);
+    }
+};
+
+BacktraceBackendSP glibc_producer(const Backtrace& raw_traces) noexcept {
+    return new GlibcBacktrace(raw_traces);
 }
 
 static BacktraceProducer get_default_bt_producer() noexcept {

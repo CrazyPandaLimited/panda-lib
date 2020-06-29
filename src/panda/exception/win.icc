@@ -82,14 +82,24 @@ static RawTraceProducer get_default_raw_producer () noexcept {
     };
 }
 
-static StackframePtr win_producer(const void* ip) noexcept {
-    StackframePtr r{};
+struct WinBacktrace: BacktraceBackend {
+    const Backtrace& raw_traces;
     SimpleDebuggingSymbols idebug;
-    if (!idebug.is_inited()) { return r; }
 
-    r = StackframePtr(new Stackframe());
-    idebug.gather(ip, *r);
-    return r;
+    WinBacktrace(const Backtrace& raw_traces_) noexcept: raw_traces{raw_traces_} {}
+
+    StackframeSP get_frame(size_t i) {
+        StackframeSP r;
+        if (!idebug.is_inited()) return r;
+        auto raw_frame = raw_traces.buffer.at(i);
+        r = StackframeSP(new Stackframe());
+        idebug.gather(raw_frame, *r);
+        return r;
+    }
+};
+
+static BacktraceBackendSP win_producer(const Backtrace& raw_traces) noexcept {
+    return new WinBacktrace(raw_traces);
 }
 
 static BacktraceProducer get_default_bt_producer () noexcept {

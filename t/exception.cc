@@ -75,8 +75,8 @@ TEST("exception with trace, catch exact exception") {
         auto frames = trace->get_frames();
         REQUIRE(frames.size() >= 47);
         
-        StackframePtr fn01_frame = nullptr;
-        StackframePtr fn45_frame = nullptr;
+        StackframeSP fn01_frame = nullptr;
+        StackframeSP fn45_frame = nullptr;
 
         for(auto& f : frames)  {
             std::cout << f->name << "\n";
@@ -111,8 +111,8 @@ TEST("exception with trace, catch non-final class") {
         REQUIRE((bool)trace);
         auto frames = trace->get_frames();
         REQUIRE(frames.size() >= 47);
-        StackframePtr fn01_frame = nullptr;
-        StackframePtr fn45_frame = nullptr;
+        StackframeSP fn01_frame = nullptr;
+        StackframeSP fn45_frame = nullptr;
 
         for(auto& f : frames)  {
             if (f->name.find("fn01") != string::npos) { fn01_frame = f; }

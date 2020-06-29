@@ -17,20 +17,26 @@ struct Stackframe: public Refcnt {
     std::vector<string> args;
 };
 
-using StackframePtr = iptr<Stackframe>;
+using StackframeSP = iptr<Stackframe>;
+
+struct BacktraceBackend: Refcnt {
+    virtual StackframeSP get_frame(size_t i) = 0;
+};
+using BacktraceBackendSP = iptr<BacktraceBackend>;
 
 struct BacktraceInfo : Refcnt {
-    BacktraceInfo(std::vector<StackframePtr>&& frames_) : frames(std::move(frames_)) {}
+    BacktraceInfo(std::vector<StackframeSP>&& frames_) : frames(std::move(frames_)) {}
     virtual ~BacktraceInfo();
-    const std::vector<StackframePtr>& get_frames() const noexcept { return frames;}
+    const std::vector<StackframeSP>& get_frames() const noexcept { return frames;}
     virtual string to_string() const noexcept;
 
-    std::vector<StackframePtr> frames;
+    std::vector<StackframeSP> frames;
 };
 
+struct Backtrace;
 using RawTrace = std::vector<void*>;
 using RawTraceProducer = int(*)(void**, int);
-using BacktraceProducer = StackframePtr(*)(const void* raw_frame);
+using BacktraceProducer = BacktraceBackendSP(*)(const Backtrace& raw_traces);
 
 struct Backtrace {
     static const constexpr int max_depth = 50;
@@ -46,7 +52,6 @@ struct Backtrace {
     static void install_producer(BacktraceProducer& producer);
     static string dump_trace() noexcept;
 
-private:
     std::vector<void*> buffer;
 };
 
