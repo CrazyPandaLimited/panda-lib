@@ -88,13 +88,14 @@ struct WinBacktrace: BacktraceBackend {
 
     WinBacktrace(const Backtrace& raw_traces_) noexcept: raw_traces{raw_traces_} {}
 
-    StackframeSP get_frame(size_t i) {
-        StackframeSP r;
-        if (!idebug.is_inited()) return r;
+    bool produce_frame(StackFrames& frames, size_t i) override {
+        StackframeSP frame;
+        if (!idebug.is_inited()) return false;
         auto raw_frame = raw_traces.buffer.at(i);
-        r = StackframeSP(new Stackframe());
-        idebug.gather(raw_frame, *r);
-        return r;
+        frame = StackframeSP(new Stackframe());
+        idebug.gather(raw_frame, *frame);
+        frames.emplace_back(std::move(frame));
+        return true;
     }
 };
 

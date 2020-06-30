@@ -18,9 +18,10 @@ struct Stackframe: public Refcnt {
 };
 
 using StackframeSP = iptr<Stackframe>;
+using StackFrames = std::vector<StackframeSP>;
 
 struct BacktraceBackend: Refcnt {
-    virtual StackframeSP get_frame(size_t i) = 0;
+    virtual bool produce_frame(StackFrames& result, size_t i) = 0;
 };
 using BacktraceBackendSP = iptr<BacktraceBackend>;
 
@@ -30,7 +31,7 @@ struct BacktraceInfo : Refcnt {
     const std::vector<StackframeSP>& get_frames() const noexcept { return frames;}
     virtual string to_string() const noexcept;
 
-    std::vector<StackframeSP> frames;
+    StackFrames frames;
 };
 
 struct Backtrace;

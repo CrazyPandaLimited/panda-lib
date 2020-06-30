@@ -106,10 +106,12 @@ struct GlibcBacktrace : BacktraceBackend {
         gathered  = true;
     }
 
-    StackframeSP get_frame(size_t i) {
+    bool produce_frame(StackFrames& frames, size_t i) override {
         if (!gathered) gather();
         if (i >= size) throw std::out_of_range("invalind frame index");
-        return as_frame(symbols[i]);
+        auto frame = as_frame(symbols[i]);
+        if (frame) frames.emplace_back(std::move(frame));
+        return (bool) frame;
     }
 };
 
