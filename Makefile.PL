@@ -8,17 +8,30 @@ my %libs = (
     freebsd => '-lexecinfo',
     default => '-lexecinfo',
 );
-    
+
 
 my %params = (
     NAME             => 'XS::libpanda',
     CPLUS            => 14,
-    SRC              => ['src'],
-    INC              => '-Isrc',
-    BIN_SHARE        => { INCLUDE => {'src' => '/'} },
-    CCFLAGS          => '-Wall -Wextra',
     MIN_PERL_VERSION => '5.12.0',
-    test             => { SRC => 't', BIN_DEPS => 'Test::Catch', RECURSIVE_TEST_FILES => 1 },
+    CLIB => {
+        CMAKE_TARGET => 'panda-lib',
+        CMAKE_TEST   => 'panda-lib-tests',
+        CMAKE_TEST_FILE   => 'libpanda-lib-tests.a',
+        FILE         => 'libpanda-lib.a',
+        DIR          => '.',
+    },
+    test             => {
+        INC => '-Isrc',
+        SRC => 't',
+        BIN_DEPS => 'Test::Catch',
+        RECURSIVE_TEST_FILES => 1,
+        CLIB => {
+            CMAKE_TARGET => 'panda-lib-tests',
+            FILE   => 'libpanda-lib-tests.a',
+            DIR => '.',
+        },
+    },
     LIBS             => [$libs{$^O} // $libs{default}],
 );
 
