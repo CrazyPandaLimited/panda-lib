@@ -22,13 +22,16 @@ add_library(panda-lib-tests  STATIC ${testSource})
 target_link_libraries(panda-lib-tests PUBLIC panda-lib)
 
 find_package(Catch2 QUIET)
-target_link_libraries(panda-lib-tests PUBLIC Catch2::Catch2)
+if (Catch2_FOUND)
+    target_link_libraries(panda-lib-tests PUBLIC Catch2::Catch2)
 
-get_target_property(Catch2_INCLUDE_DIR Catch2::Catch2 INTERFACE_INCLUDE_DIRECTORIES)
-target_include_directories(panda-lib-tests PUBLIC ${Catch2_INCLUDE_DIR}/catch2) #tmp fix because we use Catch2 wrong, it should be include <catch/catch.hpp>, not <catch.hpp>
+    get_target_property(Catch2_INCLUDE_DIR Catch2::Catch2 INTERFACE_INCLUDE_DIRECTORIES)
+    target_include_directories(panda-lib-tests PUBLIC ${Catch2_INCLUDE_DIR}/catch2) #tmp fix because we use Catch2 wrong, it should be include <catch/catch.hpp>, not <catch.hpp>
+endif()
 
 #ctest
-add_executable(panda-lib-test-runner ${testSource} "tests/main.cc")
+#executable should be MyTest to pass test esception.cc that checks "library" name
+add_executable(MyTest ${testSource} "tests/main.cc")
 #target_compile_definitions(panda-lib-test-runner PRIVATE CATCH_CONFIG_MAIN)
-target_link_libraries(panda-lib-test-runner panda-lib-tests)
-add_test(test-all panda-lib-test-runner)
+target_link_libraries(MyTest panda-lib-tests)
+add_test(test-all MyTest)
