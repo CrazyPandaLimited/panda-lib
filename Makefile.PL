@@ -16,14 +16,13 @@ my %params = (
     MIN_PERL_VERSION => '5.12.0',
     CLIB => {
         CMAKE_TARGET => 'panda-lib',
-        CMAKE_TEST   => 'panda-lib-tests',
-        CMAKE_TEST_FILE   => 'libpanda-lib-tests.a',
         FILE         => 'libpanda-lib.a',
         DIR          => '.',
     },
     test             => {
-        INC => '-Isrc',
-        SRC => 't',
+        INC   => '-Isrc',
+        CPLUS => 14,
+        SRC   => 't',
         BIN_DEPS => 'Test::Catch',
         RECURSIVE_TEST_FILES => 1,
         CLIB => {
