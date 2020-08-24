@@ -11,12 +11,10 @@ target_include_directories(panda-lib PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 target_compile_features(panda-lib PUBLIC cxx_std_14)
-get_target_property(MAIN_CXX panda-lib INTERFACE_COMPILE_FEATURES)
-message(STATUS "main: " ${MAIN_CXX})
 
-#tests
-file(GLOB_RECURSE testSource RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/*.cc")
-list(FILTER testSource EXCLUDE REGEX "tests/main.cc")
+########################tests#######################################
+file(GLOB_RECURSE testSource RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "t/*.cc")
+list(FILTER testSource EXCLUDE REGEX "t/main.cc")
 
 add_library(panda-lib-tests  STATIC ${testSource})
 target_link_libraries(panda-lib-tests PUBLIC panda-lib)
@@ -29,22 +27,21 @@ if (Catch2_FOUND)
     target_include_directories(panda-lib-tests PUBLIC ${Catch2_INCLUDE_DIR}/catch2) #tmp fix because we use Catch2 wrong, it should be include <catch/catch.hpp>, not <catch.hpp>
 endif()
 
-#ctest
+########################ctests######################################
 #executable should be MyTest to pass test esception.cc that checks "library" name
-add_executable(MyTest ${testSource} "tests/main.cc")
-#target_compile_definitions(panda-lib-test-runner PRIVATE CATCH_CONFIG_MAIN)
+add_executable(MyTest ${testSource} "t/main.cc")
 target_link_libraries(MyTest panda-lib-tests)
 add_test(test-all MyTest)
 
-#install
-install(DIRECTORY src DESTINATION include
+########################install#####################################
+install(DIRECTORY src/ DESTINATION include
     FILES_MATCHING PATTERN "*.h")
 install(TARGETS panda-lib EXPORT panda-libTargets
     ARCHIVE DESTINATION lib
 )
 
 install(EXPORT panda-libTargets
-    FILE panda-libTargetsTargets.cmake
+    FILE panda-libConfig.cmake
     NAMESPACE panda::
-    DESTINATION lib/cmake/panda-libTargets
+    DESTINATION lib/cmake/panda-lib
 )

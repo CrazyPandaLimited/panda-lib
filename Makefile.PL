@@ -20,16 +20,16 @@ my %params = (
         DIR          => '.',
     },
     test             => {
-        INC   => '-Isrc',
-        CPLUS => 14,
-        SRC   => 't',
+        INC      => '-Isrc',
+        CPLUS    => 14,
+        XS       => 'xs/t/MyTest.xs',
         BIN_DEPS => 'Test::Catch',
-        RECURSIVE_TEST_FILES => 1,
         CLIB => {
             CMAKE_TARGET => 'panda-lib-tests',
-            FILE   => 'libpanda-lib-tests.a',
-            DIR => '.',
+            FILE => 'libpanda-lib-tests.a',
+            DIR  => '.',
         },
+        RECURSIVE_TEST_FILES => 1,
     },
     LIBS             => [$libs{$^O} // $libs{default}],
 );
