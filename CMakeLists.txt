@@ -19,13 +19,8 @@ list(FILTER testSource EXCLUDE REGEX "t/main.cc")
 add_library(panda-lib-tests  STATIC ${testSource})
 target_link_libraries(panda-lib-tests PUBLIC panda-lib)
 
-find_package(Catch2 QUIET)
-if (Catch2_FOUND)
-    target_link_libraries(panda-lib-tests PUBLIC Catch2::Catch2)
-
-    get_target_property(Catch2_INCLUDE_DIR Catch2::Catch2 INTERFACE_INCLUDE_DIRECTORIES)
-    target_include_directories(panda-lib-tests PUBLIC ${Catch2_INCLUDE_DIR}/catch2) #tmp fix because we use Catch2 wrong, it should be include <catch/catch.hpp>, not <catch.hpp>
-endif()
+find_package(Catch2)
+target_link_libraries(panda-lib-tests PUBLIC Catch2::Catch2)
 
 ########################ctests######################################
 #executable should be MyTest to pass test esception.cc that checks "library" name
