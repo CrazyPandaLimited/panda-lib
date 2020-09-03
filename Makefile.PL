@@ -20,9 +20,7 @@ my %params = (
         DIR          => '.',
     },
     test             => {
-        INC      => '-Isrc',
         CPLUS    => 14,
-        XS       => 'xs/t/MyTest.xs',
         BIN_DEPS => 'Test::Catch',
         CLIB => {
             CMAKE_TARGET => 'panda-lib-tests',
