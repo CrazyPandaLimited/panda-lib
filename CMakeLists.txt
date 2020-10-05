@@ -12,6 +12,20 @@ target_include_directories(panda-lib PUBLIC
 )
 target_compile_features(panda-lib PUBLIC cxx_std_14)
 
+#check for execinfo for Backtrace
+include(CheckIncludeFileCXX)
+CHECK_INCLUDE_FILE_CXX(execinfo.h execinfo_header)
+if(NOT execinfo_header)
+    #TODO: add libunwind support as alternative for execinfo
+    message(FATAL_ERROR "execinfo.h not found")
+endif()
+
+find_library(execinfo_lib execinfo)
+if (execinfo_lib)
+    message(STATUS ${exe_exists})
+    target_link_libraries(panda-lib PUBLIC execinfo)
+endif()
+
 ########################tests#######################################
 file(GLOB_RECURSE testSource RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "t/*.cc")
 list(FILTER testSource EXCLUDE REGEX "t/main.cc")
