@@ -12,18 +12,22 @@ target_include_directories(panda-lib PUBLIC
 )
 target_compile_features(panda-lib PUBLIC cxx_std_14)
 
-#check for execinfo for Backtrace
-include(CheckIncludeFileCXX)
-CHECK_INCLUDE_FILE_CXX(execinfo.h execinfo_header)
-if(NOT execinfo_header)
-    #TODO: add libunwind support as alternative for execinfo
-    message(FATAL_ERROR "execinfo.h not found")
-endif()
+if (UNIX)
+    #check for execinfo for Backtrace
+    include(CheckIncludeFileCXX)
+    CHECK_INCLUDE_FILE_CXX(execinfo.h execinfo_header)
+    if(NOT execinfo_header)
+        #TODO: add libunwind support as alternative for execinfo
+        #message(FATAL_ERROR "execinfo.h not found")
+    endif()
 
-find_library(execinfo_lib execinfo)
-if (execinfo_lib)
-    message(STATUS ${exe_exists})
-    target_link_libraries(panda-lib PUBLIC execinfo)
+    find_library(execinfo_lib execinfo)
+    if (execinfo_lib)
+        message(STATUS ${exe_exists})
+        target_link_libraries(panda-lib PUBLIC execinfo)
+    endif()
+else()
+    target_link_libraries(panda-lib PUBLIC dbgeng ole32)
 endif()
 
 ########################tests#######################################
