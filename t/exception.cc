@@ -97,7 +97,7 @@ TEST_CASE("esception", "[exception]") {
 
             CHECK_THAT( fn01_frame->library, Catch::Matchers::Contains( "MyTest" ) );
             CHECK_THAT( fn01_frame->name, Catch::Matchers::Contains( "fn01" ) );
-            CHECK( fn45_frame->address > 0)
+            CHECK( fn45_frame->address > 0);
 //#ifndef _WIN32;
             CHECK( fn45_frame->offset > 0);
 //#endif
