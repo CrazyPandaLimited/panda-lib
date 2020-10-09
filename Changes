@@ -1,4 +1,4 @@
-1.4.8    xx.xx.xxxx
+1.4.8    09.10.2020
             - bugfix in log format
 1.4.7    27.08.2020
             - exceptions: increase default backtrace depth from 50 to 150
