@@ -1,0 +1,3 @@
+build/
+cmake_props/
+#!include_default
