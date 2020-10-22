@@ -25,7 +25,7 @@ static RawTraceProducer get_default_raw_producer() noexcept {
 
 // ::backtrace returns size_t on *BSD, and int on linux
 static int bt_adapter(void **dst, int sz) {
-    auto r = ::PANDA_GET_BACKTRACE(dst, sz);
+    auto r = PANDA_GET_BACKTRACE(dst, sz);
     return (int)r;
 }
 
