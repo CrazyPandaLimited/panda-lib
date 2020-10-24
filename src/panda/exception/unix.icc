@@ -4,13 +4,14 @@
 #include <memory>
 
 #if PANDA_HAS_EXECINFO
+
 #include <execinfo.h>
 #define PANDA_GET_BACKTRACE ::backtrace
-#endif
 
-#if PANDA_HAS_LIBUNWIND
+#else
 #include <libunwind.h>
 #define PANDA_GET_BACKTRACE ::unw_backtrace
+
 #endif
 
 namespace panda {
@@ -122,12 +123,12 @@ struct GlibcBacktrace : BacktraceBackend {
     bool produce_frame(StackFrames& frames, size_t i) override {
         if (!gathered) gather();
 #if PANDA_HAS_EXECINFO
-        if (i >= size) throw std::out_of_range("invalind frame index");
+        if (i >= size) throw std::out_of_range("invalid frame index");
         auto frame = as_frame(symbols[i]);
         if (frame) frames.emplace_back(std::move(frame));
         return (bool) frame;
 #else
-        if (i >= size) throw std::out_of_range("invalind frame index");
+        if (i >= size) throw std::out_of_range("invalid frame index");
         StackframeSP frame = new Stackframe();
         frame->address = (std::uint64_t)raw_traces.buffer.at(i);
         frames.emplace_back(std::move(frame));
