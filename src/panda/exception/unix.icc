@@ -39,9 +39,24 @@ static RawTraceProducer get_default_raw_producer() noexcept {
     return bt_adapter;
 }
 #else
+
+#if defined (__linux__)
+
 static RawTraceProducer get_default_raw_producer() noexcept {
     return ::backtrace;
 }
+#else
+
+static int bt_adapter(void **dst, int sz) {
+    auto r = ::backtrace(dst, sz);
+    return (int)r;
+}
+
+static RawTraceProducer get_default_raw_producer() noexcept {
+    return bt_adapter;
+}
+
+#endif
 #endif
 
 
