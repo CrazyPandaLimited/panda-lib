@@ -5,6 +5,7 @@ use XS::Install;
 my %libs = (
     MSWin32 => '-lexecinfo -ldbgeng -lole32',
     linux   => '',
+    darwin  => '',
     freebsd => '-lexecinfo',
     default => '-lexecinfo',
 );
