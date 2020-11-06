@@ -3,7 +3,7 @@ use Config;
 use XS::Install;
 
 my %libs = (
-    MSWin32 => '-lexecinfo -ldbgeng -lole32',
+    MSWin32 => '-ldbgeng -lole32',
     linux   => '',
     darwin  => '',
     freebsd => '-lexecinfo',
@@ -31,7 +31,7 @@ my %params = (
         },
         RECURSIVE_TEST_FILES => 1,
     },
-    LDDLFLAGS          => $libs{$^O} // $libs{default},
+    LINK               => $libs{$^O} // $libs{default},
     CONFIGURE_REQUIRES => {'Alien::cmake3' => 0},
 );
 
