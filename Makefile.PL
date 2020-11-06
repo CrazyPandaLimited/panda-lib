@@ -7,6 +7,7 @@ my %libs = (
     linux   => '',
     darwin  => '',
     freebsd => '-lexecinfo',
+    openbsd => '',
     default => '-lexecinfo',
 );
 
