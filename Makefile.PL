@@ -33,10 +33,4 @@ my %params = (
     CONFIGURE_REQUIRES => {'Alien::cmake3' => 0},
 );
 
-if ($ENV{SANITIZE}) {
-    ($params{CCFLAGS}||='') .= ' -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer';
-    $params{LIBS}[1] .= ' -lubsan -lasan'; #sanitizer
-    $params{LIBS}[0] .= ' -lubsan -lasan'; #sanitizer
-}
-
 write_makefile(%params);
