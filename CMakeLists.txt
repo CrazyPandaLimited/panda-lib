@@ -10,7 +10,12 @@ target_include_directories(panda-lib PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:include>
 )
-target_compile_features(panda-lib PUBLIC cxx_std_14)
+
+set_target_properties(panda-lib PROPERTIES
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
 
 if (UNIX)
     # needed for *bsd
