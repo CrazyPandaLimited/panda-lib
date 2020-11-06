@@ -29,7 +29,7 @@ my %params = (
         },
         RECURSIVE_TEST_FILES => 1,
     },
-    LIBS               => [$libs{$^O} // $libs{default}],
+    LDDLFLAGS          => $libs{$^O} // $libs{default},
     CONFIGURE_REQUIRES => {'Alien::cmake3' => 0},
 );
 
