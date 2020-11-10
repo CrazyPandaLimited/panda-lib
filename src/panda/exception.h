@@ -50,7 +50,8 @@ struct Backtrace {
     iptr<BacktraceInfo> get_backtrace_info() const noexcept;
     const RawTrace& get_trace () const noexcept { return buffer; }
 
-    static void install_producer(BacktraceProducer& producer);
+    static void install_producer  (const BacktraceProducer& producer) noexcept;
+    static void uninstall_producer(const BacktraceProducer& producer) noexcept;
     static string dump_trace() noexcept;
 
     std::vector<void*> buffer;
