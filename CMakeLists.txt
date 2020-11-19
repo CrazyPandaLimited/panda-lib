@@ -11,11 +11,7 @@ target_include_directories(panda-lib PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-set_target_properties(panda-lib PROPERTIES
-    CXX_STANDARD 14
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
+target_compile_features(panda-lib PUBLIC cxx_std_14)
 
 if (UNIX)
     # needed for *bsd
