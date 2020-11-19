@@ -12,6 +12,7 @@ target_include_directories(panda-lib PUBLIC
 )
 
 target_compile_features(panda-lib PUBLIC cxx_std_14)
+add_library(panda::panda-lib ALIAS panda-lib)
 
 if (UNIX)
     # needed for *bsd
@@ -69,7 +70,9 @@ install(TARGETS panda-lib EXPORT panda-libTargets
 )
 
 install(EXPORT panda-libTargets
-    FILE panda-libConfig.cmake
+    FILE panda-libTargets.cmake
     NAMESPACE panda::
     DESTINATION lib/cmake/panda-lib
 )
+
+install(FILES panda-libConfig.cmake DESTINATION lib/cmake/panda-lib)

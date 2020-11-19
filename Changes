@@ -1,7 +1,7 @@
 1.4.11    xx.xx.xx
             - more correct libunwind usage and detection on *bsd
             - improve makefile
-            - lower cmake requirements
+            - cmake subdirectory support
 1.4.10    30.10.2020
             - attempt to fix exceptions in musl environments (e.g. alipine linux)
             - attempt to fix exceptions for windows build, single executable test
