@@ -24,7 +24,7 @@ my %params = (
     test             => {
         CPLUS    => 14,
         BIN_DEPS => 'Test::Catch',
-        CLIB => {
+        CLIB     => {
             CMAKE_TARGET => 'panda-lib-tests',
             FILE => 'libpanda-lib-tests.a',
             DIR  => '.',
@@ -32,6 +32,7 @@ my %params = (
         RECURSIVE_TEST_FILES => 1,
     },
     LINK               => $libs{$^O} // $libs{default},
+    BIN_SHARE          => 1,
     CONFIGURE_REQUIRES => {'Alien::cmake3' => 0},
 );
 
