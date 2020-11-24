@@ -1,4 +1,4 @@
-1.4.11    xx.xx.xx
+1.4.11    25.11.2020
             - more correct libunwind usage and detection on *bsd
             - improve makefile
             - cmake subdirectory support
