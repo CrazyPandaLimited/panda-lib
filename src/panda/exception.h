@@ -33,6 +33,7 @@ struct BacktraceInfo : Refcnt {
 
     StackFrames frames;
 };
+using BacktraceInfoSP = iptr<BacktraceInfo>;
 
 struct Backtrace;
 using RawTrace = std::vector<void*>;
