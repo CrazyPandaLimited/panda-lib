@@ -29,7 +29,7 @@ static int bt_adapter(void **dst, int sz) {
     int count = 0;
     while ((unw_step(&cursor) > 0) && count < sz) {
         unw_get_reg(&cursor, UNW_REG_IP, &ip);
-        dst[++count] = (void*)ip;
+        dst[count++] = (void*)ip;
     }
     return count;
 }
