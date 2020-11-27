@@ -1,6 +1,7 @@
 #pragma once
 #include <utility>
 #include <exception>
+#include <iosfwd>
 
 namespace panda {
 
@@ -491,5 +492,14 @@ bool operator!= (const unexpected<E>& e, const expected<T, E>& x) { return !(x =
 template <class T, class E>
 void swap (expected<T,E>& lhs, expected<T,E>& rhs) { lhs.swap(rhs); }
 
+template <class T, class E, typename = decltype(std::declval<std::ostream&>() << std::declval<T>() << std::declval<E>())>
+std::ostream& operator<< (std::ostream& s, const expected<T, E>& x) {
+    if (x.has_value()) {
+        s << x.value();
+    } else {
+        s << x.error();
+    }
+    return s;
+}
 
 }

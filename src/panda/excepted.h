@@ -486,4 +486,14 @@ bool operator!= (const unexpected<E>& e, const excepted<T, E>& x) { return !(x =
 template <class T, class E>
 void swap (excepted<T,E>& lhs, excepted<T,E>& rhs) { lhs.swap(rhs); }
 
+template <class T, class E, typename = decltype(std::declval<std::ostream&>() << std::declval<T>() << std::declval<E>())>
+std::ostream& operator<< (std::ostream& s, const excepted<T, E>& x) {
+    if (x.has_value()) {
+        s << x.value();
+    } else {
+        s << x.error();
+    }
+    return s;
+}
+
 }
