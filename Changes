@@ -1,5 +1,6 @@
 1.4.12    xx.xx.2020
             - exceptions, libunwind: with fake 1st frame with IP = 0
+            - move C part to separate folder
 1.4.11    25.11.2020
             - more correct libunwind usage and detection on *bsd
             - improve makefile

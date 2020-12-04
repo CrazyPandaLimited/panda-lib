@@ -35,7 +35,6 @@ blib
 CMakeFiles
 CMakeCache.txt
 *.deps
-*.cmake
 
 build
 cmake_props

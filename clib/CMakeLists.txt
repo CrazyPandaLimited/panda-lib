@@ -47,8 +47,8 @@ endif()
 target_link_libraries(panda-lib PUBLIC ${panda-lib-libraries})
 
 ########################tests#######################################
-file(GLOB_RECURSE testSource RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "t/*.cc")
-list(FILTER testSource EXCLUDE REGEX "t/main.cc")
+file(GLOB_RECURSE testSource RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/*.cc")
+list(FILTER testSource EXCLUDE REGEX "tests/main.cc")
 
 add_library(panda-lib-tests  STATIC ${testSource})
 target_link_libraries(panda-lib-tests PUBLIC panda-lib)
@@ -58,7 +58,7 @@ target_link_libraries(panda-lib-tests PUBLIC Catch2::Catch2)
 
 ########################ctests######################################
 #executable should be MyTest to pass test esception.cc that checks "library" name
-add_executable(MyTest ${testSource} "t/main.cc")
+add_executable(MyTest ${testSource} "tests/main.cc")
 target_link_libraries(MyTest panda-lib-tests)
 add_test(test-all MyTest)
 
@@ -75,4 +75,4 @@ install(EXPORT panda-libTargets
     DESTINATION lib/cmake/panda-lib
 )
 
-install(FILES panda-libConfig.cmake DESTINATION lib/cmake/panda-lib)
+install(FILES panda-lib-config.cmake DESTINATION lib/cmake/panda-lib)
