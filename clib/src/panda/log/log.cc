@@ -19,29 +19,60 @@ string_view default_message = "==> MARK <==";
 ILogger::~ILogger () {}
 
 namespace details {
+    // panda-log is thread-safe and we use quite a tricky way to avoid mutexes on logging
+    // and thus eliminating any perfomance penalties for thread-safety except only for a single access to a thread local variable
+
     using Modules = unordered_string_multimap<string, Module*>;
 
-    struct Data {
-        ILoggerSP          logger;
-        IFormatterSP       formatter;
-        std::ostringstream os;
+    struct ModuleData {
+        ILoggerSP    effective_logger; // optimization to avoid traversing the parent-child tree
+        ILoggerSP    logger;           // explicitly installed logger for this module
+        IFormatterSP effective_formatter;
+        IFormatterSP formatter;
     };
 
-    ILoggerSP logger;
+    struct Data {
+        size_t rev = 0;
+        std::ostringstream os;
+        std::map<uintptr_t, ModuleData> map;
+
+        Data& operator= (const Data& oth) {
+            // ostream is never changed
+            rev = oth.rev;
+            map = oth.map;
+            return *this;
+        }
+
+        ModuleData& get_module_data (const Module* module) {
+            return map.at(reinterpret_cast<uintptr_t>(module));
+        }
+    };
+
 
     static std::recursive_mutex mtx;
-    #define LOG_LOCK std::lock_guard<decltype(mtx)> guard(mtx);
-    #define MOD_LOCK std::lock_guard<decltype(mtx)> guard(mtx);
+    #define SYNC_LOCK std::lock_guard<decltype(mtx)> guard(mtx);
 
-    static IFormatterSP formatter = IFormatterSP(new PatternFormatter(default_format));
-    static Modules      modules;
-    static auto         mt_id = std::this_thread::get_id();
-    static Data         mt_data; // data for main thread, can't use TLS because it's destroyed much earlier
-
-    static thread_local Data  _ct_data;            // data for child threads
+    static Modules modules;                        // modules by name index
+    static Data src_data;                          // main container for modules data
+    static auto mt_id = std::this_thread::get_id();
+    static Data mt_data;                           // cached data for main thread, can't use TLS because it's destroyed much earlier
+    static thread_local Data  _ct_data;            // cached data for child threads
     static thread_local auto* ct_data = &_ct_data; // TLS via pointers works 3x faster in GCC
 
-    static Data& get_data () { return std::this_thread::get_id() == mt_id ? mt_data : *ct_data; }
+    static inline Data& get_data () {
+        return std::this_thread::get_id() == mt_id ? mt_data : *ct_data;
+    }
+
+    static inline Data& get_synced_data () {
+        auto& data = get_data();
+
+        if (data.rev != src_data.rev) { // data changed by some thread
+            SYNC_LOCK;
+            data = src_data;
+        }
+
+        return data;
+    }
 
     std::ostream& get_os () { return get_data().os; }
 
@@ -51,22 +82,13 @@ namespace details {
         std::string s(stream.str());
         stream.str({});
 
-        auto& data = get_data();
+        auto& data = get_synced_data().get_module_data(module);
 
-        if (data.logger != logger) {
-            LOG_LOCK;
-            data.logger = logger;
-        }
-        if (data.formatter != formatter) {
-            LOG_LOCK;
-            data.formatter = formatter;
-        }
-
-        if (data.logger) {
+        if (data.effective_logger) {
             Info info(level, module, cp.file, cp.line, cp.func);
             int status = clock_gettime(CLOCK_REALTIME, &info.time);
             if (status != 0) info.time.tv_sec = info.time.tv_nsec = 0;
-            data.logger->log_format(s, info, *(data.formatter));
+            data.effective_logger->log_format(s, info, *(data.effective_formatter));
         }
         return true;
     }
@@ -81,16 +103,8 @@ void ILogger::log (const string&, const Info&) {
     assert(0 && "either ILogger::log or ILogger::log_format must be implemented");
 }
 
-ILoggerSP fn2logger (const logger_format_fn& f) {
-    struct Logger : ILogger {
-        logger_format_fn f;
-        Logger (const logger_format_fn& f) : f(f) {}
-        void log_format (std::string& s, const Info& i, const IFormatter& fmt) override { f(s, i, fmt); }
-    };
-    return new Logger(f);
-}
 
-ILoggerSP fn2logger (const logger_fn& f) {
+ILoggerSP make_logger (const logger_fn& f) {
     struct Logger : ILogger {
         logger_fn f;
         Logger (const logger_fn& f) : f(f) {}
@@ -99,7 +113,16 @@ ILoggerSP fn2logger (const logger_fn& f) {
     return new Logger(f);
 }
 
-IFormatterSP fn2formatter (const format_fn& f) {
+ILoggerSP make_logger (const logger_format_fn& f) {
+    struct Logger : ILogger {
+        logger_format_fn f;
+        Logger (const logger_format_fn& f) : f(f) {}
+        void log_format (std::string& s, const Info& i, const IFormatter& fmt) override { f(s, i, fmt); }
+    };
+    return new Logger(f);
+}
+
+IFormatterSP make_formatter (const format_fn& f) {
     struct Formatter : IFormatter {
         format_fn f;
         Formatter (const format_fn& f) : f(f) {}
@@ -108,81 +131,127 @@ IFormatterSP fn2formatter (const format_fn& f) {
     return new Formatter(f);
 }
 
-void set_logger (const ILoggerSP& l) {
-    LOG_LOCK;
-    logger = get_data().logger = l;
+IFormatterSP make_formatter (string_view pattern) {
+    return new PatternFormatter(pattern);
 }
 
-void set_formatter (const IFormatterSP& f) {
-    if (!f) return set_format(default_format);
-    LOG_LOCK;
-    formatter = get_data().formatter = f;
-}
-
-ILoggerSP get_logger () {
-    auto& data = get_data();
-    if (data.logger != logger) {
-        LOG_LOCK;
-        data.logger = logger;
-    }
-    return data.logger;
-}
-
-IFormatterSP get_formatter () {
-    auto& data = get_data();
-    if (data.formatter != formatter) {
-        LOG_LOCK;
-        data.formatter = formatter;
-    }
-    return data.formatter;
-}
 
 Module::Module (const string& name, Level level) : Module(name, panda_log_module, level) {}
+Module::Module (const string& name, Module& parent, Level level) : Module(name, &parent, level) {}
+Module::Module (const string& name, std::nullptr_t, Level level) : Module(name, (Module*)nullptr, level) {}
 
-Module::Module (const string& name, Module* parent, Level level) : parent(parent), level(level), name(name) {
-    MOD_LOCK;
+Module::Module (const string& name, Module* parent, Level level) : _parent(parent), _level(level), _name(name) {
+    SYNC_LOCK;
+
+    ++src_data.rev;
+    auto &data = src_data.map[reinterpret_cast<uintptr_t>(this)]; // creates entry
 
     if (parent) {
-        parent->children.push_back(this);
-        if (parent->name) this->name = parent->name + "::" + name;
+        parent->_children.push_back(this);
+        if (parent->_name) this->_name = parent->_name + "::" + name;
+
+        // inherit effective logger and formatter from parent module
+        auto& parent_data = src_data.get_module_data(parent);
+        data.effective_logger    = parent_data.effective_logger;
+        data.effective_formatter = parent_data.effective_formatter;
+    } else {
+        // set default formatter for root module
+        data.effective_formatter = data.formatter = IFormatterSP(new PatternFormatter(default_format));
     }
 
-    if (this->name) modules.emplace(this->name, this);
+    modules.emplace(this->_name, this);
 }
 
+const string&          Module::name     () const { return _name; }
+const Module*          Module::parent   () const { return _parent; }
+Level                  Module::level    () const { return _level; }
+const Module::Modules& Module::children () const { return _children; }
+
 void Module::set_level (Level level) {
-    MOD_LOCK;
-    this->level = level;
-    for (auto& m : children) m->set_level(level);
+    SYNC_LOCK;
+    this->_level = level;
+    for (auto& m : _children) m->set_level(level);
+}
+
+void Module::set_logger (ILoggerFromAny _l) {
+    SYNC_LOCK;
+    auto l = std::move(_l.value);
+    ++src_data.rev;
+    auto& data = src_data.get_module_data(this);
+    data.logger = l;
+    if (!l && _parent) l = src_data.get_module_data(_parent).effective_logger;
+    data.effective_logger = l;
+    for (auto& m : _children) m->_set_effective_logger(std::move(l));
+}
+
+void Module::_set_effective_logger (const ILoggerSP& l) {
+    auto& data = src_data.get_module_data(this);
+    if (data.logger) return; // all children already have it as effective logger
+    data.effective_logger = l;
+    for (auto& m : _children) m->_set_effective_logger(l);
+}
+
+void Module::set_formatter (IFormatterFromAny _f) {
+    SYNC_LOCK;
+    auto f = std::move(_f.value);
+    ++src_data.rev;
+    auto& data = src_data.get_module_data(this);
+    data.formatter = f;
+    if (!f) {
+        if (_parent) f = src_data.get_module_data(_parent).effective_formatter;
+        else         f = data.formatter = IFormatterSP(new PatternFormatter(default_format));
+    }
+    data.effective_formatter = f;
+    for (auto& m : _children) m->_set_effective_formatter(std::move(f));
+}
+
+void Module::_set_effective_formatter (const IFormatterSP& f) {
+    auto& data = src_data.get_module_data(this);
+    if (data.formatter) return; // all children already have it as effective formatter
+    data.effective_formatter = f;
+    for (auto& m : _children) m->_set_effective_formatter(f);
+}
+
+ILoggerSP Module::get_logger () {
+    return get_synced_data().get_module_data(this).logger;
+}
+
+IFormatterSP Module::get_formatter () {
+    return get_synced_data().get_module_data(this).formatter;
 }
 
 Module::~Module () {
-    MOD_LOCK;
-    for (auto& m : children) m->parent = nullptr;
-    if (parent) {
-        auto it = std::find(parent->children.begin(), parent->children.end(), this);
-        if (it == parent->children.end()) {
-            panda_log_warn(*this, "Wrong module destruction order for " << name);
-        } else {
-            parent->children.erase(it);
-        }
+    SYNC_LOCK;
+    for (auto& m : _children) {
+        m->_parent = nullptr;
+        auto& data = src_data.get_module_data(m);
+        // we must set explicitly logger and formatter as these modules are now root modules
+        data.logger = data.effective_logger;
+        data.formatter = data.effective_formatter;
     }
 
-    if (name) {
-        auto range = modules.equal_range(name);
-        while (range.first != range.second) {
-            if (range.first->second != this) {
-                ++range.first;
-                continue;
-            }
-            modules.erase(range.first);
-            break;
-        }
+    if (_parent) {
+        auto it = std::find(_parent->_children.begin(), _parent->_children.end(), this);
+        assert(it != _parent->_children.end());
+        _parent->_children.erase(it);
     }
+
+    auto range = modules.equal_range(_name);
+    while (range.first != range.second) {
+        if (range.first->second != this) {
+            ++range.first;
+            continue;
+        }
+        modules.erase(range.first);
+        break;
+    }
+
+    src_data.map.erase(reinterpret_cast<uintptr_t>(this));
 }
 
+
 void set_level (Level val, string_view modname) {
-    MOD_LOCK;
+    SYNC_LOCK;
     if (!modname.length()) return ::panda_log_module.set_level(val);
 
     auto range = modules.equal_range(modname);
@@ -192,6 +261,30 @@ void set_level (Level val, string_view modname) {
         range.first->second->set_level(val);
         ++range.first;
     }
+}
+
+void set_logger (ILoggerFromAny l) {
+    panda_log_module.set_logger(std::move(l));
+}
+
+void set_formatter (IFormatterFromAny f) {
+    panda_log_module.set_formatter(std::move(f));
+}
+
+ILoggerSP get_logger () {
+    return panda_log_module.get_logger();
+}
+
+IFormatterSP get_formatter () {
+    return panda_log_module.get_formatter();
+}
+
+std::vector<Module*> get_modules () {
+    SYNC_LOCK;
+    std::vector<Module*> ret;
+    ret.reserve(modules.size());
+    for (auto& row : modules) ret.push_back(row.second);
+    return ret;
 }
 
 std::ostream& operator<< (std::ostream& stream, const escaped& str) {

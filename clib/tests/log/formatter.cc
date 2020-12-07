@@ -34,56 +34,56 @@ TEST("set_formatter") {
     REQUIRE(str == "jopa");
 }
 
-TEST("set_format") {
+TEST("set formatter string") {
     Ctx c;
     Module panda_log_module("epta");
 
     SECTION("level") {
-        set_format("LEVEL=%L");
+        set_formatter("LEVEL=%L");
         panda_log_alert();
         CHECK(c.fstr == "LEVEL=alert");
     }
 
     SECTION("module") {
         SECTION("default") {
-            set_format("MODULE=%M");
+            set_formatter("MODULE=%M");
             panda_log_alert();
             CHECK(c.fstr == "MODULE=epta");
         }
         SECTION("strip") {
-            set_format(" MOD=%4.1M ");
+            set_formatter(" MOD=%4.1M ");
             panda_log_alert(::panda_log_module, "");
             CHECK(c.fstr == " ");
         }
     }
 
     SECTION("function") {
-        set_format("FUNC=%F");
+        set_formatter("FUNC=%F");
         panda_log_alert();
         CHECK(c.fstr.find("FUNC=____C_A_T_C_H____T_E_S_T____") == 0);
     }
 
     SECTION("file") {
         SECTION("short name") {
-            set_format("FILE=%f");
+            set_formatter("FILE=%f");
             panda_log_alert();
             CHECK(c.fstr == "FILE=formatter.cc");
         }
         SECTION("full name") {
-            set_format("FILE=%1f");
+            set_formatter("FILE=%1f");
             panda_log_alert();
             REGCHECK(c.fstr, "FILE=.*tests[\\/]log[\\/]formatter.cc");
         }
     }
 
     SECTION("line") {
-        set_format("LINE=%l");
+        set_formatter("LINE=%l");
         panda_log_alert();
         CHECK(c.fstr == "LINE=81");
     }
 
     SECTION("message") {
-        set_format("MSG=%m");
+        set_formatter("MSG=%m");
         panda_log_alert("mymsg");
         CHECK(c.fstr == "MSG=mymsg");
     }
@@ -131,25 +131,25 @@ TEST("set_format") {
                 re += "\\.\\d{9}";
             }
         }
-        set_format(pat);
+        set_formatter(pat);
         panda_log_alert();
         REGCHECK(c.fstr, re + '$');
     }
 
     SECTION("thread id") {
-        set_format("THREAD=%T");
+        set_formatter("THREAD=%T");
         panda_log_alert();
         REGCHECK(c.fstr, "THREAD=\\d+");
     }
 
     SECTION("process id") {
-        set_format("PID=%p");
+        set_formatter("PID=%p");
         panda_log_alert();
         REGCHECK(c.fstr, "PID=\\d+");
     }
 
     SECTION("process title") {
-        set_format("TITLE=%P");
+        set_formatter("TITLE=%P");
         panda_log_alert();
         REGCHECK(c.fstr, "TITLE=.+");
     }

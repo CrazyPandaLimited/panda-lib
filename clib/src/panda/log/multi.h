@@ -6,8 +6,10 @@ namespace panda { namespace log {
 
 struct MultiLogger : ILogger {
     struct Channel {
-        Channel (const ILoggerSP& l, const IFormatterSP& f = {}, Level minl = Level::Debug) : logger(l), formatter(f), min_level(minl) {}
-        Channel (const ILoggerSP& l, Level minl)                                            : logger(l), min_level(minl) {}
+        Channel (ILoggerFromAny l, Level minl) : logger(std::move(l.value)), min_level(minl) {}
+        Channel (ILoggerFromAny l, IFormatterFromAny f = {}, Level minl = Level::Debug)
+            : logger(std::move(l.value)), formatter(std::move(f.value)), min_level(minl) {}
+
         ILoggerSP    logger;
         IFormatterSP formatter;
         Level        min_level;

@@ -68,36 +68,3 @@ TEST("empty log") {
     c.check_called();
     CHECK(c.str == "==> MARK <==");
 }
-
-//void test (int nthr, int cnt) {
-//    struct Logger : ILogger {
-//        void log (Level, const CodePoint&, const string&) override {
-//            //std::time(NULL);
-//        }
-//    };
-//
-//    auto logger = [](Level, const CodePoint&, const string&){
-//        //std::this_thread::sleep_for(std::chrono::microseconds(10));
-//        //printf("log\n");
-//    };
-//    set_logger(logger);
-//    set_logger(ILoggerSP(new Logger()));
-//
-//    std::vector<std::thread> v;
-//    for (int i = 0; i < nthr; ++i) {
-//        v.push_back(std::thread([](int cnt) {
-//            for (int i = 0; i < cnt; ++i) {
-//                panda_log_warning("");
-//            }
-//        }, cnt));
-//    }
-//
-//    if (0) v.push_back(std::thread([](int cnt) {
-//        for (int i = 0; i < cnt; ++i) {
-//            if (i % 2 == 0) set_logger(ILoggerSP(new Logger()));
-//            else            set_logger(nullptr);
-//        }
-//    }, cnt));
-//
-//    for (auto& t : v) t.join();
-//}

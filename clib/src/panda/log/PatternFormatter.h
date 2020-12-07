@@ -37,6 +37,4 @@ private:
     string _fmt;
 };
 
-void set_format (string_view pattern);
-
 }}

@@ -93,8 +93,10 @@ TEST("destroy old logger") {
     auto logger2 = new Logger();
     logger2->dtor = &dtor;
     set_logger(logger2);
+    panda_log_error("");
     REQUIRE(dtor == 1);
 
     set_logger(nullptr);
+    panda_log_error("");
     REQUIRE(dtor == 2);
 }

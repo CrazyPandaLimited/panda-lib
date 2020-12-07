@@ -14,7 +14,7 @@ namespace panda { namespace log {
 
 #define panda_should_log(...)       PANDA_PP_VFUNC(PANDA_SHOULD_LOG, __VA_ARGS__)
 #define PANDA_SHOULD_LOG1(lvl)      PANDA_SHOULD_LOG2(lvl, panda_log_module)
-#define PANDA_SHOULD_LOG2(lvl, mod) ((lvl) >= (mod).level && panda::log::details::logger)
+#define PANDA_SHOULD_LOG2(lvl, mod) ((lvl) >= (mod).level())
 #define panda_should_rlog(lvl)      PANDA_SHOULD_LOG2(lvl, ::panda_log_module)
 
 #define panda_log(...)            PANDA_LOG(__VA_ARGS__)                                      // proxy to expand args
@@ -84,33 +84,13 @@ enum class Level {
     Emergency
 };
 
-struct Module {
-    using Modules = std::vector<Module*>;
-
-    Module* parent;
-    Level   level;
-    string  name;
-    Modules children;
-
-    Module (const string& name, Level level = Level::Warning);
-    Module (const string& name, Module& parent, Level level = Level::Warning) : Module(name, &parent, level) {}
-    Module (const string& name, Module* parent, Level level = Level::Warning);
-
-    Module (const Module&) = delete;
-    Module (Module&&)      = delete;
-
-    Module& operator= (const Module&) = delete;
-
-    void set_level (Level);
-
-    virtual ~Module ();
-};
-
 struct CodePoint {
     string_view   file;
     uint32_t      line;
     string_view   func;
 };
+
+struct Module;
 
 struct Info {
     Info () : level(), module(), line() {}
@@ -142,28 +122,75 @@ using format_fn        = function<string(std::string&, const Info&)>;
 using logger_format_fn = function<void(std::string&, const Info&, const IFormatter&)>;
 using logger_fn        = function<void(const string&, const Info&)>;
 
-ILoggerSP    fn2logger    (const logger_format_fn&);
-ILoggerSP    fn2logger    (const logger_fn&);
-IFormatterSP fn2formatter (const format_fn&);
+inline ILoggerSP make_logger (std::nullptr_t) { return {}; }
+inline ILoggerSP make_logger (ILoggerSP l) { return std::move(l); }
+       ILoggerSP make_logger (const logger_fn& f);
+       ILoggerSP make_logger (const logger_format_fn& f);
+
+inline IFormatterSP make_formatter (std::nullptr_t) { return {}; }
+inline IFormatterSP make_formatter (const IFormatterSP& f) { return f; }
+       IFormatterSP make_formatter (const format_fn& f);
+       IFormatterSP make_formatter (string_view pattern);
+
+struct ILoggerFromAny {
+    ILoggerSP value;
+    ILoggerFromAny () {}
+    template <class T> ILoggerFromAny (T&& l) : value(make_logger(std::forward<T>(l))) {}
+};
+
+struct IFormatterFromAny {
+    IFormatterSP value;
+    IFormatterFromAny () {}
+    template <class T> IFormatterFromAny (T&& f) : value(make_formatter(std::forward<T>(f))) {}
+};
+
+struct Module {
+    using Modules = std::vector<Module*>;
+
+    Module (const string& name, Level level = Level::Warning);                 // module with root parent
+    Module (const string& name, Module& parent, Level level = Level::Warning); // module with parent
+    Module (const string& name, Module* parent, Level level = Level::Warning);
+    Module (const string& name, std::nullptr_t, Level level = Level::Warning); // root module
+
+    Module (const Module&) = delete;
+    Module (Module&&)      = delete;
+
+    Module& operator= (const Module&) = delete;
+
+    const string&  name     () const;
+    const Module*  parent   () const;
+    Level          level    () const;
+    const Modules& children () const;
+
+    void set_level     (Level);
+    void set_logger    (ILoggerFromAny);
+    void set_formatter (IFormatterFromAny);
+
+    ILoggerSP    get_logger    ();
+    IFormatterSP get_formatter ();
+
+    virtual ~Module ();
+
+private:
+    Module* _parent;
+    Level   _level;
+    string  _name;
+    Modules _children;
+
+    void _set_effective_logger    (const ILoggerSP&);
+    void _set_effective_formatter (const IFormatterSP&);
+};
 
 void set_level     (Level, string_view module = "");
-void set_logger    (const ILoggerSP&);
-void set_formatter (const IFormatterSP&);
-
-inline void set_logger    (const logger_format_fn& f) { set_logger(fn2logger(f)); }
-inline void set_logger    (const logger_fn& f)        { set_logger(fn2logger(f)); }
-inline void set_logger    (std::nullptr_t)            { set_logger(ILoggerSP()); }
-inline void set_formatter (const format_fn& f)        { set_formatter(fn2formatter(f)); }
-inline void set_formatter (std::nullptr_t)            { set_formatter(IFormatterSP()); }
+void set_logger    (ILoggerFromAny l);
+void set_formatter (IFormatterFromAny f);
 
 ILoggerSP    get_logger    ();
 IFormatterSP get_formatter ();
 
-struct escaped { string_view src; };
+std::vector<Module*> get_modules ();
 
 namespace details {
-    extern ILoggerSP logger;
-
     std::ostream& get_os ();
     bool          do_log (std::ostream&, Level, const Module*, const CodePoint&);
 
@@ -171,7 +198,6 @@ namespace details {
     template <>       struct IsEval<'['> : std::true_type  {};
 
     static constexpr inline char getf (const char* s) { return *s; }
-
 
     struct LambdaStream : std::ostream {};
     struct Unique1 {};
@@ -184,8 +210,11 @@ namespace details {
     }
 }
 
+struct escaped { string_view src; };
+
 std::ostream& operator<< (std::ostream&, const escaped&);
 
 }}
 
 extern panda::log::Module panda_log_module;
+

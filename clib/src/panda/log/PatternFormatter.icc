@@ -22,10 +22,6 @@ namespace panda { namespace log {
 
 string_view default_format = "%1t %c[%L/%1M]%C %f:%l,%F(): %m";
 
-void set_format (string_view pattern) {
-    set_formatter(new PatternFormatter(pattern));
-}
-
 #ifdef _WIN32
     static const char* colors[] = {nullptr};
 #else
@@ -103,7 +99,7 @@ string PatternFormatter::format (std::string& msg, const Info& info) const {
             case 'l': ret += panda::to_string(info.line);           break;
             case 'm': ret += string_view(msg.data(), msg.length()); break;
             case 'M': {
-                if (info.module->name.length()) ret += info.module->name;
+                if (info.module->name().length()) ret += info.module->name();
                 else {
                     if (x && ret.length() >= x) ret.length(ret.length() - x);
                     s += y;

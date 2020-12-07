@@ -24,8 +24,4 @@ struct Ctx {
         REQUIRE(cnt == 1);
         cnt = 0;
     }
-
-    ~Ctx () {
-        set_logger(nullptr);
-    }
 };
