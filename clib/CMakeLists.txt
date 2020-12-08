@@ -51,10 +51,9 @@ file(GLOB_RECURSE testSource RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/*.cc")
 list(FILTER testSource EXCLUDE REGEX "tests/main.cc")
 
 add_library(panda-lib-tests  STATIC ${testSource})
-target_link_libraries(panda-lib-tests PUBLIC panda-lib)
-
+find_package(Threads)
 find_package(Catch2)
-target_link_libraries(panda-lib-tests PUBLIC Catch2::Catch2)
+target_link_libraries(panda-lib-tests PUBLIC panda-lib ${CMAKE_THREAD_LIBS_INIT} Catch2::Catch2)
 
 ########################ctests######################################
 #executable should be MyTest to pass test esception.cc that checks "library" name
