@@ -11,29 +11,29 @@ my %libs = (
     default => '-lexecinfo',
 );
 
+my $cmake_project = "panda-lib";
+my $cmake_tests   = "tests";
 
 my %params = (
-    NAME             => 'XS::libpanda',
-    CPLUS            => 14,
-    MIN_PERL_VERSION => '5.12.0',
-    CLIB => {
-        DIR          => 'clib',
-        CMAKE_TARGET => 'panda-lib',
-        FILE         => 'libpanda-lib.a',
-    },
-    test             => {
-        CPLUS    => 14,
-        BIN_DEPS => 'Test::Catch',
-        CLIB     => {
-            DIR          => 'clib',
-            CMAKE_TARGET => 'panda-lib-tests',
-            FILE         => 'libpanda-lib-tests.a',
-        },
-        RECURSIVE_TEST_FILES => 1,
-    },
+    NAME               => 'XS::libpanda',
+    CPLUS              => 14,
     LINK               => $libs{$^O} // $libs{default},
     BIN_SHARE          => 1,
     CONFIGURE_REQUIRES => {'Alien::cmake3' => 0},
+    CLIB               => {
+        DIR          => 'clib',
+        CMAKE_TARGET => $cmake_project,
+        FILE         => "lib${cmake_project}.a",
+    },
+    test               => {
+        BIN_DEPS => 'Test::Catch',
+        CLIB     => {
+            DIR          => 'clib',
+            CMAKE_TARGET => $cmake_tests,
+            FILE         => "lib${cmake_tests}.a",
+        },
+        RECURSIVE_TEST_FILES => 1,
+    },
 );
 
 write_makefile(%params);
