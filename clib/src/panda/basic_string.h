@@ -248,6 +248,9 @@ public:
     explicit
     basic_string (basic_string_view<CharT, Traits> sv) : basic_string(sv.data(), sv.length()) {}
 
+    explicit
+    basic_string (const std::basic_string<CharT,Traits>& ss) : basic_string(ss.data(), ss.length()) {}
+
     template <size_type SIZE>
     basic_string& assign (const CharT (&str)[SIZE]) {
         _release();
