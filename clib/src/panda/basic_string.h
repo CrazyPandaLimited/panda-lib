@@ -1681,14 +1681,14 @@ namespace std {
     template<class C, class T, class A>
     struct hash<panda::basic_string<C,T,A>> {
         size_t operator() (const panda::basic_string<C,T,A>& s) const {
-            return panda::hash::hashXX<size_t>((const char*)s.data(), s.length() * sizeof(C));
+            return panda::hash::hashXX<size_t>(panda::string_view((const char*)s.data(), s.length() * sizeof(C)));
         }
     };
 
     template<class C, class T, class A>
     struct hash<const panda::basic_string<C,T,A>> {
         size_t operator() (const panda::basic_string<C,T,A>& s) const {
-            return panda::hash::hashXX<size_t>((const char*)s.data(), s.length() * sizeof(C));
+            return panda::hash::hashXX<size_t>(panda::string_view((const char*)s.data(), s.length() * sizeof(C)));
         }
     };
 }

@@ -4,12 +4,13 @@
 
 namespace panda { namespace hash {
 
-uint64_t hash_murmur64a (const char* str, size_t len) {
+uint64_t hash_murmur64a (string_view str) {
     const uint64_t seed = 7;
     const uint64_t m = 0xc6a4a7935bd1e995LLU;
     const int r = 47;
 
-    const uint64_t * data = (const uint64_t *) str;
+    auto len = str.length();
+    const uint64_t * data = (const uint64_t *) str.data();
     const uint64_t * end = data + (len/8);
 
     uint64_t h = seed ^ (len * m);
@@ -43,7 +44,10 @@ uint64_t hash_murmur64a (const char* str, size_t len) {
     return h;
 }
 
-uint32_t hash_jenkins_one_at_a_time (const char *key, size_t len) {
+uint32_t hash_jenkins_one_at_a_time (string_view str) {
+    const char* key = str.data();
+    auto len = str.length();
+
     uint32_t hash, i;
     for (hash = i = 0; i < len; ++i) {
         hash += key[i];
@@ -54,18 +58,6 @@ uint32_t hash_jenkins_one_at_a_time (const char *key, size_t len) {
     hash ^= (hash >> 11);
     hash += (hash << 15);
     return hash;
-}
-
-char* crypt_xor (const char* source, size_t slen, const char* key, size_t klen, char* dest) {
-    unsigned char* buf;
-    if (dest) buf = (unsigned char*) dest;
-    else {
-        buf = (unsigned char*) malloc(slen+1); // space for '0'
-        if (!buf) throw std::bad_alloc();
-    }
-    for (size_t i = 0; i < slen; ++i) buf[i] = ((unsigned char) source[i]) ^ ((unsigned char) key[i % klen]);
-    buf[slen] = 0;
-    return (char*) buf;
 }
 
 }}
