@@ -123,7 +123,7 @@ using logger_format_fn = function<void(std::string&, const Info&, const IFormatt
 using logger_fn        = function<void(const string&, const Info&)>;
 
 inline ILoggerSP make_logger (std::nullptr_t) { return {}; }
-inline ILoggerSP make_logger (ILoggerSP l) { return std::move(l); }
+inline ILoggerSP make_logger (ILoggerSP l) { return l; }
        ILoggerSP make_logger (const logger_fn& f);
        ILoggerSP make_logger (const logger_format_fn& f);
 
