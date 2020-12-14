@@ -91,7 +91,8 @@ TEST("set formatter string") {
     SECTION("current time") {
         string pat = "TIME=";
         string re;
-        SECTION("Y4 date") {
+
+        SECTION("Y4 date (dashed)") {
             re = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}";
             SECTION("low-res") {
                 pat += "%t";
@@ -99,6 +100,14 @@ TEST("set formatter string") {
             SECTION("hi-res") {
                 pat += "%.1t";
                 re += "\\.\\d{1}";
+            }
+        }
+
+        SECTION("Y4 date(slashed)") {
+            re = "\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}";
+            SECTION("low-res") {
+                pat += "%3t";
+                WARN(pat);
             }
         }
         SECTION("Y2 date") {

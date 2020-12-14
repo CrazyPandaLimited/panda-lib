@@ -29,7 +29,7 @@ string_view default_format = "%1t %c[%L/%1M]%C %f:%l,%F(): %m";
 #endif
     
 static const char  clear_color[] = "\e[0m";
-static const char* dates[] = {"%Y-%m-%d %H:%M:%S", "%y-%m-%d %H:%M:%S", "%H:%M:%S"};
+static const char* dates[] = {"%Y-%m-%d %H:%M:%S", "%y-%m-%d %H:%M:%S", "%H:%M:%S", "%Y/%m/%d %H:%M:%S"};
 
 static void add_mks (string& dest, long nsec, unsigned prec) {
     dest += '.';
@@ -52,7 +52,7 @@ static inline void ymdhms (string& dest, time_t epoch, unsigned type) {
     auto cap = 23;
     string tmp(cap);
 
-    assert(type < 3);
+    assert(type < 4);
     auto len = strftime(tmp.buf(), cap, dates[type], &dt);
     tmp.length(len);
 
@@ -122,7 +122,7 @@ string PatternFormatter::format (std::string& msg, const Info& info) const {
                 break;
             }
             case 't': {
-                if (x < 3) ymdhms(ret, info.time.tv_sec, x);
+                if (x < 4) ymdhms(ret, info.time.tv_sec, x);
                 else       ret += panda::to_string(info.time.tv_sec);
                 if (y) add_mks(ret, info.time.tv_nsec, y);
                 break;

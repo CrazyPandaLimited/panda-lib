@@ -16,10 +16,11 @@ namespace panda { namespace log {
  * %l - line
  * %m - message
  * %t - current time
- *      x=0: YYYY/MM/DD HH:MM:SS
- *      x=1: YY/MM/DD HH:MM:SS
+ *      x=0: YYYY-MM-DD HH:MM:SS
+ *      x=1: YY-MM-DD HH:MM:SS
  *      x=2: HH:MM:SS
  *      x=3: UNIX TIMESTAMP
+ *      x=4: YYYY/MM/DD HH:MM:SS
  *      y>0: high resolution time, adds fractional part after seconds with "y" digits precision
  * %T - current thread id
  * %p - current process id
