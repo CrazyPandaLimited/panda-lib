@@ -35,11 +35,13 @@ namespace details {
         size_t rev = 0;
         std::ostringstream os;
         std::map<uintptr_t, ModuleData> map;
+        string program_name;
 
         Data& operator= (const Data& oth) {
             // ostream is never changed
             rev = oth.rev;
             map = oth.map;
+            program_name = oth.program_name;
             return *this;
         }
 
@@ -76,22 +78,39 @@ namespace details {
 
     std::ostream& get_os () { return get_data().os; }
 
+    static string_view default_program_name = "<unknown>";
+
     bool do_log (std::ostream& _stream, Level level, const Module* module, const CodePoint& cp) {
         std::ostringstream& stream = static_cast<std::ostringstream&>(_stream);
         stream.flush();
         std::string s(stream.str());
         stream.str({});
 
-        auto& data = get_synced_data().get_module_data(module);
+        auto& lib_data    = get_synced_data();
+        auto& module_data = lib_data.get_module_data(module);
 
-        if (data.effective_logger) {
-            Info info(level, module, cp.file, cp.line, cp.func);
+        if (module_data.effective_logger) {
+            string_view program_name = lib_data.program_name ? lib_data.program_name : default_program_name;
+            Info info(level, module, cp.file, cp.line, cp.func, program_name);
             int status = clock_gettime(CLOCK_REALTIME, &info.time);
             if (status != 0) info.time.tv_sec = info.time.tv_nsec = 0;
-            data.effective_logger->log_format(s, info, *(data.effective_formatter));
+            module_data.effective_logger->log_format(s, info, *(module_data.effective_formatter));
         }
         return true;
     }
+
+    // https://stackoverflow.com/questions/9097201/how-to-get-current-process-name-in-linux
+    // https://stackoverflow.com/questions/2471553/access-command-line-arguments-without-using-char-argv-in-main/24718544#24718544
+
+    static void spy_$0(int argc, char** argv, char** /* envp */) {
+        if (argc > 0) {
+            if (argv[0]) {
+                default_program_name = argv[0];
+            }
+        }
+    }
+
+    __attribute__((section(".init_array"))) void (* p_my_cool_main)(int,char*[],char*[]) = spy_$0;
 }
 using namespace details;
 
@@ -296,6 +315,12 @@ std::ostream& operator<< (std::ostream& stream, const escaped& str) {
        }
    }
    return stream;
+}
+
+void set_program_name(const string& value) noexcept {
+    SYNC_LOCK;
+    ++src_data.rev;
+    src_data.program_name = value;
 }
 
 }}

@@ -159,7 +159,8 @@ TEST("set formatter string") {
 
     SECTION("process title") {
         set_formatter("TITLE=%P");
+        set_program_name("Void Linux");
         panda_log_alert();
-        REGCHECK(c.fstr, "TITLE=.+");
+        REGCHECK(c.fstr, "TITLE=Void Linux");
     }
 }

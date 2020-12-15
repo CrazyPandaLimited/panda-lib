@@ -11,13 +11,6 @@
     #define _PANDA_LOCALTIME(epoch_ptr, tm_ptr) (localtime_r(epoch_ptr, tm_ptr) != nullptr)
 #endif
 
-#ifdef _GNU_SOURCE
-    extern char* program_invocation_name;
-    static inline const char* get$0 () { return program_invocation_name; }
-#else
-    static inline const char* get$0 () { return "<unknown>"; }
-#endif
-
 namespace panda { namespace log {
 
 string_view default_format = "%1t %c[%L/%1M]%C %f:%l,%F(): %m";
@@ -139,7 +132,7 @@ string PatternFormatter::format (std::string& msg, const Info& info) const {
                 break;
             }
             case 'P': {
-                ret += get$0();
+                ret += info.program_name;
                 break;
             }
             case 'c': if (colors[(size_t)info.level]) ret += colors[(size_t)info.level]; break;

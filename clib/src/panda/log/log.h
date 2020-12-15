@@ -94,8 +94,8 @@ struct Module;
 
 struct Info {
     Info () : level(), module(), line() {}
-    Info (Level level, const Module* module, const string_view& file, uint32_t line, const string_view& func)
-        : level(level), module(module), file(file), line(line), func(func) {}
+    Info (Level level, const Module* module, const string_view& file, uint32_t line, const string_view& func, const string_view& program_name)
+        : level(level), module(module), file(file), line(line), func(func), program_name{program_name} {}
 
     Level         level;
     const Module* module;
@@ -103,6 +103,7 @@ struct Info {
     uint32_t      line;
     string_view   func;
     timespec      time;
+    string_view   program_name;
 };
 
 struct IFormatter : AtomicRefcnt {
@@ -181,9 +182,10 @@ private:
     void _set_effective_formatter (const IFormatterSP&);
 };
 
-void set_level     (Level, string_view module = "");
-void set_logger    (ILoggerFromAny l);
-void set_formatter (IFormatterFromAny f);
+void set_level       (Level, string_view module = "");
+void set_logger      (ILoggerFromAny l);
+void set_formatter   (IFormatterFromAny f);
+void set_program_name(const string& value) noexcept;
 
 ILoggerSP    get_logger    ();
 IFormatterSP get_formatter ();
