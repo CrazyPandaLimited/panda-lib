@@ -3,20 +3,22 @@
 namespace panda {
 
 template <typename Begin, typename End = Begin>
-class IteratorPair {
-    Begin _begin;
-    End _end;
-public:
-    IteratorPair (Begin begin, End end) : _begin(begin), _end(end) {}
+struct IteratorPair {
+    Begin first;
+    End   second;
 
-    Begin begin () const { return _begin; }
-    End end   () const { return _end; }
+    IteratorPair (Begin begin, End end) : first(std::move(begin)), second(std::move(end)) {}
 
+    const Begin& begin () const { return first; }
+    const End&   end   () const { return second; }
+
+    Begin& begin () { return first; }
+    End&   end   () { return second; }
 };
 
 template <typename Begin, typename End = Begin>
-IteratorPair<Begin, End> make_iterator_pair(Begin begin, End end) {
-    return IteratorPair<Begin, End>(begin, end);
+auto make_iterator_pair(Begin&& begin, End&& end) {
+    return IteratorPair<std::decay_t<Begin>, std::decay_t<End>>(std::forward<Begin>(begin), std::forward<End>(end));
 }
 
 }
