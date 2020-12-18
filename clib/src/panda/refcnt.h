@@ -16,7 +16,8 @@ struct iptr {
     template <class U> friend struct iptr;
     typedef T element_type;
 
-    iptr ()                : ptr(NULL)    {}
+    constexpr iptr () : ptr(NULL) {}
+
     iptr (T* pointer)      : ptr(pointer) { if (ptr) refcnt_inc(ptr); }
     iptr (const iptr& oth) : ptr(oth.ptr) { if (ptr) refcnt_inc(ptr); }
 
