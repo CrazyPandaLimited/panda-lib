@@ -51,26 +51,35 @@ namespace details {
     };
 
 
-    static std::recursive_mutex mtx;
-    #define SYNC_LOCK std::lock_guard<decltype(mtx)> guard(mtx);
 
-    static Modules modules;                        // modules by name index
-    static Data src_data;                          // main container for modules data
-    static auto mt_id = std::this_thread::get_id();
-    static Data mt_data;                           // cached data for main thread, can't use TLS because it's destroyed much earlier
-    static thread_local Data  _ct_data;            // cached data for child threads
-    static thread_local auto* ct_data = &_ct_data; // TLS via pointers works 3x faster in GCC
+    struct Instance {
+        std::recursive_mutex mtx;
 
-    static inline Data& get_data () {
-        return std::this_thread::get_id() == mt_id ? mt_data : *ct_data;
+        Modules modules;                        // modules by name index
+        Data src_data;                          // main container for modules data
+        std::thread::id mt_id = std::this_thread::get_id();
+        Data mt_data;                           // cached data for main thread, can't use TLS because it's destroyed much earlier
+    };
+
+    Instance& inst() {
+        static Instance d;
+        return d;
     }
 
-    static inline Data& get_synced_data () {
+#define SYNC_LOCK std::lock_guard<decltype(inst().mtx)> guard(inst().mtx);
+
+    inline Data& get_data () {
+        thread_local Data  _ct_data;            // cached data for child threads
+        thread_local auto* ct_data = &_ct_data; // TLS via pointers works 3x faster in GCC
+        return std::this_thread::get_id() == inst().mt_id ? inst().mt_data : *ct_data;
+    }
+
+    inline Data& get_synced_data () {
         auto& data = get_data();
 
-        if (data.rev != src_data.rev) { // data changed by some thread
+        if (data.rev != inst().src_data.rev) { // data changed by some thread
             SYNC_LOCK;
-            data = src_data;
+            data = inst().src_data;
         }
 
         return data;
@@ -162,15 +171,15 @@ Module::Module (const string& name, std::nullptr_t, Level level) : Module(name, 
 Module::Module (const string& name, Module* parent, Level level) : _parent(parent), _level(level), _name(name) {
     SYNC_LOCK;
 
-    ++src_data.rev;
-    auto &data = src_data.map[reinterpret_cast<uintptr_t>(this)]; // creates entry
+    ++inst().src_data.rev;
+    auto &data = inst().src_data.map[reinterpret_cast<uintptr_t>(this)]; // creates entry
 
     if (parent) {
         parent->_children.push_back(this);
         if (parent->_name) this->_name = parent->_name + "::" + name;
 
         // inherit effective logger and formatter from parent module
-        auto& parent_data = src_data.get_module_data(parent);
+        auto& parent_data = inst().src_data.get_module_data(parent);
         data.effective_logger    = parent_data.effective_logger;
         data.effective_formatter = parent_data.effective_formatter;
     } else {
@@ -178,7 +187,7 @@ Module::Module (const string& name, Module* parent, Level level) : _parent(paren
         data.effective_formatter = data.formatter = IFormatterSP(new PatternFormatter(default_format));
     }
 
-    modules.emplace(this->_name, this);
+    inst().modules.emplace(this->_name, this);
 }
 
 const string&          Module::name     () const { return _name; }
@@ -195,17 +204,17 @@ void Module::set_level (Level level) {
 void Module::set_logger (ILoggerFromAny _l) {
     SYNC_LOCK;
     auto l = std::move(_l.value);
-    ++src_data.rev;
-    auto& data = src_data.get_module_data(this);
+    ++inst().src_data.rev;
+    auto& data = inst().src_data.get_module_data(this);
     data.logger = l;
-    if (!l && _parent) l = src_data.get_module_data(_parent).effective_logger;
+    if (!l && _parent) l = inst().src_data.get_module_data(_parent).effective_logger;
     data.effective_logger = l;
     for (auto& m : _children) m->_set_effective_logger(std::move(l));
     get_synced_data(); // reset any possible loggers for current thread
 }
 
 void Module::_set_effective_logger (const ILoggerSP& l) {
-    auto& data = src_data.get_module_data(this);
+    auto& data = inst().src_data.get_module_data(this);
     if (data.logger) return; // all children already have it as effective logger
     data.effective_logger = l;
     for (auto& m : _children) m->_set_effective_logger(l);
@@ -214,11 +223,11 @@ void Module::_set_effective_logger (const ILoggerSP& l) {
 void Module::set_formatter (IFormatterFromAny _f) {
     SYNC_LOCK;
     auto f = std::move(_f.value);
-    ++src_data.rev;
-    auto& data = src_data.get_module_data(this);
+    ++inst().src_data.rev;
+    auto& data = inst().src_data.get_module_data(this);
     data.formatter = f;
     if (!f) {
-        if (_parent) f = src_data.get_module_data(_parent).effective_formatter;
+        if (_parent) f = inst().src_data.get_module_data(_parent).effective_formatter;
         else         f = data.formatter = IFormatterSP(new PatternFormatter(default_format));
     }
     data.effective_formatter = f;
@@ -227,7 +236,7 @@ void Module::set_formatter (IFormatterFromAny _f) {
 }
 
 void Module::_set_effective_formatter (const IFormatterSP& f) {
-    auto& data = src_data.get_module_data(this);
+    auto& data = inst().src_data.get_module_data(this);
     if (data.formatter) return; // all children already have it as effective formatter
     data.effective_formatter = f;
     for (auto& m : _children) m->_set_effective_formatter(f);
@@ -245,7 +254,7 @@ Module::~Module () {
     SYNC_LOCK;
     for (auto& m : _children) {
         m->_parent = nullptr;
-        auto& data = src_data.get_module_data(m);
+        auto& data = inst().src_data.get_module_data(m);
         // we must set explicitly logger and formatter as these modules are now root modules
         data.logger = data.effective_logger;
         data.formatter = data.effective_formatter;
@@ -257,17 +266,17 @@ Module::~Module () {
         _parent->_children.erase(it);
     }
 
-    auto range = modules.equal_range(_name);
+    auto range = inst().modules.equal_range(_name);
     while (range.first != range.second) {
         if (range.first->second != this) {
             ++range.first;
             continue;
         }
-        modules.erase(range.first);
+        inst().modules.erase(range.first);
         break;
     }
 
-    src_data.map.erase(reinterpret_cast<uintptr_t>(this));
+    inst().src_data.map.erase(reinterpret_cast<uintptr_t>(this));
 }
 
 
@@ -275,7 +284,7 @@ void set_level (Level val, string_view modname) {
     SYNC_LOCK;
     if (!modname.length()) return ::panda_log_module.set_level(val);
 
-    auto range = modules.equal_range(modname);
+    auto range = inst().modules.equal_range(modname);
     if (range.first == range.second) throw exception(string("unknown module: ") + modname);
 
     while (range.first != range.second) {
@@ -303,8 +312,8 @@ IFormatterSP get_formatter () {
 std::vector<Module*> get_modules () {
     SYNC_LOCK;
     std::vector<Module*> ret;
-    ret.reserve(modules.size());
-    for (auto& row : modules) ret.push_back(row.second);
+    ret.reserve(inst().modules.size());
+    for (auto& row : inst().modules) ret.push_back(row.second);
     return ret;
 }
 
@@ -321,8 +330,8 @@ std::ostream& operator<< (std::ostream& stream, const escaped& str) {
 
 void set_program_name(const string& value) noexcept {
     SYNC_LOCK;
-    ++src_data.rev;
-    src_data.program_name = value;
+    ++inst().src_data.rev;
+    inst().src_data.program_name = value;
 }
 
 }}
