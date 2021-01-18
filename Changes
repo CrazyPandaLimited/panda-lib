@@ -1,4 +1,5 @@
 1.5.0    xx.xx.2020
+            - exceptions, give libunwind priority (needed for *bsd)
             - exceptions, libunwind: with fake 1st frame with IP = 0
             - move C part to separate folder
             - panda-log: support for logger & formatter in log modules, improve API
