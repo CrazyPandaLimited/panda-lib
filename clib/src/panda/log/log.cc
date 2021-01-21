@@ -201,6 +201,7 @@ void Module::set_logger (ILoggerFromAny _l) {
     if (!l && _parent) l = src_data.get_module_data(_parent).effective_logger;
     data.effective_logger = l;
     for (auto& m : _children) m->_set_effective_logger(std::move(l));
+    get_synced_data(); // reset any possible loggers for current thread
 }
 
 void Module::_set_effective_logger (const ILoggerSP& l) {
@@ -222,6 +223,7 @@ void Module::set_formatter (IFormatterFromAny _f) {
     }
     data.effective_formatter = f;
     for (auto& m : _children) m->_set_effective_formatter(std::move(f));
+    get_synced_data(); // reset any possible loggers for current thread
 }
 
 void Module::_set_effective_formatter (const IFormatterSP& f) {
