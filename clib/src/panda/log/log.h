@@ -9,6 +9,12 @@
 #include <ostream>
 
 namespace panda { namespace log {
+struct Module;
+}}
+
+extern panda::log::Module panda_log_module;
+
+namespace panda { namespace log {
 
 #define PANDA_LOG_CODE_POINT panda::log::CodePoint{__FILE__, __LINE__, __func__}
 
@@ -144,7 +150,6 @@ struct IFormatterFromAny {
     IFormatterFromAny () {}
     template <class T> IFormatterFromAny (T&& f) : value(make_formatter(std::forward<T>(f))) {}
 };
-
 struct Module {
     using Modules = std::vector<Module*>;
 
@@ -171,12 +176,13 @@ struct Module {
     IFormatterSP get_formatter ();
 
     virtual ~Module ();
+    void init();
 
 private:
     Module* _parent;
     Level   _level;
-    string  _name;
     Modules _children;
+    string  _name;
 
     void _set_effective_logger    (const ILoggerSP&);
     void _set_effective_formatter (const IFormatterSP&);

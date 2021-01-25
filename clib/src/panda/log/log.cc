@@ -15,6 +15,7 @@
 namespace panda { namespace log {
 
 string_view default_message = "==> MARK <==";
+static bool destroy_flag = false;
 
 ILogger::~ILogger () {}
 
@@ -53,12 +54,23 @@ namespace details {
 
 
     struct Instance {
+        bool contains(const Module* module) {
+            auto iter = std::find_if(modules.begin(), modules.end(), [module](const auto& m) {
+                return m.second == module;
+            });
+            return iter != modules.end();
+        }
+
         std::recursive_mutex mtx;
 
         Modules modules;                        // modules by name index
         Data src_data;                          // main container for modules data
         std::thread::id mt_id = std::this_thread::get_id();
         Data mt_data;                           // cached data for main thread, can't use TLS because it's destroyed much earlier
+
+        ~Instance() {
+            destroy_flag = true;
+        }
     };
 
     Instance& inst() {
@@ -105,6 +117,25 @@ namespace details {
             if (status != 0) info.time.tv_sec = info.time.tv_nsec = 0;
             module_data.effective_logger->log_format(s, info, *(module_data.effective_formatter));
         }
+        return true;
+    }
+
+    static std::vector<Module*>& wait_list() {
+        static std::vector<Module*> inst;
+        return inst;
+    }
+
+    bool try_init_waiting() {
+        auto& list = wait_list();
+        auto iter = std::find_if(list.begin(), list.end(), [](const auto& m) {
+            return inst().contains(m->parent());
+        });
+        if (iter == list.end()) {
+            return false;
+        }
+
+        (*iter)->init();
+        wait_list().erase(iter);
         return true;
     }
 
@@ -163,37 +194,13 @@ IFormatterSP make_formatter (string_view pattern) {
     return new PatternFormatter(pattern);
 }
 
+const string& Module::name() const { return _name; }
+const Module* Module::parent   () const { return _parent; }
+Level         Module::level    () const { return _level; }
 
-Module::Module (const string& name, Level level) : Module(name, panda_log_module, level) {}
-Module::Module (const string& name, Module& parent, Level level) : Module(name, &parent, level) {}
-Module::Module (const string& name, std::nullptr_t, Level level) : Module(name, (Module*)nullptr, level) {}
-
-Module::Module (const string& name, Module* parent, Level level) : _parent(parent), _level(level), _name(name) {
-    SYNC_LOCK;
-
-    ++inst().src_data.rev;
-    auto &data = inst().src_data.map[reinterpret_cast<uintptr_t>(this)]; // creates entry
-
-    if (parent) {
-        parent->_children.push_back(this);
-        if (parent->_name) this->_name = parent->_name + "::" + name;
-
-        // inherit effective logger and formatter from parent module
-        auto& parent_data = inst().src_data.get_module_data(parent);
-        data.effective_logger    = parent_data.effective_logger;
-        data.effective_formatter = parent_data.effective_formatter;
-    } else {
-        // set default formatter for root module
-        data.effective_formatter = data.formatter = IFormatterSP(new PatternFormatter(default_format));
-    }
-
-    inst().modules.emplace(this->_name, this);
+const Module::Modules& Module::children () const {
+    return _children;
 }
-
-const string&          Module::name     () const { return _name; }
-const Module*          Module::parent   () const { return _parent; }
-Level                  Module::level    () const { return _level; }
-const Module::Modules& Module::children () const { return _children; }
 
 void Module::set_level (Level level) {
     SYNC_LOCK;
@@ -250,8 +257,56 @@ IFormatterSP Module::get_formatter () {
     return get_synced_data().get_module_data(this).formatter;
 }
 
+Module::Module (const string& name, Level level) : Module(name, panda_log_module, level) {}
+Module::Module (const string& name, Module& parent, Level level) : Module(name, &parent, level) {}
+Module::Module (const string& name, std::nullptr_t, Level level) : Module(name, (Module*)nullptr, level) {}
+
+Module::Module (const string& name, Module* parent, Level level)
+    : _parent(parent)
+    , _level(level)
+    , _name(name)
+{
+    if (parent && !inst().contains(parent)) {
+        wait_list().push_back(this);
+    } else {
+        init();
+        while(try_init_waiting()) {}
+    }
+}
+
+void Module::init() {
+    SYNC_LOCK;
+    ++inst().src_data.rev;
+    auto &data = inst().src_data.map[reinterpret_cast<uintptr_t>(this)]; // creates entry
+
+    if (inst().contains(this)) {
+        return;
+    }
+
+    if (_parent) {
+        _parent->init();
+        _parent->_children.push_back(this);
+        if (!_parent->_name.empty()) {
+            this->_name = _parent->_name + "::" + _name;
+        }
+
+        // inherit effective logger and formatter from parent module
+        auto& parent_data = inst().src_data.get_module_data(_parent);
+        data.effective_logger    = parent_data.effective_logger;
+        data.effective_formatter = parent_data.effective_formatter;
+    } else {
+        // set default formatter for root module
+        data.effective_formatter = data.formatter = IFormatterSP(new PatternFormatter(default_format));
+    }
+
+    inst().modules.emplace(this->_name, this);
+}
+
 Module::~Module () {
     SYNC_LOCK;
+    if (destroy_flag) {
+        return;
+    }
     for (auto& m : _children) {
         m->_parent = nullptr;
         auto& data = inst().src_data.get_module_data(m);
@@ -278,7 +333,6 @@ Module::~Module () {
 
     inst().src_data.map.erase(reinterpret_cast<uintptr_t>(this));
 }
-
 
 void set_level (Level val, string_view modname) {
     SYNC_LOCK;
