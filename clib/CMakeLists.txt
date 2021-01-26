@@ -52,11 +52,11 @@ find_package(Catch2)
 target_link_libraries(tests PUBLIC ${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} Catch2::Catch2)
 
 ########################ctests######################################
-#executable should be MyTest to pass test esception.cc that checks "library" name
+#executable should be MyTest to pass test exception.cc that checks "library" name
 enable_testing()
-add_executable(runtests ${testSource} "tests/main.cc")
-target_link_libraries(runtests tests)
-add_test(test-all runtests)
+add_executable(MyTest ${testSource} "tests/main.cc")
+target_link_libraries(MyTest tests)
+add_test(test-all MyTest)
 
 ########################install#####################################
 install(DIRECTORY src/ DESTINATION include FILES_MATCHING PATTERN "*.h")
