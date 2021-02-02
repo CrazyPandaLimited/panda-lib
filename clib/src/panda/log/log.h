@@ -51,7 +51,6 @@ namespace panda { namespace log {
 #define panda_log_critical(...)         panda_log(panda::log::Level::Critical,     __VA_ARGS__)
 #define panda_log_alert(...)            panda_log(panda::log::Level::Alert,        __VA_ARGS__)
 #define panda_log_emergency(...)        panda_log(panda::log::Level::Emergency,    __VA_ARGS__)
-#define panda_log_halt(...)             do{ panda_log(panda::log::Level::Emergency, __VA_ARGS__); std::quick_exit(-1); } while (0)
 
 #define panda_rlog(level, msg)          panda_log(level, ::panda_log_module, msg)
 #define panda_rlog_verbose_debug(msg)   panda_rlog(panda::log::Level::VerboseDebug, msg)
@@ -64,7 +63,6 @@ namespace panda { namespace log {
 #define panda_rlog_critical(msg)        panda_rlog(panda::log::Level::Critical, msg)
 #define panda_rlog_alert(msg)           panda_rlog(panda::log::Level::Alert, msg)
 #define panda_rlog_emergency(msg)       panda_rlog(panda::log::Level::Emergency, msg)
-#define panda_rlog_halt(msg)            do { panda_rlog(panda::log::Level::Emergency, msg); std::quick_exit(-1); } while (0)
 
 #define panda_log_ctor(...)  PANDA_PP_VFUNC(PANDA_LOG_CTOR, __VA_ARGS__)
 #define panda_log_dtor(...)  PANDA_PP_VFUNC(PANDA_LOG_DTOR, __VA_ARGS__)

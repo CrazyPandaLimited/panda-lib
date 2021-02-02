@@ -5,8 +5,6 @@
             - panda-log: support for logger & formatter in log modules, improve API
             - panda-log: add %4t pattern to format dates lke '2020/12/14 17:48:30'
             - panda-log: allow to assign custom program name
-            - panda-log: add halt helper, which logs with emergency and forces program
-              exit *WITHOUT* cleanup.
 1.4.11    25.11.2020
             - more correct libunwind usage and detection on *bsd
             - improve makefile
