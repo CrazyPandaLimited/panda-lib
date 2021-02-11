@@ -38,6 +38,69 @@ TEST("2 elements") {
     REQUIRE(iter == list.end());
 }
 
+TEST("ctor from initializer list") {
+    owning_list<int> list = {1,2,3};
+    CHECK(list.size() == 3);
+    auto iter = list.begin();
+    CHECK(*iter++ == 1);
+    CHECK(*iter++ == 2);
+    CHECK(*iter++ == 3);
+    CHECK(iter == list.end());
+}
+
+TEST("assign initializer list") {
+    owning_list<int> list = {1,2,3};
+    list = {3,2};
+    CHECK(list.size() == 2);
+    auto iter = list.begin();
+    CHECK(*iter++ == 3);
+    CHECK(*iter++ == 2);
+    CHECK(iter == list.end());
+}
+
+TEST("copy ctor") {
+    owning_list<int> list = {1,2,3};
+    owning_list<int> copy = list;
+
+    auto iter = list.begin();
+    CHECK(*iter++ == 1);
+    CHECK(*iter++ == 2);
+    CHECK(*iter++ == 3);
+    CHECK(iter == list.end());
+
+    iter = copy.begin();
+    CHECK(*iter++ == 1);
+    CHECK(*iter++ == 2);
+    CHECK(*iter++ == 3);
+    CHECK(iter == copy.end());
+
+    list.remove(2);
+    CHECK(list.size() == 2);
+    CHECK(copy.size() == 3);
+}
+
+TEST("copy assign") {
+    owning_list<int> list = {1,2,3};
+    owning_list<int> copy = {8,9};
+    copy = list;
+
+    auto iter = list.begin();
+    CHECK(*iter++ == 1);
+    CHECK(*iter++ == 2);
+    CHECK(*iter++ == 3);
+    CHECK(iter == list.end());
+
+    iter = copy.begin();
+    CHECK(*iter++ == 1);
+    CHECK(*iter++ == 2);
+    CHECK(*iter++ == 3);
+    CHECK(iter == copy.end());
+
+    list.remove(2);
+    CHECK(list.size() == 2);
+    CHECK(copy.size() == 3);
+}
+
 TEST("remove 0") {
     owning_list<int> list;
     list.push_back(10);

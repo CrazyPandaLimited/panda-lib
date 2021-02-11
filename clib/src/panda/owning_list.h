@@ -86,7 +86,16 @@ struct owning_list {
     using reverse_iterator = base_iterator<prev_strategy>;
     using iterator = base_iterator<next_strategy>;
 
-    owning_list() : _size(0), first(nullptr), last(nullptr) {}
+    owning_list() {}
+
+    owning_list (const std::initializer_list<T>& list) : owning_list() {
+        for (auto& elem : list) push_back(elem);
+    }
+
+    owning_list (const owning_list& oth) : owning_list() {
+        for (auto node = oth.first.get(); node; node = node->next.get()) push_back(node->value);
+    }
+
     ~owning_list() {
         clear(); // do not remove! we must invalidate all elements to make ++ on any iterator correct
     }
@@ -107,7 +116,7 @@ struct owning_list {
         return reverse_iterator(nullptr);
     }
 
-    template<typename TT = T>
+    template<typename TT>
     void push_back(TT&& val) {
         node_sp node = new node_t(std::forward<TT>(val));
         if (last) {
@@ -120,7 +129,7 @@ struct owning_list {
         ++_size;
     }
 
-    template<typename TT = T>
+    template<typename TT>
     void push_front(TT&& val) {
         node_sp node = new node_t(std::forward<TT>(val));
         if (first) {
@@ -167,8 +176,14 @@ struct owning_list {
         return _size == 0;
     }
 
+    owning_list& operator= (const std::initializer_list<T>& list) {
+        clear();
+        for (auto& elem : list) push_back(elem);
+        return *this;
+    }
+
 private:
-    size_t _size;
+    size_t _size = 0;
     node_sp first;
     node_sp last;
 };
