@@ -150,7 +150,11 @@ namespace details {
         }
     }
 
+    #ifdef __MACH__
+    __attribute__((section("_DATA,.init_array"))) void (* p_my_cool_main)(int,char*[],char*[]) = spy_$0;
+    #else
     __attribute__((section(".init_array"))) void (* p_my_cool_main)(int,char*[],char*[]) = spy_$0;
+    #endif
 }
 using namespace details;
 
