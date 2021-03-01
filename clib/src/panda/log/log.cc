@@ -81,9 +81,17 @@ namespace details {
 #define SYNC_LOCK std::lock_guard<decltype(inst().mtx)> guard(inst().mtx);
 
     inline Data& get_data () {
-        thread_local Data  _ct_data;            // cached data for child threads
-        thread_local auto* ct_data = &_ct_data; // TLS via pointers works 3x faster in GCC
-        return std::this_thread::get_id() == inst().mt_id ? inst().mt_data : *ct_data;
+        if (std::this_thread::get_id() == inst().mt_id) {
+            return inst().mt_data;
+        }
+
+        thread_local Data* ct_data = nullptr; // cached data for child threads
+        if (!ct_data) { // TLS via pointers works 3x faster in GCC
+            thread_local Data _ct_data;
+            ct_data = &_ct_data;
+        }
+
+        return *ct_data;
     }
 
     inline Data& get_synced_data () {
