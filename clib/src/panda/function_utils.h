@@ -20,7 +20,7 @@ namespace function_details {
 
 
 template <typename Ret, typename... Args>
-struct Ifunction : function_details::AnyFunction, virtual Refcnt {
+struct Ifunction : function_details::AnyFunction, virtual AtomicRefcnt {
     virtual ~Ifunction() {}
     virtual Ret operator()(Args...) = 0;
     virtual bool equals(const function_details::AnyFunction* oth) const = 0;

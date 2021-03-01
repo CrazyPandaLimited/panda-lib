@@ -128,6 +128,10 @@ void swap (iptr<T>& a, iptr<T>& b) noexcept { a.swap(b); }
 struct weak_storage;
 
 struct Refcnt {
+    using weak_storage_type = weak_storage;
+
+    //Refcnt (const Refcnt&) : Refcnt() {}
+
     void retain  () const { ++_refcnt; }
     void release () const {
         if (_refcnt > 1) --_refcnt;
@@ -158,7 +162,18 @@ protected:
     virtual void on_delete () noexcept {}
 };
 
+struct weak_storage : public Refcnt {
+    weak_storage () : valid(true) {}
+    bool valid;
+};
+
+struct atomic_weak_storage;
+
 struct AtomicRefcnt {
+    using weak_storage_type = atomic_weak_storage;
+
+    AtomicRefcnt (const AtomicRefcnt&) : AtomicRefcnt() {}
+
     void retain  () const { ++_refcnt; }
     void release () const {
         if (!--_refcnt) delete this;
@@ -170,11 +185,16 @@ protected:
     virtual ~AtomicRefcnt ();
 
 private:
-    mutable std::atomic<uint32_t> _refcnt;
+    friend iptr<atomic_weak_storage> refcnt_weak (const AtomicRefcnt*);
+
+    mutable std::atomic<uint32_t>     _refcnt;
+    mutable iptr<atomic_weak_storage> _weak;
+
+    iptr<atomic_weak_storage> get_weak () const;
 };
 
-struct weak_storage : public Refcnt {
-    weak_storage () : valid(true) {}
+struct atomic_weak_storage : public AtomicRefcnt {
+    atomic_weak_storage () : valid(true) {}
     bool valid;
 };
 
@@ -185,9 +205,10 @@ inline iptr<weak_storage> refcnt_weak (const Refcnt* o) { return o->get_weak(); 
 
 inline void refcnt_dec (const Refcntd* o) { o->release(); }
 
-inline void     refcnt_inc (const AtomicRefcnt* o) { o->retain(); }
-inline void     refcnt_dec (const AtomicRefcnt* o) { o->release(); }
-inline uint32_t refcnt_get (const AtomicRefcnt* o) { return o->refcnt(); }
+inline void                      refcnt_inc  (const AtomicRefcnt* o) { o->retain(); }
+inline void                      refcnt_dec  (const AtomicRefcnt* o) { o->release(); }
+inline uint32_t                  refcnt_get  (const AtomicRefcnt* o) { return o->refcnt(); }
+inline iptr<atomic_weak_storage> refcnt_weak (const AtomicRefcnt* o) { return o->get_weak(); }
 
 template <typename T1, typename T2> inline iptr<T1> static_pointer_cast  (const iptr<T2>& ptr) { return iptr<T1>(static_cast<T1*>(ptr.get())); }
 template <typename T1, typename T2> inline iptr<T1> const_pointer_cast   (const iptr<T2>& ptr) { return iptr<T1>(const_cast<T1*>(ptr.get())); }
@@ -200,7 +221,8 @@ template <typename T1, typename T2> inline std::shared_ptr<T1> dynamic_pointer_c
 template <typename T>
 struct weak_iptr {
     template <class U> friend struct weak_iptr;
-    typedef T element_type;
+    using element_type = T;
+    using storage_type = typename T::weak_storage_type;
 
     weak_iptr() : storage(nullptr), object(nullptr) {}
     weak_iptr(const weak_iptr&) = default;
@@ -269,7 +291,7 @@ struct weak_iptr {
     }
 
 private:
-    iptr<weak_storage> storage;
+    iptr<storage_type> storage;
     T* object; // it is cache, it never invalidates itself, use storage->object to check validity
 };
 

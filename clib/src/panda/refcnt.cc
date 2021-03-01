@@ -2,7 +2,7 @@
 
 namespace panda {
 
-iptr<weak_storage> panda::Refcnt::get_weak () const {
+iptr<weak_storage> Refcnt::get_weak () const {
     if (!_weak) _weak = new weak_storage();
     return _weak;
 }
@@ -11,6 +11,13 @@ Refcnt::~Refcnt () {
     if (_weak) _weak->valid = false;
 }
 
-AtomicRefcnt::~AtomicRefcnt () {}
+iptr<atomic_weak_storage> AtomicRefcnt::get_weak () const {
+    if (!_weak) _weak = new atomic_weak_storage();
+    return _weak;
+}
+
+AtomicRefcnt::~AtomicRefcnt () {
+    if (_weak) _weak->valid = false;
+}
 
 }
