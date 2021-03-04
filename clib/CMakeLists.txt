@@ -2,6 +2,12 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(panda-lib LANGUAGES CXX)
 
 set(LIB_TYPE STATIC)
+option(PANDALIB_BUILD_TESTS OFF)
+if (${PANDALIB_BUILD_TESTS})
+    set(EXCLUDE_TEST)
+else()
+    set(EXCLUDE_TEST EXCLUDE_FROM_ALL)
+endif()
 
 file(GLOB_RECURSE libPandaSource RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*.cc")
 add_library(${PROJECT_NAME} ${LIB_TYPE} ${libPandaSource})
@@ -46,17 +52,20 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${panda-lib-libraries})
 file(GLOB_RECURSE testSource RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/*.cc")
 list(FILTER testSource EXCLUDE REGEX "tests/main.cc")
 
-add_library(tests STATIC ${testSource})
+add_library(tests STATIC EXCLUDE_FROM_ALL ${testSource})
 find_package(Threads)
 find_package(Catch2)
 target_link_libraries(tests PUBLIC ${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} Catch2::Catch2)
 
 ########################ctests######################################
 #executable should be MyTest to pass test exception.cc that checks "library" name
+include(CTest)
 enable_testing()
-add_executable(MyTest ${testSource} "tests/main.cc")
+message(STATUS "ex:" ${EXCLUDE_TEST})
+add_executable(MyTest ${EXCLUDE_TEST} ${testSource} "tests/main.cc")
 target_link_libraries(MyTest tests)
 add_test(test-all MyTest)
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS MyTest)
 
 ########################install#####################################
 install(DIRECTORY src/ DESTINATION include FILES_MATCHING PATTERN "*.h")
