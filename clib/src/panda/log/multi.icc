@@ -15,13 +15,17 @@ void MultiLogger::log_format (std::string& rawmsg, const Info& info, const IForm
     string defmsg;
     for (auto& row : channels) {
         if (info.level < row.min_level) continue;
-        string msg;
-        if (row.formatter) msg = row.formatter->format(rawmsg, info);
-        else {
-            if (!defmsg) defmsg = fmt.format(rawmsg, info);
-            msg = defmsg;
+        
+        auto sub_multilogger = panda::dyn_cast<MultiLogger*>(row.logger.get());
+        if (sub_multilogger) {
+            sub_multilogger->log_format(rawmsg, info, row.formatter ? *row.formatter : fmt);
         }
-        row.logger->log(msg, info);
+        else if (row.formatter) {
+            row.logger->log_format(rawmsg, info, *row.formatter);
+        } else {
+            if (!defmsg) defmsg = fmt.format(rawmsg, info);
+            row.logger->log(defmsg, info);
+        }
     }
 };
 
