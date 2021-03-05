@@ -8,6 +8,7 @@
             - improve owning_list
             - support for weak ref in atomic refcnt
             - ifunction now uses atomic refcnt
+            - support recursive multilogger, support passthrough for loggers
 1.4.11    25.11.2020
             - more correct libunwind usage and detection on *bsd
             - improve makefile

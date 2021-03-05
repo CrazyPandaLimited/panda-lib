@@ -164,13 +164,14 @@ struct Module {
 
     Module& operator= (const Module&) = delete;
 
-    const string&  name     () const;
-    const Module*  parent   () const;
-    Level          level    () const;
-    const Modules& children () const;
+    const string&  name        () const;
+    const Module*  parent      () const;
+    Level          level       () const;
+    const Modules& children    () const;
+    bool           passthrough () const;
 
     void set_level     (Level);
-    void set_logger    (ILoggerFromAny);
+    void set_logger    (ILoggerFromAny, bool passthrough = false);
     void set_formatter (IFormatterFromAny);
 
     ILoggerSP    get_logger    ();
@@ -184,6 +185,7 @@ private:
     Level   _level;
     Modules _children;
     string  _name;
+    bool    _passthrough = false;
 
     void _set_effective_logger    (const ILoggerSP&);
     void _set_effective_formatter (const IFormatterSP&);

@@ -217,3 +217,19 @@ TEST("set logger/formatter for module") {
     CHECK(f == V{2,2});
     l.clear(); f.clear();
 }
+
+TEST("logger passthrough") {
+    Module root("root", nullptr, Level::Warning);
+    Module mod("mod", root, Level::Warning);
+    Module submod("submod", mod, Level::Warning);
+
+    using V = std::vector<int>;
+    V l;
+
+    root.set_logger([&](const std::string&, const Info&) { l.push_back(1); }, true); // root module should not passthrough anywhere
+    submod.set_logger([&](const std::string&, const Info&) { l.push_back(2); }, true);
+
+    panda_log_error(submod, "");
+    CHECK(l == V{2,1});
+    l.clear();
+}

@@ -115,7 +115,7 @@ namespace details {
         std::string s(stream.str());
         stream.str({});
 
-        auto& lib_data    = get_synced_data();
+        auto& lib_data = get_synced_data();
         auto& module_data = lib_data.get_module_data(module);
 
         if (module_data.effective_logger) {
@@ -124,6 +124,17 @@ namespace details {
             int status = clock_gettime(CLOCK_REALTIME, &info.time);
             if (status != 0) info.time.tv_sec = info.time.tv_nsec = 0;
             module_data.effective_logger->log_format(s, info, *(module_data.effective_formatter));
+
+            if (module->passthrough()) {
+                while (1) {
+                    module = module->parent();
+                    if (!module) break;
+                    auto& module_data = lib_data.get_module_data(module);
+                    if (!module_data.effective_logger) break;
+                    module_data.effective_logger->log_format(s, info, *(module_data.effective_formatter));
+                    if (!module->passthrough()) break;
+                }
+            }
         }
         return true;
     }
@@ -206,9 +217,10 @@ IFormatterSP make_formatter (string_view pattern) {
     return new PatternFormatter(pattern);
 }
 
-const string& Module::name() const { return _name; }
-const Module* Module::parent   () const { return _parent; }
-Level         Module::level    () const { return _level; }
+const string& Module::name        () const { return _name; }
+const Module* Module::parent      () const { return _parent; }
+Level         Module::level       () const { return _level; }
+bool          Module::passthrough () const { return _passthrough; }
 
 const Module::Modules& Module::children () const {
     return _children;
@@ -220,7 +232,7 @@ void Module::set_level (Level level) {
     for (auto& m : _children) m->set_level(level);
 }
 
-void Module::set_logger (ILoggerFromAny _l) {
+void Module::set_logger (ILoggerFromAny _l, bool passthrough) {
     SYNC_LOCK;
     auto l = std::move(_l.value);
     ++inst().src_data.rev;
@@ -230,6 +242,7 @@ void Module::set_logger (ILoggerFromAny _l) {
     data.effective_logger = l;
     for (auto& m : _children) m->_set_effective_logger(std::move(l));
     get_synced_data(); // reset any possible loggers for current thread
+    _passthrough = passthrough;
 }
 
 void Module::_set_effective_logger (const ILoggerSP& l) {
