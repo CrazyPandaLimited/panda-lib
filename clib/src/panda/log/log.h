@@ -199,6 +199,7 @@ void set_program_name(const string& value) noexcept;
 ILoggerSP    get_logger    ();
 IFormatterSP get_formatter ();
 
+Module*              get_module  (string_view);
 std::vector<Module*> get_modules ();
 
 namespace details {

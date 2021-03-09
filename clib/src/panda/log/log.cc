@@ -388,6 +388,14 @@ IFormatterSP get_formatter () {
     return panda_log_module.get_formatter();
 }
 
+Module* get_module (string_view name) {
+    if (!name.length()) return &::panda_log_module;
+    SYNC_LOCK;
+    auto range = inst().modules.equal_range(name);
+    if (range.first == range.second) return nullptr;
+    return range.first->second;
+}
+
 std::vector<Module*> get_modules () {
     SYNC_LOCK;
     std::vector<Module*> ret;
