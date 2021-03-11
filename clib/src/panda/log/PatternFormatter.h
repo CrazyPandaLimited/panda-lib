@@ -33,7 +33,8 @@ extern string_view default_format;
 
 struct PatternFormatter : IFormatter {
     PatternFormatter (string_view fmt) : _fmt(string(fmt)) {}
-    string format (std::string&, const Info&) const override;
+    static string format (const string&, std::string&, const Info&);
+           string format (std::string&, const Info&) const override;
 private:
     string _fmt;
 };

@@ -52,9 +52,9 @@ static inline void ymdhms (string& dest, time_t epoch, unsigned type) {
     dest += tmp;
 }
 
-string PatternFormatter::format (std::string& msg, const Info& info) const {
-    auto len = _fmt.length();
-    auto s   = _fmt.data();
+string PatternFormatter::format (const string& fmt, std::string& msg, const Info& info) {
+    auto len = fmt.length();
+    auto s   = fmt.data();
     auto se  = s + len;
     string ret((len > 25 ? len*2 : 50) + msg.length());
 
@@ -152,6 +152,10 @@ string PatternFormatter::format (std::string& msg, const Info& info) const {
     }
 
     return ret;
+}
+
+string PatternFormatter::format (std::string& msg, const Info& info) const {
+    return format(_fmt, msg, info);
 }
 
 }}
