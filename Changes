@@ -10,6 +10,7 @@
             - ifunction now uses atomic refcnt
             - support recursive multilogger, support passthrough for loggers
             - add catch tests helper header
+            - add compilation fix for expected/excepted
 1.4.11    25.11.2020
             - more correct libunwind usage and detection on *bsd
             - improve makefile
