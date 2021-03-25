@@ -327,11 +327,13 @@ struct excepted<void, E> {
     template <class E2>
     excepted& operator= (const unexpected<E2>& uex) {
         set_err(uex.value());
+        return *this;
     }
 
     template <class E2>
     excepted& operator= (unexpected<E2>&& uex) {
         set_err(std::move(uex.value()));
+        return *this;
     }
 
     constexpr bool     has_value     () const noexcept { _checked = true; return _has_val; }
