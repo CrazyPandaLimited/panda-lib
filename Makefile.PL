@@ -12,7 +12,7 @@ my %libs = (
 );
 
 my $cmake_project = "panda-lib";
-my $cmake_tests   = "tests";
+my $cmake_tests   = "$cmake_project-tests";
 
 my %params = (
     NAME               => 'XS::libpanda',

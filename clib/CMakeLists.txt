@@ -52,18 +52,17 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${panda-lib-libraries})
 file(GLOB_RECURSE testSource RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests/*.cc")
 list(FILTER testSource EXCLUDE REGEX "tests/main.cc")
 
-add_library(tests STATIC EXCLUDE_FROM_ALL ${testSource})
+add_library(${PROJECT_NAME}-tests STATIC EXCLUDE_FROM_ALL ${testSource})
 find_package(Threads)
 find_package(Catch2)
-target_link_libraries(tests PUBLIC ${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} Catch2::Catch2)
+target_link_libraries(${PROJECT_NAME}-tests PUBLIC ${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} Catch2::Catch2)
 
 ########################ctests######################################
 #executable should be MyTest to pass test exception.cc that checks "library" name
 include(CTest)
 enable_testing()
-message(STATUS "ex:" ${EXCLUDE_TEST})
 add_executable(MyTest ${EXCLUDE_TEST} ${testSource} "tests/main.cc")
-target_link_libraries(MyTest tests)
+target_link_libraries(MyTest ${PROJECT_NAME}-tests)
 add_test(test-all MyTest)
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS MyTest)
 
