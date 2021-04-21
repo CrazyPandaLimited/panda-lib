@@ -3,8 +3,14 @@
 #include <vector>
 #include "string.h"
 #include "refcnt.h"
+#include "function.h"
 
 namespace panda {
+
+struct ArgumentsHolder: public Refcnt { };
+using ArgumentsHolderSP = iptr<ArgumentsHolder>;
+
+using ArgumentsDecorator = function<string(ArgumentsHolderSP)>;
 
 struct Stackframe: public Refcnt {
     string file;
@@ -14,7 +20,7 @@ struct Stackframe: public Refcnt {
     std::uint64_t address = 0;
     std::uint64_t offset = 0;
     std::uint64_t line_no = 0;
-    std::vector<string> args;
+    ArgumentsHolderSP args;
 };
 
 using StackframeSP = iptr<Stackframe>;
@@ -29,7 +35,7 @@ struct BacktraceInfo : Refcnt {
     BacktraceInfo(std::vector<StackframeSP>&& frames_) : frames(std::move(frames_)) {}
     virtual ~BacktraceInfo();
     const std::vector<StackframeSP>& get_frames() const noexcept { return frames;}
-    virtual string to_string() const noexcept;
+    virtual string to_string(const ArgumentsDecorator& decorator = {}) const noexcept;
 
     StackFrames frames;
 };
