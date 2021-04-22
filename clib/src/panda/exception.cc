@@ -18,7 +18,7 @@ static FrameProducers   frame_producers { get_default_bt_producer() };
 
 BacktraceInfo::~BacktraceInfo() {};
 
-string BacktraceInfo::to_string(const ArgumentsDecorator &) const noexcept {
+string BacktraceInfo::to_string() const noexcept {
     string r;
     for(auto& frame: frames) {
         // mimic gdb-style

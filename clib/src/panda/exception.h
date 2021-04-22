@@ -10,8 +10,6 @@ namespace panda {
 struct ArgumentsHolder: public Refcnt { };
 using ArgumentsHolderSP = iptr<ArgumentsHolder>;
 
-using ArgumentsDecorator = function<string(ArgumentsHolderSP)>;
-
 struct Stackframe: public Refcnt {
     string file;
     string library;
@@ -35,7 +33,7 @@ struct BacktraceInfo : Refcnt {
     BacktraceInfo(std::vector<StackframeSP>&& frames_) : frames(std::move(frames_)) {}
     virtual ~BacktraceInfo();
     const std::vector<StackframeSP>& get_frames() const noexcept { return frames;}
-    virtual string to_string(const ArgumentsDecorator& decorator = {}) const noexcept;
+    virtual string to_string() const noexcept;
 
     StackFrames frames;
 };
