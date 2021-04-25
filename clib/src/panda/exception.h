@@ -19,6 +19,7 @@ struct Stackframe: public Refcnt {
     std::uint64_t offset = 0;
     std::uint64_t line_no = 0;
     ArgumentsHolderSP args;
+    virtual ~Stackframe();
 };
 
 using StackframeSP = iptr<Stackframe>;
