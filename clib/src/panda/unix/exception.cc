@@ -43,8 +43,8 @@ RawTraceProducer get_default_raw_producer() noexcept {
     #endif
 }
 
+#if PANDA_HAS_EXECINFO
 static StackframeSP as_frame (const char* symbol) {
-    using guard_t = std::unique_ptr<char*, std::function<void(char**)>>;
     StackframeSP r;
     std::cmatch what;
     #if defined (__linux__)
@@ -80,7 +80,6 @@ static StackframeSP as_frame (const char* symbol) {
     // abi::__cxa_demangle() on FreeBSD "demangles" even non-mangled names
     if (mangled_name.size() > 2 && (mangled_name[0] == '_') && (mangled_name[1] == 'Z')) {
         char* demangled = abi::__cxa_demangle(mangled_name.c_str(), nullptr, nullptr, &status);
-        guard_t guard;
         if (demangled) {
             demangled_name = demangled;
             free(demangled);
@@ -107,6 +106,7 @@ static StackframeSP as_frame (const char* symbol) {
 
     return r;
 }
+#endif
 
 struct GlibcBacktrace : BacktraceBackend {
     char** symbols = nullptr;
