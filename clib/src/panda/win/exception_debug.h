@@ -1,7 +1,5 @@
 // adopted from https://github.com/boostorg/stacktrace/tree/develop/include/boost/stacktrace/detail
-
 #pragma once
-#ifdef _WIN32
 
 struct IDebugSymbols;
 struct IDebugClient;
@@ -53,6 +51,5 @@ public:
     debugging_symbols() noexcept;
 
 };
-}
 
-#endif
+}

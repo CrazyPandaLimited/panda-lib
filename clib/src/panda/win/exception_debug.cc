@@ -1,15 +1,11 @@
 // adopted from https://github.com/boostorg/stacktrace/tree/develop/include/boost/stacktrace/detail
-#ifdef _WIN32
-
-#include "win_debug.h"
+#include "exception_debug.h"
 #include <windows.h>
 #include <dbgeng.h>
-
 
 __CRT_UUID_DECL(IDebugClient,0x27fe5639,0x8407,0x4f47,0x83,0x64,0xee,0x11,0x8f,0xb0,0x8a,0xc8)
 __CRT_UUID_DECL(IDebugControl,0x5182e668,0x105e,0x416e,0xad,0x92,0x24,0xef,0x80,0x04,0x24,0xba)
 __CRT_UUID_DECL(IDebugSymbols,0x8c31e98c,0x983a,0x48a5,0x90,0x16,0x6f,0xe5,0xd6,0x67,0xa9,0x50)
-
 
 using namespace panda;
 
@@ -77,6 +73,3 @@ com_holder< ::IDebugSymbols>& debugging_symbols::get_thread_local_debug_inst() n
 debugging_symbols::debugging_symbols() noexcept : idebug_( get_thread_local_debug_inst() ) {}
 
 bool debugging_symbols::is_inited() const noexcept { return idebug_.is_inited();  }
-
-
-#endif

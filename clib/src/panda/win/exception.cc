@@ -1,8 +1,7 @@
 // adopted from https://github.com/boostorg/stacktrace/tree/develop/include/boost/stacktrace/detail
-
-//#include <iostream>
+#include "../exception.h"
 #include <cxxabi.h>
-#include "win_debug.h"
+#include "exception_debug.h"
 #include <windows.h>
 #include <dbgeng.h>
 
@@ -75,7 +74,7 @@ public:
     }
 };
 
-static RawTraceProducer get_default_raw_producer () noexcept {
+RawTraceProducer get_default_raw_producer () noexcept {
     return [](void** ptr, int sz) -> int {
         auto r = ::CaptureStackBackTrace(1, static_cast<unsigned long>(sz), ptr, nullptr);
         return r;
@@ -99,12 +98,10 @@ struct WinBacktrace: BacktraceBackend {
     }
 };
 
-static BacktraceBackendSP win_producer(const Backtrace& raw_traces) noexcept {
-    return new WinBacktrace(raw_traces);
-}
-
-static BacktraceProducer get_default_bt_producer () noexcept {
-    return win_producer;
+BacktraceProducer get_default_bt_producer () noexcept {
+    return [](const Backtrace& raw_traces) -> BacktraceBackendSP {
+        return new WinBacktrace(raw_traces);
+    };
 }
 
 }
