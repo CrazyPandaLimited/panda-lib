@@ -1485,12 +1485,18 @@ private:
 
     // leaves object in invalid state
     void _release () {
+        // suppress false-positive GCC warning: ‘*((void*)&<anonymous> +16)’ may be used uninitialized in this function
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wpragmas"
+        #pragma GCC diagnostic ignored "-Wunknown-warning-option"
+        #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
         switch (_state) {
             case State::LITERAL  :
             case State::SSO      : break;
             case State::INTERNAL : _release_internal(); break;
             case State::EXTERNAL : _release_external(); break;
         }
+        #pragma GCC diagnostic pop
     }
 
     void _release_internal () { _release_internal(_storage.internal, _storage.dtor); }
