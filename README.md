@@ -11,7 +11,7 @@ mkdir build
 cd build
 cmake ..
 cmake --build ..
-cmake --build . --target install
+cmake --build .. --target install
 ```
 
 # Dependencies
@@ -20,4 +20,4 @@ Lib itself does not depend on anything but it use [Catch2](https://github.com/ca
 
 # Documentation
 
-In progress
+In progress. You can find som in folder [doc](doc).
