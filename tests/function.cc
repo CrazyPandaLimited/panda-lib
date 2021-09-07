@@ -37,6 +37,34 @@ namespace test {
 
 using namespace test;
 
+TEST("synopsis") {
+    int a = 13;
+    function<int(int)> f = [&](int b){return a + b;};
+    REQUIRE(f(42) == 55); // calling lambda 42 + 13 == 55
+
+    struct Test {
+        int operator()(int v) {return v;}
+        bool operator == (const Test&) const { return true; }
+    };
+
+    f = Test(); // make function from callable object
+    REQUIRE(f(42) == 42); // calling Test::operator()
+
+    function<int(int)> f2 = Test();
+    REQUIRE(f == f2); // if functors are equal so do panda::functions
+
+    function<int(void)> l1 = [&](){return a;};
+    auto l2 = l1;
+    function<int(void)> l3 = [&](){return a;};
+
+    REQUIRE(l1 == l2); // copies are equal
+    REQUIRE(l1 != l3); // l3 made from different lambda
+
+    // compatible types of arguments and return are allowed if implicitly convertible
+    function<double (int)> cb = [](double) -> int {return 10;};
+    REQUIRE(cb(3) == 10);
+}
+
 TEST("simplest function") {
     function<void(void)> f = &void_func;
     REQUIRE(true);
