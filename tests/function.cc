@@ -1,3 +1,5 @@
+#define CATCH_CONFIG_ENABLE_BENCHMARKING
+
 #include "test.h"
 #include <panda/function.h>
 #include <panda/function_utils.h>
@@ -406,3 +408,38 @@ TEST("lambda self reference auto...") {
     };
     CHECK(f3(123) == 111);
 }
+
+//template <typename F>
+//int bench(const F& f) {
+//    int ret = 0;
+//    for (size_t i = 0; i < 1000000; ++i) {
+//        ret += f(i);
+//    }
+//    return ret;
+//};
+
+//int free_function(int a) {
+//    return a*2;
+//}
+
+//template <typename F>
+//int launch(string name) {
+//    F free_wrapped = &free_function;
+//    F simple_lambda = [](int a){return a*2;};
+//    int val = 2;
+//    F capture_lambda = [=](int a){return a*val;};
+
+//    BENCHMARK(name + " free")          { return bench(free_function); };
+//    BENCHMARK(name + " free wrapped")  { return bench(free_wrapped); };
+//    BENCHMARK(name + " capture_lambda"){ return bench(capture_lambda); };
+
+//    return 0;
+//}
+
+//TEST_CASE("benchmark", "[!benchmark]") {
+//    launch<panda::function<int(int)>>("panda");
+//    launch<std::function<int(int)>>("std");
+//    launch<panda::function<int(int)>>("panda");
+//    launch<std::function<int(int)>>("std");
+//}
+
