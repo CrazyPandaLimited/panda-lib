@@ -86,7 +86,7 @@ namespace string_detail {
         CharT*   start() {return (CharT*)(&refcnt + 1);}
     };
 
-    static_assert(sizeof(Buffer<char>) % 8 == 0);
+    static_assert(sizeof(Buffer<char>) % 8 == 0, "Alignment problem, sizeof(Buffer<char>) should be 8 on 32-bit platforms and 16 on 64");
 
     template <class CharT>
     struct ExternalShared : Buffer<CharT> {
