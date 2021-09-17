@@ -186,10 +186,10 @@ public:
     static const size_type MAX_SSO_CHARS = (MAX_SSO_BYTES / sizeof(CharT));
     static const size_type MAX_SIZE      = npos / sizeof(CharT) - BUF_CHARS;
 
-    constexpr basic_string () noexcept : _str_literal(&TERMINAL), _length(0), _state(State::LITERAL) {}
+    basic_string () noexcept : _str_literal(&TERMINAL), _length(0), _state(State::LITERAL) {}
 
     template <size_type SIZE> // implicit constructor for literals, literals are expected to be null-terminated
-    constexpr basic_string (const CharT (&str)[SIZE]) noexcept : _str_literal(str), _length(SIZE-1), _state(State::LITERAL) {}
+    basic_string (const CharT (&str)[SIZE]) noexcept : _str_literal(str), _length(SIZE-1), _state(State::LITERAL) {}
 
     template <size_type SIZE> // implicit constructor for char arrays, array must be null-trminated, behaviour is similar to std::string
     constexpr basic_string (CharT (&str)[SIZE]) noexcept : basic_string(str, traits_type::length(str)) {}
@@ -1513,8 +1513,12 @@ private:
     static void _free_external_str (ExternalShared* ebuf, dtor_fn dtor) { dtor(ebuf->ptr, ebuf->capacity); }
     static void _free_external_buf (ExternalShared* ebuf)               { ebuf->dtor((CharT*)ebuf, EBUF_CHARS); }
 
+    static size_type min(size_type a, size_type b) { // std::min is in <algorithm> header, it is too heavy to include for one function
+        return a < b ? a : b;
+    }
+
     static int _compare (const CharT* ptr1, size_type len1, const CharT* ptr2, size_type len2) {
-        int r = traits_type::compare(ptr1, ptr2, std::min(len1, len2));
+        int r = traits_type::compare(ptr1, ptr2, min(len1, len2));
         if (!r) r = (len1 < len2) ? -1 : (len1 > len2 ? 1 : 0);
         return r;
     }
