@@ -2,7 +2,7 @@
             - Add docs, describing system dependecies
             - panda-log: using std::chrono
             - multiple fixes for MSVC
-            - xs adapter now part of c++ module
+            - xs adapter is now part of c++ module
 1.5.4    13.07.2021
             - add logger multiline message decorator support
 1.5.3    02.07.2021
