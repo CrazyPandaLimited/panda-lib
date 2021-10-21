@@ -1,0 +1,203 @@
+1.5.5    xx.xx.2021
+            - Add docs, describing system dependecies
+            - panda-log: using std::chrono
+            - multiple fixes for MSVC
+            - xs adapter now part of c++ module
+1.5.4    13.07.2021
+            - add logger multiline message decorator support
+1.5.3    02.07.2021
+            - improve platform-dependent code, remove clang warnings
+1.5.2    14.05.2021
+            - change default order of adding callbacks in callback dispatcher to "BACK"
+1.5.1    19.04.2021
+            - change MANIFEST.SKIP
+1.5.0    08.04.2021
+            - exceptions, give libunwind priority (needed for *bsd)
+            - exceptions, libunwind: with fake 1st frame with IP = 0
+            - move C part to separate folder
+            - panda-log: support for logger & formatter in log modules, improve API
+            - panda-log: add %4t pattern to format dates lke '2020/12/14 17:48:30'
+            - panda-log: allow to assign custom program name
+            - improve owning_list
+            - support for weak ref in atomic refcnt
+            - ifunction now uses atomic refcnt
+            - support recursive multilogger, support passthrough for loggers
+            - add catch tests helper header
+            - add compilation fix for expected/excepted
+1.4.11    25.11.2020
+            - more correct libunwind usage and detection on *bsd
+            - improve makefile
+            - cmake subdirectory support
+            - lower cmake requirements
+            - change log level names to avoid clashing on windows + change enum -> enum class
+            - fix makefile
+1.4.10    30.10.2020
+            - attempt to fix exceptions in musl environments (e.g. alipine linux)
+            - attempt to fix exceptions for windows build, single executable test
+1.4.9    12.10.2020
+            - require Alien::cmake3 to build
+1.4.8    09.10.2020
+            - bugfix in log format
+1.4.7    27.08.2020
+            - exceptions: increase default backtrace depth from 50 to 150
+1.4.6    01.07.2020
+            - exceptions: use more performant backtraces gathering interfaces
+1.4.5    28.06.2020
+            - exceptions: fix segfaults on *BSD
+1.4.4    27.06.2020
+            - exceptions: allow fallback on default resolver
+            - exceptions, unix/glibc:: dump frame info even if symbol isn't available
+            - fix compilation issues on win32
+1.4.3    24.06.2020
+            - exceptions: fix tests on *BSD
+1.4.2    23.06.2020
+            - exceptions: fix test for raspberry pi
+1.4.1    22.06.2020
+            - exceptions: more correctly handle on systems with buggy glibc/libunwind
+            - exceptions: disable test on systems with buggy glibc/libunwind
+1.4.0    19.06.2020
+            - basic_string: avoid access to uninitialized memory in c_str()
+            - basic_string: distinguish char array from const char array in constructor for safety
+            - logger: add root logging macros, add function to codepoint
+            - logger: add formatter feature
+            - logger: use formatter by default, pass to simple logger API compiled string
+            - logger: make logger/formatter usage and changing thread safe via iptr-on-atomic
+            - logger: add pattern formatter (used by default)
+            - logger: improve logger API with variadic macros
+            - logger: fix main module initialization order
+            - logger: add console logger impl
+            - logger: add multi logger
+            - exceptions: export Windows Debugger Enginge in API
+            - exceptions: add default to_string implementation
+            - exceptions: BacktraceInfo has reasonable default implementation
+            - exceptions: add Backtrace::dump_trace() default stack trace dumper
+            - massively speedup multiple "+=" operations without reserve() for basic_string
+            - fix rfind() and find_last* default value for "pos" in string and string_view
+            - remove useless xs file
+1.3.14   02.04.2020
+            - exceptions: add default backtrace producer (info gather info from symbols)
+            - exceptions: enable tests for all *nix systems
+            - fix logging on global destruction
+1.3.13   24.03.2020
+           - panda log: refactor a little
+           - VarIntStack iterator
+           - ErrorCode::contains
+1.3.12   13.02.2020
+           - bad_expected_access<ErrorCode> specialization for better error messages
+           - remove copy ctor and copy= from excepted(), throw exc if copy= to object with not checked error
+           - workaround thread_local global dtor bug in freebsd
+           - improve ErrorCode
+           - add noexcept to some basic_string ctors
+           - global tls ptr storage is now destroyed with statics, not with thread_locals
+1.3.11   22.02.2020
+           - additional log macro
+           - remove std::optional to prevent binary incompatibility
+1.3.10   16.02.2020
+           - fix 32bit systems backtrace segv (disable backtrace for 32bit)
+           - add stringized arguments field for Stackframe object
+           - fix expected<>
+1.3.9    30.01.2020
+           - renamed to XS::libpanda
+1.3.8    28.01.2020
+           - fix tests for windows (again)
+1.3.7    27.01.2020
+           - fix tests for windows
+1.3.6    24.01.2020
+           - renamed to Alien::libpanda
+           - fix t/exception.cc tests with -O3
+1.3.5    21.01.2020
+           - improve backtrace interface (glibc only)
+           - fix SunOS compilation
+1.3.4    17.01.2020
+           - fix compilation warnings
+1.3.3    14.01.2020
+           - improve basic_string
+1.3.2    14.01.2020
+           - bugfix for 32bit systems
+1.3.1    30.12.2019
+           - temporarily disable exception backtrace test
+1.3.0    30.12.2019
+           - panda::log modules
+           - backtracable exceptions
+           - ErrorCode - list of std::error_code
+           - basic_string small optimization
+           - AllocatedObject bugfix: add default placement new
+           - add comparison ops to panda::optional
+           - remove docs for C++ API
+1.2.10   14.08.2019
+           - fix panda::expected and panda::excepted constructors
+           - add comparison operator to iptr
+           - fix compilation warnings
+1.2.9    02.08.2019
+           - remove useless fix for string_view
+1.2.8    02.08.2019
+           - fix compilation for GCC 4.9, change previous fix for panda::string, so tests are now ok
+1.2.7    01.08.2019
+           - panda::string compilation fix for GCC [4.9 - 6.0) - workaround GCC's bug with return type of literal
+           - string map containers test compilation fix for GCC 5
+1.2.6    30.07.2019
+           - fix compilation warnings for some compilers
+           - fix panda::string tests for 32bit systems
+           - fix panda::string tests for clang4-6
+1.2.5    25.07.2019
+           - require newer XS::Install
+1.2.4    24.07.2019
+           - require newer XS::Install
+1.2.3    22.07.2019
+           - move fake std::string_view to panda::string_view + related changes
+           - fix endian.h for C++17 clang (fuck macros)
+           - fix intrusive_chain compilation for clang17
+           - fix compilation warnings for clang17
+           - return #include <ostream> to log.h (unfortunately, but there is no workaround)
+           - remove panda::lib/traits/etc namespace, accumulate all utils in panda::
+1.2.2    15.07.2019
+           - fix compiler warnings
+1.2.1    12.07.2019
+           - add get_global_[tls_]ptr
+           - add PANDA_GLOBAL/TLS_MEMBER[_PTR] macros helpers for creating static members
+             (global or tls) which has the same address across any shared library.
+           - change log level names to camel case (fuck the fucking macros)
+           - fix intrusive_chain size(): now O(1)
+           - CallbackDispatcher: extended callback is now accepted only in add_event_listener
+             to resolve ambiguity with template lambdas when dispatcher.add([](auto...) { });
+1.2.0    25.06.2019
+           - add panda::excepted (expected with strict error checking and exception propagation)
+           - add panda::expected (P0323R7)
+           - add string_view compare operators with const C*
+           - removed panda::shared_ptr, panda::Refcounted (use panda::Refcnt instead)
+           - iptr now uses refcnt_inc/dec/get proxies
+           - dyn_cast is now no-op if classes match
+           - moved to XS::Install
+1.1.4    14.06.2018
+           - fix dll loading for Windows
+1.1.3    18.05.2018
+           - fix tests on older versions of Test::More
+           - allow build back to v5.12.0
+1.1.2    08.04.2018
+           - add empty test when building without TEST_FULL
+1.1.1    08.02.2018
+           - std::integer_sequence for old C++ lower than 14
+           - panda::function optimizations
+1.1.0    06.02.2018
+           - bugfixes and warn fixes in panda::string
+           - move all tests from perl to c++
+           - iptr<> added
+1.0.7    17.01.2018
+           - C++14 requirements lowered to C++11
+           - new overloads for endian conversions
+1.0.6    12.01.2018
+           - class panda::function - compareble version of std::function
+           - class CallbackDispatcher - implementation of observer pattern
+           - simple logger tools
+1.0.5    08.09.2017
+           - string::append now can use COW in case of empty string
+1.0.4    07.05.2017
+           - shared_ptr::operator bool is explicit now
+1.0.3    16.05.2017
+           - fix default pos value for find_last_of, find_last_not_of
+1.0.2    16.05.2017
+           - bugfix for stoX group of functions in case of no pos argument
+1.0.1    15.05.2017
+           - do not bootstrap so library (no XS code inside), it will be loaded automatically because of "-l" linker flag
+1.0.0    11.05.2017
+           - C++ code moved from Panda::Lib

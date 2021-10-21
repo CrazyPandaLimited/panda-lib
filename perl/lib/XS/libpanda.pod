@@ -1,0 +1,28 @@
+=head1 NAME
+
+XS::libpanda - panda::lib C++ library for XS.
+
+=head1 DESCRIPTION
+
+This library is intended to use only from XS modules.
+No perl interface.
+
+=head1 DEPENDENCIES
+
+This module requires either C<execinfo.h> (it is shipped with C<libc6-dev> or
+C<glibc-devel> or C<libexecinfo-dev> on Linux) or <libunwind.h> (shipped with FreeBSD,
+but also can be found with packages like C<libunwind-dev> on Linux).
+
+=head1 SEE ALSO
+
+L<XS::Install>
+
+=head1 AUTHOR
+
+Pronin Oleg <syber@crazypanda.ru>, Crazy Panda LTD
+
+=head1 LICENSE
+
+You may distribute this code under the same terms as Perl itself.
+
+=cut
