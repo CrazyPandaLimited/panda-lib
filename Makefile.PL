@@ -21,7 +21,6 @@ my %params = (
     BIN_SHARE          => 1,
     CONFIGURE_REQUIRES => {'Alien::cmake3' => 0},
     CCFLAGS            => '-Wall -Wextra',
-    dist               => {TARFLAGS => 'hcvf'},
     CLIB               => {
         DIR          => 'clib',
         CMAKE_TARGET => $cmake_project,
