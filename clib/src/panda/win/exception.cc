@@ -11,7 +11,7 @@ static panda::string demangle(const panda::string& mangled) {
 #else
 #include <cxxabi.h>
 static panda::string demangle(const panda::string& mangled) {
-    string result;
+    panda::string result;
     int status;
     char* d = abi::__cxa_demangle(mangled.c_str(), nullptr, nullptr, &status);
     if (d) {
