@@ -1,4 +1,3 @@
-#define CATCH_CONFIG_EXTERNAL_INTERFACES
 #include "test.h"
 #include <panda/log.h>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
