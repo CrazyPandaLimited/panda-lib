@@ -1,5 +1,7 @@
 #include "test.h"
+#include <algorithm>
 #include <panda/varint.h>
+#include <catch2/generators/catch_generators.hpp>
 
 #define TEST(name) TEST_CASE("varint: " name, "[varint]")
 
