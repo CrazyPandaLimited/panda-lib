@@ -1,4 +1,5 @@
 #include "test.h"
+#include <catch2/benchmark/catch_benchmark.hpp>
 
 struct Base {
     int x;
@@ -51,7 +52,7 @@ Base* get_suka () { return new Epta(); }
 //    WARN(res);
 //}
 
-TEST_CASE("bench_mempool_single", "[bench-mempool][!hide]") {
+TEST_CASE("bench_mempool_single", "[bench-mempool][.]") {
     MemoryPool pool(16);
     uint64_t res = 0;
     for (size_t i = 0; i < 1000000000; i++) {
@@ -63,7 +64,7 @@ TEST_CASE("bench_mempool_single", "[bench-mempool][!hide]") {
     WARN(res);
 }
 
-TEST_CASE("bench_mempool_multi", "[bench-mempool][!hide]") {
+TEST_CASE("bench_mempool_multi", "[bench-mempool][.]") {
     MemoryPool pool(16);
     uint64_t res = 0;
     void* ptrs[1000];
@@ -79,7 +80,7 @@ TEST_CASE("bench_mempool_multi", "[bench-mempool][!hide]") {
     WARN(res);
 }
 
-TEST_CASE("bench_static_mempool_instance", "[bench-mempool][!hide]") {
+TEST_CASE("bench_static_mempool_instance", "[bench-mempool][.]") {
     uint64_t res = 0;
     for (size_t i = 0; i < 1000000000; i++) {
         res += (uint64_t)StaticMemoryPool<16>::instance();
@@ -87,7 +88,7 @@ TEST_CASE("bench_static_mempool_instance", "[bench-mempool][!hide]") {
     WARN(res);
 }
 
-TEST_CASE("bench_static_mempool_single", "[bench-mempool][!hide]") {
+TEST_CASE("bench_static_mempool_single", "[bench-mempool][.]") {
     uint64_t res = 0;
     for (size_t i = 0; i < 1000000000; i++) {
         auto p = StaticMemoryPool<16>::instance()->allocate();
@@ -98,7 +99,7 @@ TEST_CASE("bench_static_mempool_single", "[bench-mempool][!hide]") {
     WARN(res);
 }
 
-TEST_CASE("bench_static_mempool_multi", "[bench-mempool][!hide]") {
+TEST_CASE("bench_static_mempool_multi", "[bench-mempool][.]") {
     uint64_t res = 0;
     void* ptrs[1000];
     for (size_t j = 0; j < 1000000; ++j) {
@@ -113,7 +114,7 @@ TEST_CASE("bench_static_mempool_multi", "[bench-mempool][!hide]") {
     WARN(res);
 }
 
-TEST_CASE("bench_dynamic_mempool_instance", "[bench-mempool][!hide]") {
+TEST_CASE("bench_dynamic_mempool_instance", "[bench-mempool][.]") {
     uint64_t res = 0;
     for (size_t i = 0; i < 1000000000; i++) {
         res += (uint64_t)DynamicMemoryPool::instance();
@@ -121,7 +122,7 @@ TEST_CASE("bench_dynamic_mempool_instance", "[bench-mempool][!hide]") {
     WARN(res);
 }
 
-TEST_CASE("bench_dynamic_mempool_single", "[bench-mempool][!hide]") {
+TEST_CASE("bench_dynamic_mempool_single", "[bench-mempool][.]") {
     uint64_t res = 0;
     for (size_t i = 0; i < 1000000000; i++) {
         auto p = DynamicMemoryPool::instance()->allocate(16);
@@ -132,7 +133,7 @@ TEST_CASE("bench_dynamic_mempool_single", "[bench-mempool][!hide]") {
     WARN(res);
 }
 
-TEST_CASE("bench_pool_obj_single", "[bench-mempool][!hide]") {
+TEST_CASE("bench_pool_obj_single", "[bench-mempool][.]") {
     uint64_t res = 0;
     for (size_t i = 0; i < 1000000000; i++) {
         auto p = new FastAlloc();
@@ -143,7 +144,7 @@ TEST_CASE("bench_pool_obj_single", "[bench-mempool][!hide]") {
     WARN(res);
 }
 
-TEST_CASE("bench_pool_obj_multi", "[bench-mempool][!hide]") {
+TEST_CASE("bench_pool_obj_multi", "[bench-mempool][.]") {
     uint64_t res = 0;
     FastAlloc* ptrs[1000];
     for (size_t j = 0; j < 1000000; ++j) {
