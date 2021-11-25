@@ -3,8 +3,8 @@
 #include <panda/string.h>
 #include <panda/optional.h>
 #include <panda/memory.h>
+#include <panda/test/catch.h>
 #include <panda/CallbackDispatcher.h>
-#include <catch2/catch_test_macros.hpp>
 
 using namespace panda;
 

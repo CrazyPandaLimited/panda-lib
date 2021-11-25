@@ -35,7 +35,7 @@ TEST("set_logger") {
             Info   info;
             string str;
         };
-        Logger* logger;
+        Logger* logger = nullptr;
 
 
         SECTION("formating") {
