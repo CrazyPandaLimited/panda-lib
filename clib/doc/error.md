@@ -30,11 +30,11 @@ The library doesn’t force a user to use the same error handling ideology but i
 
 # Exceptions
 We don’t use exceptions as part of business logic so we don’t need a big hierarchy of classes for this. The only thing we need from an exception object is the information about an error. It should be easy to read the message and it should be informative. But there is no need to process it.  The standard runtime_error is pretty much enough except for one detail. It doesn't contain the call stack. You cannot detect where an error happens after the exception is caught. It is very important when it is hard to reproduce the error.
-Class [panda::Backtrace](reference/backtrace) provides a call stack and [panda::exception](reference/exception) is the base class containing the call stack. Collecting the callstach is relatively fast but making a text representation with symbols is really slow. That's why the panda::exception itself contains a vector of pointers to functions instead of storing a text. Symbolized stack is generated only if needed (`what()` call, e.g).
+Class [panda::Backtrace](reference/backtrace.md) provides a call stack and [panda::exception](reference/exception.md) is the base class containing the call stack. Collecting the callstach is relatively fast but making a text representation with symbols is really slow. That's why the panda::exception itself contains a vector of pointers to functions instead of storing a text. Symbolized stack is generated only if needed (`what()` call, e.g).
 
 
 # Expect the Expected
-Practically any interaction with a user or environment may fail. The main tools to store and process such failures are [panda::expected](reference/expected) and [panda::excepted](reference/excepted)
+Practically any interaction with a user or environment may fail. The main tools to store and process such failures are [panda::expected](reference/expected.md) and [panda::excepted](reference/excepted.md)
 
 
 Expected is a new popular way of processing errors. Andrei Alexandrescu [explained it in 2018](https://youtu.be/CGwk3i1bGQI). `Expected` is an algebraic sum op types of result and error. It can contain either a valid result or an error description but not both. If you try to get result when there is an error exception is thrown. Here is the function that parses a number:
@@ -78,13 +78,13 @@ And if we do not want any exceptions:
 This way of error handling combines all the strongest sides of exceptions and error codes. There is now `try ... catch` but users are forced to check for errors.
 
 
-[panda::expected](reference/expected) is an implementation of a proposal to standard. It is pretty much the same as many other implementations.
+[panda::expected](reference/expected.md) is an implementation of a proposal to standard. It is pretty much the same as many other implementations.
 
 
 But there is one problem in the concept of `expected`. It ignores the case of void functions. You cannot force the user to use the result value if it is not supposed to be one. In this case `expected` is the same thing as return code. This problem can be solved with one addition to `expected`. We can remember if the user checks the error or not and throw an exception in the destructor if there is an error. Yes, throwing in a destructor is very bad and it is an ugly hack. But it is also a very useful hack.
 
 
-The implementation of this idea is called [panda::excepted](reference/excepted).
+The implementation of this idea is called [panda::excepted](reference/excepted.md).
 
 # ErrorCode
 
@@ -98,9 +98,9 @@ My awesome request error (1:my::application) -> HTTP connect error (3:unievent::
 
 It is a list of errors that appears during the processing of the original connection error. One hand it is just a high level error about user request and on the other hand it contains all low level information. Some other languages provide a concept of chained exceptions for the same purpose.
 
-ErrorCode is a highly optimized class. You can use it as the usual value type as std::error_code. It works well with `expected` and `excepted`. It uses [AllocatedObject](reference/memory#AllocatedObject) to allocate its storage. It is a pool for small objects and allocation is really fast.
+ErrorCode is a highly optimized class. You can use it as the usual value type as std::error_code. It works well with `expected` and `excepted`. It uses [AllocatedObject](reference/memory.md#AllocatedObject) to allocate its storage. It is a pool for small objects and allocation is really fast.
 
-More details about ErrorCode [here](reference/ErrorCode)
+More details about ErrorCode [here](reference/ErrorCode.md)
 
 
 
