@@ -1,6 +1,6 @@
 # excepted
 
-Algebraic sum of type of result and type of error. Same as [expected](expected) but with different processing of `void`. See [Expect an Expected](../error#expect-the-expected) for a concept description.
+Algebraic sum of type of result and type of error. Same as [expected](expected.md) but with different processing of `void`. See [Expect an Expected](../error.md#expect-the-expected) for a concept description.
 
 # Synopsis
 

@@ -24,4 +24,4 @@ Ingerits [std::exception](https://en.cppreference.com/w/cpp/error/exception)
 virtual string whats () const noexcept;
 ```
 
-String representation of error. `panda::exceptions` stores a [panda::string](../string) so it is easier and faster to return it instead of allocating new char array.
+String representation of error. `panda::exceptions` stores a [panda::string](../string.md) so it is easier and faster to return it instead of allocating new char array.

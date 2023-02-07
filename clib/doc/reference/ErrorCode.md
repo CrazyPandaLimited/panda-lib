@@ -1,5 +1,5 @@
 # ErrorCode
-A list of [std::error_codes](https://en.cppreference.com/w/cpp/error/error_code). See paragraph [ErrorCode](../error#errorcode) of [Eroor Hamdling](../error)
+A list of [std::error_codes](https://en.cppreference.com/w/cpp/error/error_code). See paragraph [ErrorCode](../error.md#errorcode) of [Eroor Handling](../error.md)
 
 # Synopsis
 
