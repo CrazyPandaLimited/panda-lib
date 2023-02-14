@@ -10,13 +10,13 @@ Panda-Lib is suppose to be built with CMake.
 mkdir build
 cd build
 cmake ..
-cmake --build ..
-cmake --build .. --target install
+cmake --build .
+cmake --build . --target install
 ```
 
 # Dependencies
 
-Lib itself does not depend on anything but it use [Catch2](https://github.com/catchorg/Catch2) for tests. Make sure that [find_package](https://cmake.org/cmake/help/latest/command/find_package.html) can find it.
+Lib itself does not depend on anything but it use [Catch2](https://github.com/catchorg/Catch2) for tests. By default tests are disabled. Set `PANDALIB_TESTS=ON` to build tests and make sure that [find_package](https://cmake.org/cmake/help/latest/command/find_package.html) can find Catch2.
 
 # Documentation
 
