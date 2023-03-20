@@ -10,6 +10,7 @@ PROJECT(panda-lib LANGUAGES CXX)
 
 set(LIB_TYPE STATIC)
 
+option(PANDALIB_FETCH_DEPS OFF)
 option(PANDALIB_TESTS OFF)
 option(PANDALIB_TESTS_IN_ALL ${NOT_SUBPROJECT})
 
@@ -17,6 +18,10 @@ if (${PANDALIB_TESTS_IN_ALL})
     set(EXCLUDE_TEST)
 else()
     set(EXCLUDE_TEST EXCLUDE_FROM_ALL)
+endif()
+
+if (${PANDALIB_FETCH_DEPS})
+    include(FetchDeps.cmake)
 endif()
 
 file(GLOB_RECURSE libPandaSource RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*.cc")
