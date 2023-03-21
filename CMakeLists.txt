@@ -19,7 +19,7 @@ else()
     set(EXCLUDE_TEST EXCLUDE_FROM_ALL)
 endif()
 
-if (${PANDALIB_FETCH_DEPS})
+if (PANDALIB_FETCH_DEPS)
     include(FetchDeps.cmake)
 endif()
 
